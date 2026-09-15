@@ -15,15 +15,8 @@ export function createRng(seed: number): () => number {
   };
 }
 
-/** FNV-1a 32-бит — тогтвортой hash (огноо, actionId, канон JSON). */
-export function fnv1a(input: string): number {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < input.length; i++) {
-    h ^= input.charCodeAt(i);
-    h = Math.imul(h, 0x01000193) >>> 0;
-  }
-  return h >>> 0;
-}
+/** `shared/hash.ts`-ээс дахин экспортлов — контент ба домэйн ижил hash хэрэглэнэ. */
+export { fnv1a } from '../hash.ts';
 
 /**
  * Жигнэсэн сонголт. Каталогийг `id`-аар эрэмбэлнэ — файлын дарааллаас ХАМААРАХГҮЙ,

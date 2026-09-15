@@ -1,0 +1,128 @@
+[
+  {
+    "id": "ach-first-light",
+    "title": "First Light",
+    "description": "Reach level 2. The first cut is always the hardest one to make.",
+    "predicate": { "kind": "level", "value": 2 }
+  },
+  {
+    "id": "ach-journeyman",
+    "title": "Journeyman Editor",
+    "description": "Reach level 5 and stop calling yourself a beginner.",
+    "predicate": { "kind": "level", "value": 5 }
+  },
+  {
+    "id": "ach-ascended",
+    "title": "Editor's Ascension",
+    "description": "Reach level 10, the highest rank the studio recognises.",
+    "predicate": { "kind": "level", "value": 10 }
+  },
+  {
+    "id": "ach-xp-apprentice",
+    "title": "Five Hundred Frames",
+    "description": "Earn 500 total XP across quests, dungeons and projects.",
+    "predicate": { "kind": "totalXp", "value": 500 }
+  },
+  {
+    "id": "ach-xp-veteran",
+    "title": "Render Veteran",
+    "description": "Earn 2750 total XP. That is a lot of hours in the chair.",
+    "predicate": { "kind": "totalXp", "value": 2750 }
+  },
+  {
+    "id": "ach-xp-legend",
+    "title": "Seven and a Half Thousand",
+    "description": "Earn 7500 total XP and reach the far side of the campaign.",
+    "predicate": { "kind": "totalXp", "value": 7500 }
+  },
+  {
+    "id": "ach-campaign-opened",
+    "title": "Opening Frame",
+    "description": "Complete your first main quest.",
+    "predicate": { "kind": "mainQuestsCompleted", "value": 1 }
+  },
+  {
+    "id": "ach-campaign-halfway",
+    "title": "Halfway to the Credits",
+    "description": "Complete 9 of the 18 main quests.",
+    "predicate": { "kind": "mainQuestsCompleted", "value": 9 }
+  },
+  {
+    "id": "ach-campaign-complete",
+    "title": "Final Cut",
+    "description": "Complete all 18 main quests of the campaign.",
+    "predicate": { "kind": "mainQuestsCompleted", "value": 18 }
+  },
+  {
+    "id": "ach-gym-regular",
+    "title": "Gym Regular",
+    "description": "Complete 10 side quests in the practice gym.",
+    "predicate": { "kind": "sideQuestCompletions", "value": 10 }
+  },
+  {
+    "id": "ach-gym-devotee",
+    "title": "Reps Are Everything",
+    "description": "Complete 50 side quests. Skill is repetition with attention.",
+    "predicate": { "kind": "sideQuestCompletions", "value": 50 }
+  },
+  {
+    "id": "ach-dungeon-delver",
+    "title": "Dungeon Delver",
+    "description": "Clear 5 study dungeons and pass their mastery questions.",
+    "predicate": { "kind": "dungeonsCompleted", "value": 5 }
+  },
+  {
+    "id": "ach-dungeon-scholar",
+    "title": "Scholar of the Deep",
+    "description": "Clear 12 study dungeons across every learning domain.",
+    "predicate": { "kind": "dungeonsCompleted", "value": 12 }
+  },
+  {
+    "id": "ach-first-project",
+    "title": "Shipped It",
+    "description": "Finish your first full project, start to export.",
+    "predicate": { "kind": "projectsCompleted", "value": 1 }
+  },
+  {
+    "id": "ach-portfolio",
+    "title": "Portfolio Piece",
+    "description": "Finish 5 projects. That is a reel, not a hobby.",
+    "predicate": { "kind": "projectsCompleted", "value": 5 }
+  },
+  {
+    "id": "ach-boss-mvp",
+    "title": "Minimum Viable Cut",
+    "description": "Clear a boss review at MVP tier.",
+    "predicate": { "kind": "bossTier", "value": "mvp" }
+  },
+  {
+    "id": "ach-boss-advanced",
+    "title": "Advanced Craft",
+    "description": "Clear a boss review at advanced tier.",
+    "predicate": { "kind": "bossTier", "value": "advanced" }
+  },
+  {
+    "id": "ach-boss-mastery",
+    "title": "Mastery Tier",
+    "description": "Clear a boss review at mastery tier.",
+    "predicate": { "kind": "bossTier", "value": "mastery" }
+  },
+  {
+    "id": "ach-streak-3",
+    "title": "Three Days Running",
+    "description": "Study three days in a row.",
+    "predicate": { "kind": "streakDays", "value": 3 }
+  },
+  {
+    "id": "ach-streak-7",
+    "title": "A Full Week",
+    "description": "Keep a seven day study streak.",
+    "predicate": { "kind": "streakDays", "value": 7 }
+  },
+  {
+    "id": "ach-streak-30",
+    "title": "Thirty Day Render",
+    "description": "Keep a thirty day study streak. This is where habits live.",
+    "predicate": { "kind": "streakDays", "value": 30 }
+  }
+]

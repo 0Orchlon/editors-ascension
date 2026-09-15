@@ -1,0 +1,20 @@
+[
+  { "id": "loot-dented-lens-cap", "title": "Dented Lens Cap", "rarity": "common", "effect": "cosmetic" },
+  { "id": "loot-gaffer-tape-roll", "title": "Half-Used Roll of Gaffer Tape", "rarity": "common", "effect": "cosmetic" },
+  { "id": "loot-sticky-keyframe", "title": "Sticky Keyframe", "rarity": "common", "effect": "cosmetic" },
+  { "id": "loot-coffee-ring-storyboard", "title": "Coffee-Ringed Storyboard", "rarity": "common", "effect": "cosmetic" },
+  { "id": "loot-bent-tripod-leg", "title": "Bent Tripod Leg", "rarity": "common", "effect": "cosmetic" },
+  { "id": "loot-grey-card", "title": "Scuffed Grey Card", "rarity": "common", "effect": "cosmetic" },
+  { "id": "loot-orphaned-xlr", "title": "Orphaned XLR Cable", "rarity": "common", "effect": "cosmetic" },
+  { "id": "loot-clipping-meter", "title": "Permanently Red Clipping Meter", "rarity": "rare", "effect": "cosmetic" },
+  { "id": "loot-topology-compass", "title": "Compass of Clean Topology", "rarity": "rare", "effect": "cosmetic" },
+  { "id": "loot-bezier-quill", "title": "Bezier Quill", "rarity": "rare", "effect": "cosmetic" },
+  { "id": "loot-third-act-clapperboard", "title": "Clapperboard of the Missing Third Act", "rarity": "rare", "effect": "cosmetic" },
+  { "id": "loot-pocket-dolly", "title": "Pocket Dolly Track", "rarity": "rare", "effect": "cosmetic" },
+  { "id": "loot-foley-sock", "title": "Foley Sock of Legend", "rarity": "epic", "effect": "cosmetic" },
+  { "id": "loot-lut-of-dusk", "title": "LUT of Eternal Dusk", "rarity": "epic", "effect": "cosmetic" },
+  { "id": "loot-rig-of-no-flipping", "title": "Rig That Never Flips", "rarity": "epic", "effect": "cosmetic" },
+  { "id": "loot-silent-hard-drive", "title": "Hard Drive That Never Clicks", "rarity": "epic", "effect": "cosmetic" },
+  { "id": "loot-golden-render-node", "title": "Golden Render Node", "rarity": "legendary", "effect": "cosmetic" },
+  { "id": "loot-directors-chair", "title": "The Director's Chair", "rarity": "legendary", "effect": "cosmetic" }
+]

@@ -51,8 +51,7 @@ describe('exportSave / importSave (T-16)', () => {
   });
 
   it('runs registered migrations on an older save (SV-1)', () => {
-    const old = { schemaVersion: 1, ...newGame(), xp: 10 };
-    delete (old as Record<string, unknown>).legacy;
+    const old = { ...newGame(), schemaVersion: 1, xp: 10 };
     const registry: Record<number, Migration> = {
       2: (s) => ({ ...s, xp: Number(s.xp) * 2 }),
     };

@@ -69,7 +69,8 @@ describe('completeMilestone (T-14)', () => {
   });
 
   it('completes the project once all ten milestones are done (PJ-4)', () => {
-    let { state, projectId } = withProject();
+    const { state: start, projectId } = withProject();
+    let state = start;
     for (const key of MILESTONE_KEYS) {
       const r = completeMilestone(state, { projectId, key }, ctx);
       expect(r.ok).toBe(true);
@@ -81,7 +82,8 @@ describe('completeMilestone (T-14)', () => {
   });
 
   it('emits PROJECT_COMPLETED exactly once, on the final milestone (PJ-4)', () => {
-    let { state, projectId } = withProject();
+    const { state: start, projectId } = withProject();
+    let state = start;
     const seen: string[] = [];
     for (const key of MILESTONE_KEYS) {
       const r = completeMilestone(state, { projectId, key }, ctx);

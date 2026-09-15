@@ -26,7 +26,7 @@ export function tierFor(total: number): BossTier {
  */
 export function coachingMessage(scores: BossScores, pack: ContentPack, _state: GameState): string {
   // Тэнцвэл `BOSS_CATEGORIES`-ийн дарааллаар эхнийх — тогтвортой сонголт.
-  let weakest = BOSS_CATEGORIES[0];
+  let weakest: (typeof BOSS_CATEGORIES)[number] = BOSS_CATEGORIES[0];
   for (const category of BOSS_CATEGORIES) if (scores[category] < scores[weakest]) weakest = category;
 
   const tag = BOSS_CATEGORY_TAGS[weakest];

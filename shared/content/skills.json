@@ -1,0 +1,213 @@
+[
+  {
+    "id": "sk-edit-fundamentals",
+    "title": "Edit Fundamentals",
+    "description": "Assemble a timeline with confident in and out points, ripple trims and clean hard cuts.",
+    "cost": 1,
+    "prerequisites": []
+  },
+  {
+    "id": "sk-pacing",
+    "title": "Pacing Control",
+    "description": "Shape tension with shot duration and cut density instead of cutting on autopilot.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-edit-fundamentals"
+    ]
+  },
+  {
+    "id": "sk-color-correction",
+    "title": "Color Correction",
+    "description": "Balance exposure and white point across shots using waveform and vectorscope.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-edit-fundamentals"
+    ]
+  },
+  {
+    "id": "sk-color-grading",
+    "title": "Color Grading",
+    "description": "Build a deliberate look on a corrected baseline and keep it consistent across a sequence.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-color-correction",
+      "sk-lighting"
+    ]
+  },
+  {
+    "id": "sk-blender-navigation",
+    "title": "Blender Navigation",
+    "description": "Move around the viewport, switch modes and apply transforms without fighting the tool.",
+    "cost": 1,
+    "prerequisites": []
+  },
+  {
+    "id": "sk-modeling",
+    "title": "Box Modeling",
+    "description": "Build clean topology from primitives using extrude, loop cuts and modifiers.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-blender-navigation"
+    ]
+  },
+  {
+    "id": "sk-uv-texturing",
+    "title": "UV and Texturing",
+    "description": "Unwrap a mesh with sensible seams and map textures without stretching.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-modeling"
+    ]
+  },
+  {
+    "id": "sk-shading",
+    "title": "PBR Shading",
+    "description": "Describe surfaces with roughness, metallic and normal inputs that behave physically.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-uv-texturing"
+    ]
+  },
+  {
+    "id": "sk-lighting",
+    "title": "Lighting",
+    "description": "Shape a subject with key, fill and rim, and control shadow softness through source size.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-blender-navigation"
+    ]
+  },
+  {
+    "id": "sk-rendering",
+    "title": "Rendering",
+    "description": "Choose samples, denoising and output settings that trade render time for quality on purpose.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-shading",
+      "sk-lighting"
+    ]
+  },
+  {
+    "id": "sk-keyframing",
+    "title": "Keyframing",
+    "description": "Set keys and read F-curves so timing is designed rather than discovered by accident.",
+    "cost": 1,
+    "prerequisites": []
+  },
+  {
+    "id": "sk-easing",
+    "title": "Easing and Weight",
+    "description": "Use anticipation, overshoot and settle so motion reads as having mass.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-keyframing"
+    ]
+  },
+  {
+    "id": "sk-rigging",
+    "title": "Rigging",
+    "description": "Build armatures, weights and controls that let a mesh be posed without tearing.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-modeling",
+      "sk-keyframing"
+    ]
+  },
+  {
+    "id": "sk-character-animation",
+    "title": "Character Animation",
+    "description": "Animate a rig in poses with clear silhouettes, arcs and readable timing.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-rigging",
+      "sk-easing"
+    ]
+  },
+  {
+    "id": "sk-framing",
+    "title": "Framing and Composition",
+    "description": "Choose shot size, headroom and lens length that place the audience where the story needs them.",
+    "cost": 1,
+    "prerequisites": []
+  },
+  {
+    "id": "sk-camera-movement",
+    "title": "Camera Movement",
+    "description": "Move the camera with intent, starting and ending on frames worth holding.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-framing",
+      "sk-keyframing"
+    ]
+  },
+  {
+    "id": "sk-coverage",
+    "title": "Coverage and Continuity",
+    "description": "Plan shots that cut together, keeping screen direction and the action line intact.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-framing",
+      "sk-edit-fundamentals"
+    ]
+  },
+  {
+    "id": "sk-audio-capture",
+    "title": "Audio Capture",
+    "description": "Record clean dialogue with headroom, usable room tone and a controlled noise floor.",
+    "cost": 1,
+    "prerequisites": []
+  },
+  {
+    "id": "sk-sound-design",
+    "title": "Sound Design",
+    "description": "Layer dialogue, effects, ambience and music so each element has a distinct job.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-audio-capture"
+    ]
+  },
+  {
+    "id": "sk-mixing",
+    "title": "Mixing and Loudness",
+    "description": "Balance a mix to a loudness target with ducking rather than brute level pushes.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-sound-design"
+    ]
+  },
+  {
+    "id": "sk-compositing",
+    "title": "Compositing",
+    "description": "Combine elements with alpha, spill suppression and render passes in a linear working space.",
+    "cost": 1,
+    "prerequisites": []
+  },
+  {
+    "id": "sk-vfx-integration",
+    "title": "VFX Integration",
+    "description": "Match lighting, grain and perspective so a synthetic element sits inside the plate.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-compositing",
+      "sk-rendering"
+    ]
+  },
+  {
+    "id": "sk-story-structure",
+    "title": "Story Structure",
+    "description": "Build setup, turn and payoff that survive compression into short form.",
+    "cost": 1,
+    "prerequisites": []
+  },
+  {
+    "id": "sk-visual-storytelling",
+    "title": "Visual Storytelling",
+    "description": "Carry meaning through image, sound and cut instead of explaining it in narration.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-story-structure",
+      "sk-pacing",
+      "sk-coverage"
+    ]
+  }
+]
