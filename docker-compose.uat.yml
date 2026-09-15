@@ -1,0 +1,32 @@
+# PERSONAL-1 · deploy · UAT байршуулалт · 2026-09-15
+# DEV-тэй ижил зохион байгуулалт, зэрэг ажиллах боломжтой байхаар өөр порт/volume/project нэртэй.
+# web-app нь `dist/`-аа урьдчилан build хийсэн байхыг шаарддаг
+# (`cd web-app && npm ci --prefer-offline && npm run build`) — image нь зөвхөн статик түгээнэ.
+name: editors-ascension-uat
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    ports:
+      - "19787:8787"
+    volumes:
+      - ea-server-data-uat:/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:8787/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  web-app:
+    build:
+      context: .
+      dockerfile: web-app/Dockerfile
+    ports:
+      - "19085:80"
+    depends_on:
+      - server
+
+volumes:
+  ea-server-data-uat:

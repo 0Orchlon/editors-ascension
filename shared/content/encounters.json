@@ -1,0 +1,66 @@
+[
+  {
+    "id": "enc-tutorial-goblin",
+    "title": "Tutorial Goblin",
+    "body": "A small goblin has stolen your attention and is dragging it toward a 47-minute tutorial you will never finish. It grins from behind an open browser tab.",
+    "callToAction": "Close every tutorial tab except one, then set a timer and watch only the next 90 seconds of it.",
+    "maxMinutes": 2,
+    "weight": 5
+  },
+  {
+    "id": "enc-reference-oracle",
+    "title": "Reference Oracle",
+    "body": "An old oracle made entirely of screenshots offers you a look at how the professionals actually solved this shot.",
+    "callToAction": "Find one real film, game or animation still that matches the mood you are chasing and save it to a reference folder.",
+    "maxMinutes": 2,
+    "weight": 4
+  },
+  {
+    "id": "enc-glitch-encounter",
+    "title": "Glitch Encounter",
+    "body": "The render flickers, a frame drops, and something in the timeline is quietly wrong. The glitch stares back at you.",
+    "callToAction": "Scrub your latest export once at full speed and write down the exact timecode of the first thing that looks broken.",
+    "maxMinutes": 2,
+    "weight": 3
+  },
+  {
+    "id": "enc-insight-shrine",
+    "title": "Insight Shrine",
+    "body": "A quiet shrine glows in the corner of your workspace. It asks for no offering except one honest sentence.",
+    "callToAction": "Open your last render and write down one thing you would change if you started it again.",
+    "maxMinutes": 1,
+    "weight": 4
+  },
+  {
+    "id": "enc-lucky-render",
+    "title": "Lucky Render",
+    "body": "Against all odds the render finished early, the cache held, and nothing crashed. The machine spirits are pleased.",
+    "callToAction": "Save an incremental version of your current project file and name it something you will recognise tomorrow.",
+    "maxMinutes": 1,
+    "weight": 2
+  },
+  {
+    "id": "enc-keybind-merchant",
+    "title": "Keybind Merchant",
+    "body": "A hooded trader spreads out a cloth of shortcuts and swears each one is worth an hour of your life.",
+    "callToAction": "Pick one action you did with the mouse today and look up its keyboard shortcut, then use it three times.",
+    "maxMinutes": 2,
+    "weight": 3
+  },
+  {
+    "id": "enc-silent-cut",
+    "title": "The Silent Cut",
+    "body": "A spirit of the edit bay mutes your timeline and asks whether the picture still tells the story on its own.",
+    "callToAction": "Mute all audio and watch 30 seconds of your edit, then note one cut that stops working without sound.",
+    "maxMinutes": 2,
+    "weight": 2
+  },
+  {
+    "id": "enc-scope-hydra",
+    "title": "Scope Hydra",
+    "body": "Every time you finish one idea for this project, two more heads grow back demanding to be animated.",
+    "callToAction": "Write your project's goal in a single sentence and cross out one feature that does not serve it.",
+    "maxMinutes": 1,
+    "weight": 1
+  }
+]

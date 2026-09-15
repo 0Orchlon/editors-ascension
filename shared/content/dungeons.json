@@ -1,0 +1,908 @@
+[
+  {
+    "id": "dg-timeline-basics",
+    "world": 1,
+    "levelRequired": 1,
+    "title": "Timeline Basics",
+    "conceptGoal": "Understand how clips, tracks and the playhead work together so a timeline edit is predictable instead of accidental.",
+    "estimatedMinutes": 25,
+    "xp": 18,
+    "tags": ["video-editing"],
+    "tutorialRefs": [
+      { "title": "DaVinci Resolve — Edit page overview", "url": "https://www.blackmagicdesign.com/products/davinciresolve/edit", "minutes": 12 },
+      { "title": "Blender Manual — Video Editing", "url": "https://docs.blender.org/manual/en/latest/video_editing/index.html", "minutes": 15 }
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "What does a ripple delete do that a plain delete does not?",
+        "options": [
+          "It removes the clip and closes the gap by shifting later clips left",
+          "It removes the clip and leaves a gap of the same length",
+          "It removes only the audio of the clip",
+          "It removes the clip from the media pool as well"
+        ],
+        "correctIndex": 0,
+        "explanation": "A ripple delete edits the timeline as a chain: removing the clip pulls everything after it earlier, so total duration shrinks and no blank gap is left behind."
+      },
+      {
+        "id": "q2",
+        "prompt": "You set an in point and an out point on a source clip. What have you defined?",
+        "options": [
+          "The part of the source that will be inserted into the timeline",
+          "The export range of the final render",
+          "The clip's playback speed",
+          "The clip's position on the track"
+        ],
+        "correctIndex": 0,
+        "explanation": "In and out points mark a sub-range of the source media, and only that range is taken when you insert or overwrite into the timeline."
+      },
+      {
+        "id": "q3",
+        "prompt": "Why are higher video tracks drawn on top in a standard NLE?",
+        "options": [
+          "Because layers composite top-down, so the highest opaque track wins",
+          "Because higher tracks always render at higher resolution",
+          "Because lower tracks are muted automatically",
+          "Because only track 1 accepts effects"
+        ],
+        "correctIndex": 0,
+        "explanation": "Video tracks are a compositing stack. The topmost opaque pixel is what you see, which is why titles and overlays live above the base footage."
+      },
+      {
+        "id": "q4",
+        "prompt": "A three-point edit needs how many of the four in/out points set by hand?",
+        "options": ["Three", "Four", "Two", "One"],
+        "correctIndex": 0,
+        "explanation": "You set three points (typically source in and out plus a timeline in) and the NLE derives the fourth from the clip duration, so the edit lands deterministically."
+      }
+    ]
+  },
+  {
+    "id": "dg-cuts-and-transitions",
+    "world": 1,
+    "levelRequired": 1,
+    "title": "Cuts and Transitions",
+    "conceptGoal": "Understand when a hard cut is the right choice and what a dissolve actually communicates to the viewer.",
+    "estimatedMinutes": 20,
+    "xp": 16,
+    "tags": ["video-editing", "storytelling"],
+    "tutorialRefs": [
+      { "title": "DaVinci Resolve — Training", "url": "https://www.blackmagicdesign.com/products/davinciresolve/training", "minutes": 20 }
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "What does a cross dissolve most commonly signal to an audience?",
+        "options": [
+          "A passage of time or a change of place",
+          "That the next shot is more important",
+          "That the footage was shot on a different camera",
+          "That the film is about to end"
+        ],
+        "correctIndex": 0,
+        "explanation": "A dissolve overlaps two shots in time, and audiences have been trained by convention to read that overlap as elapsed time or a scene change."
+      },
+      {
+        "id": "q2",
+        "prompt": "What is a J-cut?",
+        "options": [
+          "The audio of the next shot starts before its picture",
+          "The picture of the next shot starts before its audio",
+          "A cut made exactly on a beat of music",
+          "A cut that reverses screen direction"
+        ],
+        "correctIndex": 0,
+        "explanation": "In a J-cut the incoming audio leads the incoming picture, which pulls the viewer into the next scene before they see it and smooths the transition."
+      },
+      {
+        "id": "q3",
+        "prompt": "Why does cutting on action tend to feel invisible?",
+        "options": [
+          "The motion carries the eye across the cut so the splice is not noticed",
+          "Because the two shots have identical color",
+          "Because the cut is always shorter than four frames",
+          "Because the audio is muted at the cut point"
+        ],
+        "correctIndex": 0,
+        "explanation": "The viewer is tracking a continuing movement, so their attention is on the action rather than on the frame where the shot changed."
+      }
+    ]
+  },
+  {
+    "id": "dg-blender-navigation",
+    "world": 1,
+    "levelRequired": 1,
+    "title": "Blender Navigation",
+    "conceptGoal": "Understand Blender's viewport, the split between object and edit mode, and how transforms are applied.",
+    "estimatedMinutes": 30,
+    "xp": 20,
+    "tags": ["blender"],
+    "tutorialRefs": [
+      { "title": "Blender Manual — Interface", "url": "https://docs.blender.org/manual/en/latest/interface/index.html", "minutes": 20 },
+      { "title": "Blender Manual — Modeling", "url": "https://docs.blender.org/manual/en/latest/modeling/index.html", "minutes": 20 }
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "What is the difference between Object Mode and Edit Mode?",
+        "options": [
+          "Object Mode transforms whole objects; Edit Mode changes the mesh's vertices, edges and faces",
+          "Object Mode is for rendering; Edit Mode is for exporting",
+          "Object Mode disables the viewport; Edit Mode enables it",
+          "They are the same thing with different shortcuts"
+        ],
+        "correctIndex": 0,
+        "explanation": "Object Mode operates on the object as a single unit through its transform, while Edit Mode operates on the geometry inside it, so the same move key produces very different results."
+      },
+      {
+        "id": "q2",
+        "prompt": "Why does applying scale matter before adding a modifier like Bevel?",
+        "options": [
+          "Unapplied scale makes the modifier's distances behave non-uniformly",
+          "Modifiers cannot be added to scaled objects at all",
+          "Applying scale doubles the render speed",
+          "It converts the mesh to a curve"
+        ],
+        "correctIndex": 0,
+        "explanation": "Modifiers work in the object's local space, so a non-uniform object scale stretches their distances; applying scale resets the scale to 1 and makes widths behave as typed."
+      },
+      {
+        "id": "q3",
+        "prompt": "What does the origin point of an object control?",
+        "options": [
+          "The pivot for rotation and scaling, and the object's reported location",
+          "The colour of the object in the viewport",
+          "Which collection the object belongs to",
+          "The render resolution of the object"
+        ],
+        "correctIndex": 0,
+        "explanation": "Transforms are computed relative to the origin, so an origin far from the geometry makes rotation swing the object around instead of spinning it in place."
+      }
+    ]
+  },
+  {
+    "id": "dg-shot-sizes",
+    "world": 1,
+    "levelRequired": 1,
+    "title": "Shot Sizes and Framing",
+    "conceptGoal": "Understand how shot size changes the emotional distance between the audience and the subject.",
+    "estimatedMinutes": 20,
+    "xp": 16,
+    "tags": ["cinematography"],
+    "tutorialRefs": [
+      { "title": "Blender Manual — Cameras", "url": "https://docs.blender.org/manual/en/latest/render/cameras.html", "minutes": 12 }
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "A wide shot placed at the start of a scene mainly does what?",
+        "options": [
+          "Establishes geography so later close-ups make spatial sense",
+          "Hides continuity errors in the close-ups",
+          "Shortens the scene's runtime",
+          "Forces the viewer to read the subject's emotion"
+        ],
+        "correctIndex": 0,
+        "explanation": "The establishing wide gives the audience a mental map of the space; without it, tight shots feel disorienting because there is no context to place them in."
+      },
+      {
+        "id": "q2",
+        "prompt": "Why does a longer focal length appear to compress depth?",
+        "options": [
+          "It narrows the field of view, so foreground and background scale differences shrink",
+          "It physically moves the background closer",
+          "It increases the sensor size",
+          "It raises the frame rate"
+        ],
+        "correctIndex": 0,
+        "explanation": "A narrow field of view crops to a small angular slice, so objects at different distances differ less in apparent size and the image reads as flattened."
+      },
+      {
+        "id": "q3",
+        "prompt": "What is headroom?",
+        "options": [
+          "The space between the top of the subject's head and the top of the frame",
+          "The dynamic range left before audio clips",
+          "The unused space on the timeline",
+          "The distance from the camera to the subject"
+        ],
+        "correctIndex": 0,
+        "explanation": "Headroom is a framing term: too much makes the subject sink in frame, too little feels cramped, so it is a deliberate compositional choice rather than an accident."
+      }
+    ]
+  },
+  {
+    "id": "dg-audio-levels",
+    "world": 2,
+    "levelRequired": 2,
+    "title": "Audio Levels and Loudness",
+    "conceptGoal": "Understand the difference between peak level and perceived loudness, and why mixes are delivered to a loudness target.",
+    "estimatedMinutes": 25,
+    "xp": 20,
+    "tags": ["audio"],
+    "tutorialRefs": [
+      { "title": "DaVinci Resolve — Fairlight audio", "url": "https://www.blackmagicdesign.com/products/davinciresolve/fairlight", "minutes": 15 },
+      { "title": "DaVinci Resolve — Training", "url": "https://www.blackmagicdesign.com/products/davinciresolve/training", "minutes": 15 }
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "Two clips both peak at -3 dBFS but one sounds much louder. Why?",
+        "options": [
+          "Perceived loudness depends on average energy over time, not on the single loudest peak",
+          "One clip has a higher sample rate",
+          "One clip is mono and mono is always louder",
+          "Peak meters are inaccurate above -6 dBFS"
+        ],
+        "correctIndex": 0,
+        "explanation": "Peak measures the highest instantaneous sample, while loudness in LUFS integrates energy over time, so a dense, compressed clip sits far louder at the same peak."
+      },
+      {
+        "id": "q2",
+        "prompt": "What does 0 dBFS mean in a digital mix?",
+        "options": [
+          "The maximum value the format can represent; going past it clips",
+          "A comfortable target level for dialogue",
+          "Digital silence",
+          "The noise floor of the recording"
+        ],
+        "correctIndex": 0,
+        "explanation": "dBFS is referenced to full scale, so 0 is the ceiling of the number format and samples that would exceed it are flattened, which is audible distortion."
+      },
+      {
+        "id": "q3",
+        "prompt": "Why leave headroom when recording dialogue?",
+        "options": [
+          "Unexpected loud moments can be recovered later, but clipped audio cannot",
+          "It makes the file smaller",
+          "It raises the sample rate automatically",
+          "It removes room tone"
+        ],
+        "correctIndex": 0,
+        "explanation": "Gain can be added in post without loss, but clipping destroys the waveform at capture time, so recording a little low is the recoverable mistake."
+      },
+      {
+        "id": "q4",
+        "prompt": "What is room tone used for?",
+        "options": [
+          "Filling gaps so silence between lines matches the scene's ambience",
+          "Boosting the dialogue level",
+          "Removing reverb from a recording",
+          "Synchronising picture and sound"
+        ],
+        "correctIndex": 0,
+        "explanation": "Digital silence next to a noisy recording is jarring, so room tone keeps the noise floor continuous and makes edits in the dialogue inaudible."
+      }
+    ]
+  },
+  {
+    "id": "dg-sound-design-layers",
+    "world": 2,
+    "levelRequired": 2,
+    "title": "Sound Design Layers",
+    "conceptGoal": "Understand how dialogue, effects, ambience and music occupy different roles so a mix stays readable.",
+    "estimatedMinutes": 25,
+    "xp": 20,
+    "tags": ["audio", "storytelling"],
+    "tutorialRefs": [
+      { "title": "DaVinci Resolve — Fairlight audio", "url": "https://www.blackmagicdesign.com/products/davinciresolve/fairlight", "minutes": 18 }
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "Dialogue is getting buried by music. What is the cleanest first fix?",
+        "options": [
+          "Duck the music under the dialogue rather than pushing the dialogue louder",
+          "Raise the dialogue until it clips",
+          "Remove the music entirely",
+          "Convert everything to mono"
+        ],
+        "correctIndex": 0,
+        "explanation": "Intelligibility is about the relationship between elements, so lowering the competing element preserves the dialogue's natural level and the overall loudness target."
+      },
+      {
+        "id": "q2",
+        "prompt": "What does ambience contribute to a scene?",
+        "options": [
+          "A continuous sense of place that glues separate shots into one space",
+          "The rhythm the edit is cut to",
+          "The loudest element of the mix",
+          "Synchronised hard effects like footsteps"
+        ],
+        "correctIndex": 0,
+        "explanation": "Ambience is continuous rather than event-based, so it persists across cuts and makes a collection of shots feel like a single location."
+      },
+      {
+        "id": "q3",
+        "prompt": "Why do sound effects often get exaggerated compared to reality?",
+        "options": [
+          "Recorded reality under-delivers emotionally, so effects are designed for impact",
+          "Microphones cannot record real sounds",
+          "It reduces file size",
+          "It is required by broadcast standards"
+        ],
+        "correctIndex": 0,
+        "explanation": "The audience reads sound emotionally, so a designed, larger-than-life effect matches the felt weight of the action even though it is not literally accurate."
+      }
+    ]
+  },
+  {
+    "id": "dg-color-fundamentals",
+    "world": 2,
+    "levelRequired": 3,
+    "title": "Color Correction Fundamentals",
+    "conceptGoal": "Understand the difference between correction and grading, and how to read a waveform and a vectorscope.",
+    "estimatedMinutes": 30,
+    "xp": 24,
+    "tags": ["video-editing", "cinematography"],
+    "tutorialRefs": [
+      { "title": "DaVinci Resolve — Color page", "url": "https://www.blackmagicdesign.com/products/davinciresolve/color", "minutes": 20 },
+      { "title": "DaVinci Resolve — Training", "url": "https://www.blackmagicdesign.com/products/davinciresolve/training", "minutes": 20 }
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "What is the difference between correction and grading?",
+        "options": [
+          "Correction normalises the image; grading applies a deliberate look",
+          "Correction happens after grading",
+          "Correction only affects audio",
+          "Grading is automatic and correction is manual"
+        ],
+        "correctIndex": 0,
+        "explanation": "Correction gets shots to a neutral, matched baseline and grading is the creative pass on top, and doing them in that order keeps the look consistent across shots."
+      },
+      {
+        "id": "q2",
+        "prompt": "A waveform monitor primarily shows you what?",
+        "options": [
+          "The luminance distribution of the image against horizontal position in the frame",
+          "The hue of each pixel on a colour wheel",
+          "The audio level over time",
+          "The frame rate stability"
+        ],
+        "correctIndex": 0,
+        "explanation": "The waveform plots brightness per column, which is why it is the tool of choice for setting black point, white point and matching exposure between shots."
+      },
+      {
+        "id": "q3",
+        "prompt": "On a vectorscope, what does the skin tone line indicate?",
+        "options": [
+          "The hue axis natural skin tones should sit near regardless of ethnicity",
+          "The maximum legal saturation",
+          "The white balance of the lens",
+          "The gamma curve in use"
+        ],
+        "correctIndex": 0,
+        "explanation": "Skin tones cluster along one hue axis because they differ mainly in luminance and saturation, so that line is a reliable white balance and grading reference."
+      },
+      {
+        "id": "q4",
+        "prompt": "Why grade in a log or wide-gamut working space when the footage allows it?",
+        "options": [
+          "More tonal information survives heavy adjustments before banding appears",
+          "It makes exports faster",
+          "It removes the need for a vectorscope",
+          "It automatically matches shots"
+        ],
+        "correctIndex": 0,
+        "explanation": "Log encodings spread the captured dynamic range across code values more evenly, so pushing contrast later stretches data that is actually there instead of inventing it."
+      }
+    ]
+  },
+  {
+    "id": "dg-pacing-and-rhythm",
+    "world": 2,
+    "levelRequired": 3,
+    "title": "Pacing and Rhythm",
+    "conceptGoal": "Understand how shot duration and cut density control tension, and why pacing is a story tool rather than a style.",
+    "estimatedMinutes": 22,
+    "xp": 20,
+    "tags": ["video-editing", "storytelling"],
+    "tutorialRefs": [
+      { "title": "DaVinci Resolve — Training", "url": "https://www.blackmagicdesign.com/products/davinciresolve/training", "minutes": 18 }
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "Why does shortening shots progressively raise tension?",
+        "options": [
+          "The viewer gets less time to process each image, which feels like accelerating pressure",
+          "Shorter shots are always brighter",
+          "It reduces the total runtime",
+          "It forces the audio to duck"
+        ],
+        "correctIndex": 0,
+        "explanation": "Cut rate sets the viewer's cognitive workload, so as shots fall below comfortable reading time the sense of urgency rises even when the content is calm."
+      },
+      {
+        "id": "q2",
+        "prompt": "A shot is held long after the action ends. What is the usual intent?",
+        "options": [
+          "To give the audience space to feel the consequence",
+          "To pad the runtime for delivery",
+          "To hide a continuity error",
+          "To avoid using a transition"
+        ],
+        "correctIndex": 0,
+        "explanation": "Holding past the beat removes new information, so the audience's attention turns inward to the emotional aftermath rather than to what happens next."
+      },
+      {
+        "id": "q3",
+        "prompt": "What usually determines where a cut lands in a dialogue scene?",
+        "options": [
+          "Where the audience's attention naturally shifts, often to a reaction",
+          "The exact midpoint of the line",
+          "The first frame of every new shot in the bin",
+          "A fixed number of frames after the line ends"
+        ],
+        "correctIndex": 0,
+        "explanation": "The edit follows attention, so cutting when the viewer wants to look at the listener feels motivated while cutting on a metronome feels mechanical."
+      }
+    ]
+  },
+  {
+    "id": "dg-keyframes-and-easing",
+    "world": 3,
+    "levelRequired": 4,
+    "title": "Keyframes and Easing",
+    "conceptGoal": "Understand how interpolation between keyframes produces the timing and weight an animation is judged on.",
+    "estimatedMinutes": 30,
+    "xp": 24,
+    "tags": ["animation"],
+    "tutorialRefs": [
+      { "title": "Blender Manual — Animation & Rigging", "url": "https://docs.blender.org/manual/en/latest/animation/index.html", "minutes": 25 },
+      { "title": "Blender Manual — Editors", "url": "https://docs.blender.org/manual/en/latest/editors/index.html", "minutes": 15 }
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "Linear interpolation between two keyframes looks robotic mainly because",
+        "options": [
+          "Real motion accelerates and decelerates, and linear curves have constant velocity",
+          "Linear interpolation drops frames",
+          "It renders at a lower resolution",
+          "It always overshoots the target"
+        ],
+        "correctIndex": 0,
+        "explanation": "Constant velocity means zero acceleration, which never happens to objects with mass, so the eye reads the motion as mechanical."
+      },
+      {
+        "id": "q2",
+        "prompt": "What does the slope of an F-curve in the graph editor represent?",
+        "options": [
+          "The rate of change of the animated value, that is its velocity",
+          "The render time of that frame",
+          "The opacity of the object",
+          "The number of keyframes remaining"
+        ],
+        "correctIndex": 0,
+        "explanation": "The curve plots value against time, so its slope is the derivative, which is why flat sections read as holds and steep sections as fast motion."
+      },
+      {
+        "id": "q3",
+        "prompt": "Why add a small overshoot before settling on a pose?",
+        "options": [
+          "It suggests momentum, so the motion reads as having mass",
+          "It shortens the animation",
+          "It prevents keyframe drift",
+          "It is required for looping"
+        ],
+        "correctIndex": 0,
+        "explanation": "Objects with inertia cannot stop instantly, so a slight overshoot and settle mimics that physical behaviour and makes the motion believable."
+      },
+      {
+        "id": "q4",
+        "prompt": "What is anticipation in animation?",
+        "options": [
+          "A small opposite movement before the main action",
+          "Rendering the next shot in advance",
+          "Holding the last frame longer",
+          "Animating on twos instead of ones"
+        ],
+        "correctIndex": 0,
+        "explanation": "A wind-up in the opposite direction prepares the viewer's eye and stores visible energy, which makes the main action land with more force."
+      }
+    ]
+  },
+  {
+    "id": "dg-camera-movement",
+    "world": 3,
+    "levelRequired": 4,
+    "title": "Camera Movement with Intent",
+    "conceptGoal": "Understand what each camera move communicates so movement is motivated rather than decorative.",
+    "estimatedMinutes": 28,
+    "xp": 24,
+    "tags": ["cinematography", "animation"],
+    "tutorialRefs": [
+      { "title": "Blender Manual — Cameras", "url": "https://docs.blender.org/manual/en/latest/render/cameras.html", "minutes": 15 },
+      { "title": "Blender Manual — Animation & Rigging", "url": "https://docs.blender.org/manual/en/latest/animation/index.html", "minutes": 20 }
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "What is the visual difference between a dolly in and a zoom in?",
+        "options": [
+          "A dolly changes perspective relationships; a zoom only magnifies the same perspective",
+          "A dolly is faster than a zoom",
+          "A zoom changes depth of field and a dolly never does",
+          "There is no difference on a virtual camera"
+        ],
+        "correctIndex": 0,
+        "explanation": "Moving the camera changes the distances between it and the objects, which alters parallax, while changing focal length only crops into the same viewpoint."
+      },
+      {
+        "id": "q2",
+        "prompt": "Why should a camera move usually start and end on a composed frame?",
+        "options": [
+          "Both ends are held on screen, so a weak frame at either end reads as a mistake",
+          "Because moves cannot be trimmed later",
+          "Because motion blur only works that way",
+          "Because the renderer requires static keyframes"
+        ],
+        "correctIndex": 0,
+        "explanation": "The static heads and tails are where the viewer actually reads composition, since the travel between them passes too quickly to redeem a bad start or stop."
+      },
+      {
+        "id": "q3",
+        "prompt": "What does the 180-degree rule protect?",
+        "options": [
+          "Consistent screen direction between characters across cuts",
+          "The exposure between shots",
+          "The audio phase between microphones",
+          "The frame rate of the sequence"
+        ],
+        "correctIndex": 0,
+        "explanation": "Keeping the camera on one side of the action line means characters stay on the same side of frame shot to shot, so the spatial relationship stays legible."
+      }
+    ]
+  },
+  {
+    "id": "dg-shading-and-materials",
+    "world": 4,
+    "levelRequired": 5,
+    "title": "Shading and Materials",
+    "conceptGoal": "Understand how a PBR shader's roughness, metallic and normal inputs describe a surface to the renderer.",
+    "estimatedMinutes": 35,
+    "xp": 28,
+    "tags": ["blender", "vfx"],
+    "tutorialRefs": [
+      { "title": "Blender Manual — Shader Nodes", "url": "https://docs.blender.org/manual/en/latest/render/shader_nodes/index.html", "minutes": 25 },
+      { "title": "Blender Manual — Materials", "url": "https://docs.blender.org/manual/en/latest/render/materials/index.html", "minutes": 20 }
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "What does raising roughness do to a surface's specular response?",
+        "options": [
+          "It scatters reflections into a wider, dimmer highlight",
+          "It makes reflections sharper and brighter",
+          "It removes reflections entirely",
+          "It changes only the base colour"
+        ],
+        "correctIndex": 0,
+        "explanation": "Roughness models microscopic surface irregularity, which spreads reflected rays over a wider cone, so the same energy is smeared into a soft highlight."
+      },
+      {
+        "id": "q2",
+        "prompt": "Why should the metallic input usually be 0 or 1 rather than something in between?",
+        "options": [
+          "Real materials are either conductors or dielectrics, so mid values are a blending hack",
+          "Values between 0 and 1 crash the renderer",
+          "Mid values double the render time",
+          "The shader ignores any value below 1"
+        ],
+        "correctIndex": 0,
+        "explanation": "Metalness is a physical classification rather than a dial, so intermediate values only make sense for texture masks blending two distinct materials across a surface."
+      },
+      {
+        "id": "q3",
+        "prompt": "A normal map differs from a displacement map because",
+        "options": [
+          "It fakes surface detail by perturbing shading normals without moving geometry",
+          "It only works on curves",
+          "It stores colour rather than direction",
+          "It is applied after rendering"
+        ],
+        "correctIndex": 0,
+        "explanation": "Normal maps change how light is calculated but leave the silhouette flat, which is why grazing angles and edges reveal the trick where real displacement would not."
+      },
+      {
+        "id": "q4",
+        "prompt": "Why does UV unwrapping matter for texturing?",
+        "options": [
+          "It defines how a 2D texture maps onto the 3D surface, controlling stretching and seams",
+          "It determines the polygon count",
+          "It sets the render sample count",
+          "It bakes lighting into the mesh"
+        ],
+        "correctIndex": 0,
+        "explanation": "Textures are 2D images, so the UV layout is the correspondence between image space and surface, and a bad unwrap stretches or repeats detail no matter how good the texture is."
+      }
+    ]
+  },
+  {
+    "id": "dg-lighting-a-subject",
+    "world": 4,
+    "levelRequired": 5,
+    "title": "Lighting a Subject",
+    "conceptGoal": "Understand how key, fill and rim lights shape a subject and how light size controls shadow softness.",
+    "estimatedMinutes": 30,
+    "xp": 26,
+    "tags": ["cinematography", "blender"],
+    "tutorialRefs": [
+      { "title": "Blender Manual — Lighting", "url": "https://docs.blender.org/manual/en/latest/render/lights/index.html", "minutes": 20 },
+      { "title": "Blender Manual — Rendering", "url": "https://docs.blender.org/manual/en/latest/render/index.html", "minutes": 20 }
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "What makes a shadow edge soft rather than hard?",
+        "options": [
+          "The light source being large relative to the subject",
+          "The light being dimmer",
+          "The light being further away at the same physical size",
+          "A higher render sample count"
+        ],
+        "correctIndex": 0,
+        "explanation": "A large source illuminates the shadow boundary from many angles and creates a wide penumbra, while a point-like source leaves a sharp transition."
+      },
+      {
+        "id": "q2",
+        "prompt": "What is the fill light's job?",
+        "options": [
+          "To control how deep the shadows cast by the key light read",
+          "To separate the subject from the background",
+          "To provide the dominant direction of light",
+          "To light the background only"
+        ],
+        "correctIndex": 0,
+        "explanation": "Fill raises the shadow side, so the key-to-fill ratio is the dial that sets contrast and therefore the mood of the shot."
+      },
+      {
+        "id": "q3",
+        "prompt": "A rim or back light is used mainly to",
+        "options": [
+          "Separate the subject from a similarly toned background",
+          "Expose the subject's face correctly",
+          "Reduce render noise",
+          "Simulate ambient occlusion"
+        ],
+        "correctIndex": 0,
+        "explanation": "An edge of light along the subject's outline creates a tonal break at the silhouette, which restores depth when subject and background share values."
+      }
+    ]
+  },
+  {
+    "id": "dg-vfx-compositing",
+    "world": 4,
+    "levelRequired": 6,
+    "title": "Compositing and Keying",
+    "conceptGoal": "Understand how alpha, spill and render passes let separate elements combine into one believable image.",
+    "estimatedMinutes": 35,
+    "xp": 30,
+    "tags": ["vfx"],
+    "tutorialRefs": [
+      { "title": "Blender Manual — Compositing", "url": "https://docs.blender.org/manual/en/latest/compositing/index.html", "minutes": 25 },
+      { "title": "DaVinci Resolve — Fusion", "url": "https://www.blackmagicdesign.com/products/davinciresolve/fusion", "minutes": 20 }
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "What does an alpha channel store?",
+        "options": [
+          "Per-pixel coverage or opacity used to blend an element over a background",
+          "The colour temperature of the shot",
+          "The depth of each pixel from the camera",
+          "The motion vector of each pixel"
+        ],
+        "correctIndex": 0,
+        "explanation": "Alpha is the mix factor in the over operation, so it decides how much of the foreground versus background survives at each pixel, including soft edges."
+      },
+      {
+        "id": "q2",
+        "prompt": "Why does a green screen key often leave a green fringe on hair?",
+        "options": [
+          "Spill: green light bounced onto the subject and is genuinely in those pixels",
+          "The keyer is running at the wrong resolution",
+          "The alpha channel is missing",
+          "The footage is interlaced"
+        ],
+        "correctIndex": 0,
+        "explanation": "The fringe is real captured light rather than a keying error, which is why the fix is spill suppression on the colour instead of a harder matte."
+      },
+      {
+        "id": "q3",
+        "prompt": "What is a render pass such as ambient occlusion or cryptomatte for?",
+        "options": [
+          "Isolating a component of the render so it can be adjusted in comp without re-rendering",
+          "Compressing the output file",
+          "Raising the sample count",
+          "Converting the scene to a different renderer"
+        ],
+        "correctIndex": 0,
+        "explanation": "Splitting the image into components moves creative control from the slow render step into the fast comp step, where changes are near-instant."
+      },
+      {
+        "id": "q4",
+        "prompt": "Why should compositing operations happen in linear colour space?",
+        "options": [
+          "Light adds linearly, so blends and blurs only behave physically in linear space",
+          "Linear space uses less memory",
+          "Display space cannot store alpha",
+          "It is the only space with 16-bit support"
+        ],
+        "correctIndex": 0,
+        "explanation": "Display-referred gamma curves are non-linear, so adding or blurring in them produces mathematically wrong values, most visibly on bright edges and defocus."
+      }
+    ]
+  },
+  {
+    "id": "dg-rigging-basics",
+    "world": 4,
+    "levelRequired": 6,
+    "title": "Rigging Basics",
+    "conceptGoal": "Understand how armatures, weights and constraints turn a static mesh into something posable.",
+    "estimatedMinutes": 35,
+    "xp": 28,
+    "tags": ["blender", "animation"],
+    "tutorialRefs": [
+      { "title": "Blender Manual — Armatures", "url": "https://docs.blender.org/manual/en/latest/animation/armatures/index.html", "minutes": 25 },
+      { "title": "Blender Manual — Constraints", "url": "https://docs.blender.org/manual/en/latest/animation/constraints/index.html", "minutes": 20 }
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "What does weight painting define?",
+        "options": [
+          "How much each bone influences each vertex when the armature deforms the mesh",
+          "The colour of the material at each vertex",
+          "The order in which bones are evaluated",
+          "Which bones are visible in the viewport"
+        ],
+        "correctIndex": 0,
+        "explanation": "Deformation is a weighted blend of bone transforms per vertex, so bad weights are exactly why elbows collapse or shoulders tear when the rig is posed."
+      },
+      {
+        "id": "q2",
+        "prompt": "When is inverse kinematics preferable to forward kinematics?",
+        "options": [
+          "When the end of a chain must hit a fixed target, such as a foot planted on the ground",
+          "When you want each joint rotated independently",
+          "When the rig has only one bone",
+          "When rendering with motion blur"
+        ],
+        "correctIndex": 0,
+        "explanation": "IK solves the chain backwards from a goal position, which is precisely what contact points need, while FK is easier for arcs where the end position is unconstrained."
+      },
+      {
+        "id": "q3",
+        "prompt": "Why use a control bone separate from the deforming bone?",
+        "options": [
+          "Animators get a clean, selectable interface without touching deformation internals",
+          "It halves the file size",
+          "Deform bones cannot be keyframed",
+          "It is required for rendering"
+        ],
+        "correctIndex": 0,
+        "explanation": "Separating the animation interface from the deformation rig means the rig's internals can be changed later without breaking animation already made on the controls."
+      }
+    ]
+  },
+  {
+    "id": "dg-story-structure",
+    "world": 5,
+    "levelRequired": 7,
+    "title": "Story Structure in Short Form",
+    "conceptGoal": "Understand how setup, turn and payoff compress into a one-minute piece without feeling truncated.",
+    "estimatedMinutes": 28,
+    "xp": 28,
+    "tags": ["storytelling"],
+    "tutorialRefs": [
+      { "title": "Blender Studio — open movies and production insight", "url": "https://studio.blender.org/", "minutes": 20 }
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "In a one-minute film, what is usually the first thing to cut?",
+        "options": [
+          "Setup the audience can infer from context",
+          "The turn",
+          "The payoff",
+          "All of the ambience"
+        ],
+        "correctIndex": 0,
+        "explanation": "Audiences fill in exposition automatically from visual context, so setup is the cheapest thing to imply, while removing the turn or payoff removes the story itself."
+      },
+      {
+        "id": "q2",
+        "prompt": "What makes an ending feel earned rather than arbitrary?",
+        "options": [
+          "It resolves the specific expectation the setup created",
+          "It is the longest shot in the piece",
+          "It uses the loudest music",
+          "It fades to black"
+        ],
+        "correctIndex": 0,
+        "explanation": "Satisfaction comes from the answer matching the question that was planted, and without that link any ending is just a stopping point."
+      },
+      {
+        "id": "q3",
+        "prompt": "Why is a clear character goal useful even in an abstract piece?",
+        "options": [
+          "It gives the viewer something to track, which creates tension and attention",
+          "It shortens the render time",
+          "It removes the need for editing",
+          "It guarantees a happy ending"
+        ],
+        "correctIndex": 0,
+        "explanation": "Wanting something creates the possibility of not getting it, and that gap is what holds attention across a sequence of images."
+      },
+      {
+        "id": "q4",
+        "prompt": "What does 'show, don't tell' mean practically in an edit?",
+        "options": [
+          "Replace narration explaining a state with an image that demonstrates it",
+          "Remove all dialogue from the piece",
+          "Use more on-screen text",
+          "Always cut to a close-up"
+        ],
+        "correctIndex": 0,
+        "explanation": "A demonstrated fact is experienced by the viewer and therefore believed, while a stated fact is only received, which is weaker per second of runtime."
+      }
+    ]
+  },
+  {
+    "id": "dg-delivery-and-export",
+    "world": 5,
+    "levelRequired": 7,
+    "title": "Delivery and Export",
+    "conceptGoal": "Understand codecs, containers and colour tagging well enough that the exported file matches what you graded.",
+    "estimatedMinutes": 25,
+    "xp": 24,
+    "tags": ["video-editing"],
+    "tutorialRefs": [
+      { "title": "DaVinci Resolve — Training", "url": "https://www.blackmagicdesign.com/products/davinciresolve/training", "minutes": 18 },
+      { "title": "Blender Manual — Output", "url": "https://docs.blender.org/manual/en/latest/render/output/index.html", "minutes": 15 }
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "What is the difference between a container and a codec?",
+        "options": [
+          "The container such as MP4 wraps streams, while the codec such as H.264 encodes them",
+          "They are two names for the same thing",
+          "The container compresses and the codec stores metadata",
+          "Containers apply only to audio"
+        ],
+        "correctIndex": 0,
+        "explanation": "A container is packaging that can hold several differently encoded streams, so the file extension alone says nothing definitive about how the video was compressed."
+      },
+      {
+        "id": "q2",
+        "prompt": "Why is an intermediate codec preferred over H.264 for a mastering export?",
+        "options": [
+          "It is lightly compressed and intra-frame, so it survives re-encoding and further editing",
+          "It produces smaller files",
+          "It is the only codec with audio support",
+          "It renders faster on every machine"
+        ],
+        "correctIndex": 0,
+        "explanation": "Delivery codecs throw away data for size and re-encoding those results compounds the loss, so masters are kept in a high-bitrate intra-frame format."
+      },
+      {
+        "id": "q3",
+        "prompt": "Your export looks more contrasty than the timeline. The likely cause is",
+        "options": [
+          "A colour space or tagging mismatch between the export and the player",
+          "The bitrate was set too high",
+          "The audio was exported in stereo",
+          "The frame rate is fractional"
+        ],
+        "correctIndex": 0,
+        "explanation": "If the file is tagged with or interpreted under a different transfer function than it was graded in, the player applies the wrong curve, which shows up as a contrast and saturation shift."
+      }
+    ]
+  }
+]

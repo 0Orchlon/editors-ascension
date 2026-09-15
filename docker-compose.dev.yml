@@ -1,0 +1,29 @@
+# PERSONAL-1 · deploy · DEV байршуулалт · 2026-09-15
+# Локал DEV гадаргуу шалгалт. web-app нь `dist/`-аа урьдчилан build хийсэн байхыг шаарддаг
+# (`cd web-app && npm ci --prefer-offline && npm run build`) — image нь зөвхөн статик түгээнэ.
+services:
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    ports:
+      - "18787:8787"
+    volumes:
+      - ea-server-data:/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:8787/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  web-app:
+    build:
+      context: .
+      dockerfile: web-app/Dockerfile
+    ports:
+      - "18085:80"
+    depends_on:
+      - server
+
+volumes:
+  ea-server-data:
