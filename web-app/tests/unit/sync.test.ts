@@ -63,6 +63,7 @@ function build(opts: { api: ApiClient; storage?: Storage; localUpdatedAt?: () =>
   const states: GameState[] = [];
   const statuses: SyncStatus[] = [];
   const sleeps: number[] = [];
+  const notices: string[] = [];
   const sync = createSync({
     api: opts.api,
     queue,
@@ -72,8 +73,9 @@ function build(opts: { api: ApiClient; storage?: Storage; localUpdatedAt?: () =>
     onState: (s) => void states.push(s),
     onStatus: (s) => void statuses.push(s),
     sleep: async (ms: number) => void sleeps.push(ms),
+    onNotice: (text: string) => void notices.push(text),
   });
-  return { sync, queue, storage, states, statuses, sleeps };
+  return { sync, queue, storage, states, statuses, sleeps, notices };
 }
 
 describe('sync — §7.6 алхам 1: хоосон дараалал дээр GET /save', () => {
@@ -205,5 +207,71 @@ describe('sync — §6.9 шилжүүлэх код', () => {
     const ok = await h.sync.redeemTransferCode('K7QM-2X4T-9BRH');
     expect(ok).toBe(false);
     expect(JSON.parse(h.storage.getItem(CREDS_KEY) ?? 'null')).toEqual(CREDS);
+  });
+});
+
+/**
+ * §7.6 алхам 4 — 422 нь ТУХАЙН нэг үйлдлийн татгалзал.
+ *
+ * ⚠ Сервер багцыг бүхэлд нь rollback хийдэг (§6.6) тул бүтэн багцыг хаях нь
+ * хүчинтэй 49 хүртэлх офлайн үйлдлийг ҮҮРД алдана — чимээгүй алдагдал.
+ */
+describe('sync — §7.6 алхам 4: 422 нь зөвхөн татгалзсан actionId-г хасна', () => {
+  const rejected = '22222222-2222-4222-8222-222222222222';
+  const keep = '33333333-3333-4333-8333-333333333333';
+
+  const api422 = () =>
+    fakeApi({
+      postActions: vi
+        .fn()
+        .mockResolvedValueOnce({
+          ok: false as const,
+          status: 422,
+          code: 'INSUFFICIENT_STAMINA',
+          actionId: rejected,
+          offline: false,
+        })
+        .mockResolvedValue({
+          ok: true as const,
+          value: { state: newGame(), results: [{ actionId: keep, status: 'applied', events: [] }], updatedAt: 'x', etag: 'act' },
+        }),
+    });
+
+  it('татгалзсан үйлдлийг хасч, ҮЛДСЭНИЙГ илгээнэ', async () => {
+    const api = api422();
+    const h = build({ api });
+    h.queue.enqueue(action(rejected));
+    h.queue.enqueue(action(keep));
+
+    await h.sync.push();
+
+    expect(h.queue.peekAll()).toEqual([]);
+    // Хоёр дахь дуудлага нь ҮЛДСЭН үйлдлийг агуулна — багц бүхэлдээ хаягдаагүй.
+    const second = (api.postActions as unknown as { mock: { calls: unknown[][] } }).mock.calls[1];
+    expect(second).toBeDefined();
+    expect((second![1] as { actionId: string }[]).map((a) => a.actionId)).toEqual([keep]);
+  });
+
+  it('тоглогчид шалтгааныг хэлнэ', async () => {
+    const h = build({ api: api422() });
+    h.queue.enqueue(action(rejected));
+    h.queue.enqueue(action(keep));
+
+    await h.sync.push();
+
+    expect(h.notices.join(' ')).toContain('INSUFFICIENT_STAMINA');
+  });
+
+  it('`actionId`-гүй 422 дээр л бүтэн багцыг хаяна (дараалал гацахгүй)', async () => {
+    const api = fakeApi({
+      postActions: vi.fn(async () => ({ ok: false as const, status: 422, code: 'INVALID_INPUT', offline: false })),
+    });
+    const h = build({ api });
+    h.queue.enqueue(action(rejected));
+    h.queue.enqueue(action(keep));
+
+    await h.sync.push();
+
+    expect(h.queue.peekAll()).toEqual([]);
   });
 });

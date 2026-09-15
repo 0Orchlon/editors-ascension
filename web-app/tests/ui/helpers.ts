@@ -15,9 +15,9 @@ export function memoryStorage(seed: Record<string, string> = {}): Storage & { du
 /** Сүлжээгүй горим — сервер бүрэн унтарсан гэж үзнэ (AC BE-7). */
 export const offlineFetch: typeof fetch = () => Promise.reject(new Error('offline'));
 
-export function mount(seed: Record<string, string> = {}) {
+export function mount(seed: Record<string, string> = {}, fetchImpl: typeof fetch = offlineFetch) {
   document.body.innerHTML = '<div id="app"></div>';
-  globalThis.fetch = offlineFetch;
+  globalThis.fetch = fetchImpl;
   window.location.hash = '#/camp';
   const storage = memoryStorage(seed);
   boot(document.getElementById('app')!, storage);

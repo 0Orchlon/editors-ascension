@@ -9,7 +9,16 @@ import type { Action, ActionBatchResponse, ContentPack, SavePayload } from '@sha
 
 export type ApiResult<T> =
   | { ok: true; value: T; etag?: string }
-  | { ok: false; status: number; code?: string; offline: boolean; retryAfterSeconds?: number };
+  | {
+      ok: false;
+      status: number;
+      code?: string;
+      /** ⚠ 422 нь ТУХАЙН үйлдлийнх — энэ талбаргүйгээр sync бүтэн багцыг хаяна (§7.6). */
+      actionId?: string;
+      detail?: string;
+      offline: boolean;
+      retryAfterSeconds?: number;
+    };
 
 export type Credentials = { playerId: string; token: string };
 
@@ -38,14 +47,19 @@ export function createApiClient(baseUrl: string, fetchImpl: typeof fetch = fetch
     const parsed = text.length > 0 ? safeJson(text) : undefined;
 
     if (!response.ok) {
-      const code = typeof parsed === 'object' && parsed !== null ? (parsed as { code?: string }).code : undefined;
+      const body =
+        typeof parsed === 'object' && parsed !== null
+          ? (parsed as { code?: string; actionId?: string; detail?: string })
+          : {};
       // 429 дээр `Retry-After`-гүйгээр дахин илгээх нь яг тэр хаалгыг дахин цохино.
       const retry = retryAfterSeconds(response.headers.get('retry-after'));
       return {
         ok: false,
         status: response.status,
         offline: false,
-        ...(code === undefined ? {} : { code }),
+        ...(body.code === undefined ? {} : { code: body.code }),
+        ...(body.actionId === undefined ? {} : { actionId: body.actionId }),
+        ...(body.detail === undefined ? {} : { detail: body.detail }),
         ...(retry === undefined ? {} : { retryAfterSeconds: retry }),
       };
     }

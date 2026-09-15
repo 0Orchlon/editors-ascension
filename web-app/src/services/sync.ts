@@ -26,6 +26,8 @@ export type SyncDeps = {
   localUpdatedAt?: () => string | null;
   onState: (state: GameState) => void;
   onStatus?: (status: SyncStatus) => void;
+  /** Тоглогчид ХЭЛЭХ ёстой зүйл (§7.6 алхам 4 — татгалзсан үйлдлийн шалтгаан). */
+  onNotice?: (text: string) => void;
   /** Тестэд солигдоно — бодит хүлээлт тестийг удаашруулна. */
   sleep?: (ms: number) => Promise<void>;
 };
@@ -149,6 +151,27 @@ export function createSync(deps: SyncDeps) {
       return queue.size() > 0;
     }
 
+    // ⚠ 422-ыг `retriesLeft`-ээс ӨМНӨ: 409/429-ийн дараа ирсэн татгалзал ч
+    // дарааллаас хасагдах ёстой, эс бөгөөс дараалал ҮҮРД гацна.
+    if (result.status === 422) {
+      // §7.6 алхам 4 — ЗӨВХӨН татгалзсан `actionId` хасагдана. Сервер багцыг
+      // бүхэлд нь rollback хийдэг (§6.6) тул үлдсэн нь ХҮЧИНТЭЙ хэвээр.
+      const rejected = batch.find((a) => a.actionId === result.actionId);
+      const reason = result.detail ?? result.code ?? 'rejected by the server';
+
+      if (rejected === undefined) {
+        // Сервер аль үйлдэл болохыг нэрлээгүй — багцыг хаяхаас өөр аргагүй.
+        queue.dropUpTo(batch.map((a) => a.actionId));
+        deps.onNotice?.(`The server rejected ${batch.length} queued action(s): ${reason}`);
+        setStatus('error');
+        return queue.size() > 0;
+      }
+
+      queue.dropUpTo([rejected.actionId]);
+      deps.onNotice?.(`The server rejected your "${rejected.type}" action: ${reason}`);
+      return queue.size() > 0;
+    }
+
     if (retriesLeft <= 0) {
       setStatus(result.offline ? 'offline' : 'error');
       return false;
@@ -166,14 +189,6 @@ export function createSync(deps: SyncDeps) {
     if (result.status === 429) {
       await sleep((result.retryAfterSeconds ?? 1) * 1000);
       return flushBatch(creds, retriesLeft - 1);
-    }
-
-    // 422 = домэйн татгалзал: дахин илгээх нь дахин татгалзана, дарааллаас хасна
-    // (эс бөгөөс дараалал үүрд гацна).
-    if (result.status === 422) {
-      queue.dropUpTo(batch.map((a) => a.actionId));
-      setStatus('error');
-      return queue.size() > 0;
     }
 
     setStatus(result.offline ? 'offline' : 'error');

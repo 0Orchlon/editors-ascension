@@ -18,7 +18,13 @@ const ONBOARDED_KEY = 'ea.onboarded.v1';
 
 export function boot(root: HTMLElement, storage: Storage = window.localStorage): void {
   let status: SyncStatus = 'offline';
-  const app = createApp({ storage, onStatus: (next) => { status = next; renderTopBar(app.game, status); } });
+  const app = createApp({
+    storage,
+    onStatus: (next) => { status = next; renderTopBar(app.game, status); },
+    // ⚠ Дээд мөрийн статус нь «ямар нэг зүйл буруу» л гэдгийг хэлнэ — ЯАГААД
+    // гэдгийг зөвхөн энэ мессеж дамжуулна (§7.6 алхам 4).
+    onNotice: (text) => { toast(text, 'warn'); announce(text); },
+  });
 
   buildShell(root);
 
@@ -60,10 +66,16 @@ export function boot(root: HTMLElement, storage: Storage = window.localStorage):
   }
 
   // `beforeunload` нь мобайл дээр найдваргүй — эдгээр хоёр л найдвартай (lld.md §7.5).
+  // ⚠ Дараалал нь эхлээд ДИСК рүү: `kick()` нь async бөгөөд хуудас хаагдахад
+  // дуусахгүй байж болно, `flush()` нь синхрон бөгөөд ҮРГЭЛЖ гүйцнэ.
+  const persist = (): void => {
+    app.flush();
+    void app.kick();
+  };
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') void app.kick();
+    if (document.visibilityState === 'hidden') persist();
   });
-  window.addEventListener('pagehide', () => void app.kick());
+  window.addEventListener('pagehide', persist);
   window.addEventListener('online', () => void app.kick());
 }
 

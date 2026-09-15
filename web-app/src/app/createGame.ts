@@ -15,6 +15,8 @@ export type AppDeps = {
   now?: () => string;
   newId?: () => string;
   onStatus?: (status: SyncStatus) => void;
+  /** Серверийн татгалзал зэрэг тоглогчид ХЭЛЭХ мессеж (§7.6 алхам 4). */
+  onNotice?: (text: string) => void;
 };
 
 export type App = {
@@ -23,6 +25,12 @@ export type App = {
   warning?: string;
   /** Дарааллыг серверт түлхэнэ. Сервер байхгүй бол ЧИМЭЭГҮЙ өнгөрнө (AC BE-7). */
   kick: () => Promise<void>;
+  /**
+   * Хүлээгдэж буй debounce бичилтийг ШУУД бичнэ (§7.5).
+   * ⚠ Хуудас хаагдахад `kick()` нь хангалтгүй: сервергүй тоглогчийн сүүлийн
+   * үйлдэл зөвхөн энэ дуудлагаар localStorage-д хүрнэ.
+   */
+  flush: () => void;
 };
 
 export function createApp(deps: AppDeps): App {
@@ -47,6 +55,7 @@ export function createApp(deps: AppDeps): App {
     localUpdatedAt: () => persistence.lastSavedAt(),
     onState: (state) => holder.game?.replaceState(state),
     ...(deps.onStatus === undefined ? {} : { onStatus: deps.onStatus }),
+    ...(deps.onNotice === undefined ? {} : { onNotice: deps.onNotice }),
   });
 
   const game = createGameService({
@@ -68,6 +77,7 @@ export function createApp(deps: AppDeps): App {
     game,
     sync,
     kick: () => sync.push(),
+    flush: () => persistence.flush(),
   };
   if (loaded.warning !== undefined) app.warning = loaded.warning;
   return app;
