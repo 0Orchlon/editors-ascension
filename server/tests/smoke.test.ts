@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { createServer } from '../src/index.ts';
+import { startApp } from './helpers.ts';
 
-describe('server bootstrap (T-02)', () => {
-  it('starts and stops', async () => {
-    const s = createServer();
-    const port = await s.listen(0);
-    expect(port).toBeGreaterThan(0);
-    await s.close();
+describe('server bootstrap (T-02, T-24)', () => {
+  it('starts, answers health, and stops', async () => {
+    const app = await startApp();
+    const res = await app.request('GET', '/api/health');
+    expect(res.status).toBe(200);
+    await app.close();
   });
 });
