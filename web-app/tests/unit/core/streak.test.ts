@@ -143,3 +143,26 @@ function bossAttempt(tier: 'failed' | 'mvp' | 'advanced' | 'mastery') {
     tier,
   } as GameState['bossAttempts'][number];
 }
+
+describe('streak calendar arithmetic (T-13)', () => {
+  const extendsFrom = (previous: string, today: string): boolean =>
+    qualifyDay(withStreak({ current: 1, best: 1, lastQualifiedDate: previous }), `${today}T00:00:00Z`)
+      .streak.current === 2;
+
+  it('crosses a year boundary', () => {
+    expect(extendsFrom('2025-12-31', '2026-01-01')).toBe(true);
+  });
+
+  it('handles 29 February in a leap year', () => {
+    expect(extendsFrom('2028-02-29', '2028-03-01')).toBe(true);
+    expect(extendsFrom('2028-02-28', '2028-02-29')).toBe(true);
+  });
+
+  it('handles 28 February in a non-leap year', () => {
+    expect(extendsFrom('2026-02-28', '2026-03-01')).toBe(true);
+  });
+
+  it('does not treat a two-day gap as consecutive', () => {
+    expect(extendsFrom('2026-03-08', '2026-03-10')).toBe(false);
+  });
+});

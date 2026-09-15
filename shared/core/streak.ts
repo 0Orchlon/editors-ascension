@@ -2,10 +2,28 @@
 import type { DomainEvent, GameState } from '../types/index.ts';
 import { dayOf } from './result.ts';
 
-/** `YYYY-MM-DD`-ийн өмнөх өдөр (UTC — A-LLD-6). */
+const DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] as const;
+const isLeapYear = (y: number): boolean => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+const pad = (n: number): string => String(n).padStart(2, '0');
+
+/**
+ * `YYYY-MM-DD`-ийн өмнөх өдөр (UTC — A-LLD-6).
+ *
+ * ⚠ `Date` ашиглахгүй: `shared/core` нь цагийн API-гүй байх ёстой (plan.md P-5,
+ * `architecture.test.ts` шалгана). Энэ нь цэвэр календарийн арифметик.
+ */
 function previousDay(day: string): string {
-  const ms = Date.parse(`${day}T00:00:00Z`);
-  return new Date(ms - 86_400_000).toISOString().slice(0, 10);
+  let [y, m, d] = day.split('-').map(Number) as [number, number, number];
+  d -= 1;
+  if (d === 0) {
+    m -= 1;
+    if (m === 0) {
+      m = 12;
+      y -= 1;
+    }
+    d = m === 2 && isLeapYear(y) ? 29 : DAYS_IN_MONTH[m - 1]!;
+  }
+  return `${y}-${pad(m)}-${pad(d)}`;
 }
 
 export type StreakOutcome = {
