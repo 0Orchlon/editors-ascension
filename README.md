@@ -26,6 +26,21 @@ cd server  && npm ci && npm test && npm start       # http://127.0.0.1:8787
 бүрэн ажиллана (AC BE-7). Сервер асвал үйлдлүүд `POST /api/players/{id}/actions`-аар
 илгээгдэж серверийн төлөв эрх бүхий болно.
 
+### DEV байршуулалт (docker-compose)
+
+```bash
+cd web-app && npm ci --prefer-offline && npm run build   # dist/ шаардлагатай, image dist-ыг л түгээнэ
+docker compose -f docker-compose.dev.yml up -d --build
+# web-app: http://localhost:18085   server: http://localhost:18787/api/health
+```
+
+⚠ **Мэдэгдэж буй хязгаарлал:** `server/src/app.ts`-ийн `server.listen(port, '127.0.0.1', …)`
+нь зөвхөн container-ийн loopback дээр сонсдог тул өөр container-с (жш web-app-ийн
+nginx `proxy_pass`) болон host-ийн port-forward-оор хүрэх боломжгүй (`connect() failed
+(111: Connection refused)`). Container дотроосоо (`/api/health`) бол хэвийн. Энэ бол
+эх кодын зан төлөв тул байршуулалтын алхмаар засаагүй — `0.0.0.0`-д сонсох эсэхийг
+хэрэгжүүлэгч шийднэ.
+
 ## Шалгах — гадаргуу тутамд НЭГ команд
 
 ```bash
