@@ -231,6 +231,22 @@ describe('authoritative actions + idempotency (T-44)', () => {
   const claim = (n: number) =>
     action(n, 'claimQuest', { questId: 'mq-first-cut', checkedConditions: [0, 1, 2] });
 
+  /**
+   * lld.md §6.6 — `If-Match` нь БОДИТ хувилбарыг заана. Save мөр байхгүй үед
+   * тодорхой ETag нь ЗӨРСӨН гэсэн үг (клиент өөр төлвийн тухай ярьж байна).
+   */
+  it('rejects a concrete If-Match when the player has no save row yet (BE-11)', async () => {
+    const { request, newPlayer } = await app();
+    const { playerId, token } = await newPlayer();
+    const res = await request('POST', `/api/players/${playerId}/actions`, {
+      token,
+      body: { actions: [claim(1)] },
+      headers: { 'if-match': '"W/stale"' },
+    });
+    expect(res.status).toBe(409);
+    expect(res.body.code).toBe('ETAG_MISMATCH');
+  });
+
   it('applies an action and persists the resulting xp (BE-11)', async () => {
     const { request, newPlayer } = await app();
     const { playerId, token } = await newPlayer();

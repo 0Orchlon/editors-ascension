@@ -34,7 +34,9 @@ export function runBatch(
 ): BatchOutcome {
   return transact(db, () => {
     const row = readSave(db, playerId);
-    if (ifMatch !== undefined && ifMatch !== '*' && row !== null && row.etag !== ifMatch)
+    // §6.6 — `*` нь «ямар ч хувилбар», бусад нь БОДИТ хувилбарыг заана: save мөр
+    // байхгүй атлаа тодорхой ETag ирсэн бол клиент өөр төлвийн тухай ярьж байна.
+    if (ifMatch !== undefined && ifMatch !== '*' && (row === null || row.etag !== ifMatch))
       throw etagMismatch();
 
     const before = row === null ? newGame() : (JSON.parse(row.stateJson) as GameState);
