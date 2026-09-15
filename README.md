@@ -12,7 +12,7 @@
 |---|---|
 | `shared/` | ✅ домэйн цөм, контент пакет, validator, save давхарга |
 | `server/` | ✅ 10 endpoint, SQLite, эрх бүхий үйлдэл, snapshot, transfer, ops хаалга |
-| `web-app/` | ✅ 8 дэлгэц, офлайн дараалал, export/import, a11y |
+| `web-app/` | ✅ 8 дэлгэц, офлайн дараалал, сервертэй эвлэрүүлэг (If-Match · 409 · 429), шилжүүлэх код, export/import, a11y |
 | `docs/PERSONAL-1/` | ✅ спек · төлөвлөгөө · tasks · LLD · гэрээний баримт |
 
 ## Эхлэх
@@ -29,7 +29,7 @@ cd server  && npm ci && npm test && npm start       # http://127.0.0.1:8787
 ## Шалгах — гадаргуу тутамд НЭГ команд
 
 ```bash
-cd web-app && npm test      # typecheck + lint + vitest (405 тест)
+cd web-app && npm test      # typecheck + lint + vitest (423 тест)
 cd server  && npm test      # typecheck + lint + vitest (75 тест)
 ```
 
@@ -39,7 +39,7 @@ cd server  && npm test      # typecheck + lint + vitest (75 тест)
 
 ```
 web-app/src/ui  →  web-app/src/services  →  shared/core  →  shared/{types,validate}
-server/src/routes → server/src/domain/actionEngine → shared/core
+server/src/app.ts → server/src/domain/actionEngine → shared/core
 ```
 
 - Тоглоомын дүрэм нь **`shared/core/**` дотор ГАНЦ хувилбартай**. Клиент, сервер

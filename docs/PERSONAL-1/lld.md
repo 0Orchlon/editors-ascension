@@ -90,14 +90,22 @@ dungeon · boss · project · achievement-ийн ЦОРЫН ГАНЦ хэрэг�
 
 ## 2. Репогийн файлын бүтэн мод
 
+⚠ **2026-09-15 шинэчлэл.** Доорх мод нь ХЭРЭГЖСЭН репог тусгана. Анхны загварын
+мод нь server талд `routes/`, `middleware/{requestId,logger,…}`, `db/repos/`,
+`ops/`, web талд `contentService.ts`, `exportImport.ts`, `layout.ts`, `theme.css`
+гэсэн файлуудыг төлөвлөж байсан — хэрэгжүүлэлт эдгээрийг НЭГТГЭСЭН (server-ийн
+router + middleware гинж нь `app.ts` дотор, web-ийн контент/экспорт нь
+`gameService.ts` дотор). Зан төлөв өөрчлөгдөөгүй, файлын хил л өөр. Загварын
+мод нь репог тайлбарлахаа больсон тул мод нь ЗАСАГДАВ — хэрэгжилт биш.
+
 ```
 editors-ascension/
 ├─ README.md
 ├─ .gitignore                         # server/data/, dist/, node_modules/
 ├─ docs/PERSONAL-1/
-│  ├─ spec.md  plan.md  tasks.md  lld.md  lld.html  contracts.yaml
+│  ├─ spec.md  plan.md  tasks.md  lld.md  lld.html  contracts.yaml  contract-docs.md
 ├─ shared/                            # ГАДААД ХАМААРАЛГҮЙ. TS эх код.
-│  ├─ CLAUDE.md
+│  ├─ CLAUDE.md  hash.ts
 │  ├─ validate/
 │  │  ├─ dsl.ts                       # мини схемийн DSL + Infer<> (§5.1)
 │  │  ├─ schemas.ts                   # contracts.yaml-ийн схемүүд DSL-ээр
@@ -109,37 +117,38 @@ editors-ascension/
 │  │  └─ serialize.ts                 # toPayload / fromPayload / newGame
 │  ├─ core/
 │  │  ├─ constants.ts                 # ProgressionConstants — ГАНЦ хувилбар
-│  │  ├─ rng.ts                       # mulberry32 + fnv1a
-│  │  ├─ result.ts                    # Ok / Rejected хэлбэр
+│  │  ├─ rng.ts        result.ts      saves.ts      # export/import + гэмтэл сэргээлт
 │  │  ├─ progression.ts   stamina.ts   quests.ts     sideQuests.ts
 │  │  ├─ dungeons.ts      dailyMission.ts  encounters.ts  economy.ts
 │  │  ├─ achievements.ts  streak.ts    projects.ts   boss.ts
 │  │  └─ apply.ts                     # applyAction() — үйлдлийн диспетчер (§5.4.12)
 │  └─ content/
-│     ├─ quests.main.json   quests.side.json   dungeons.json
+│     ├─ mainQuests.json  sideQuests.json  dungeons.json
 │     ├─ skills.json  achievements.json  encounters.json  loot.json
 │     └─ index.ts                     # пакет угсрах + contentVersion тооцох
 ├─ web-app/
 │  ├─ CLAUDE.md  package.json  tsconfig.json  vite.config.ts  index.html
 │  ├─ src/
-│  │  ├─ app/  main.ts  router.ts  layout.ts  theme.css
+│  │  ├─ app/       main.ts  router.ts  createGame.ts   # угсралт — DOM-гүй ажиллана
 │  │  ├─ services/  store.ts  gameService.ts  persistence.ts  actionQueue.ts
-│  │  │             sync.ts  apiClient.ts  contentService.ts  exportImport.ts
-│  │  └─ ui/   components/  screens/  styles/
-│  └─ tests/   unit/  integration/  a11y/  architecture.test.ts
+│  │  │             sync.ts  apiClient.ts
+│  │  ├─ ui/        shell.ts  components.ts  screens/*.ts   # 8 дэлгэц
+│  │  └─ styles.css
+│  └─ tests/   unit/  unit/core/  integration/  ui/  a11y/
+│              architecture.test.ts  smoke.test.ts
 └─ server/
    ├─ CLAUDE.md  package.json  tsconfig.json
    ├─ src/
-   │  ├─ index.ts  app.ts  config.ts
-   │  ├─ middleware/  requestId.ts  logger.ts  bodyLimit.ts  rateLimit.ts
-   │  │               auth.ts  ownership.ts  validate.ts  problem.ts
-   │  ├─ routes/      health.ts  players.ts  saves.ts  actions.ts
-   │  │               snapshots.ts  transfer.ts  content.ts
-   │  ├─ db/          open.ts  migrations/001_init.sql  repos/*.ts
-   │  ├─ domain/      actionEngine.ts        # shared/core-ийг гүйлгээнд уяна
-   │  ├─ content/     load.ts
-   │  └─ ops/         shutdown.ts  cleanup.ts
-   └─ tests/  unit/  integration/  contract/  architecture.test.ts
+   │  ├─ index.ts                     # процесс: сонсох + graceful shutdown
+   │  ├─ app.ts                       # router + middleware гинж + 9 handler (§6.10)
+   │  ├─ auth/tokens.ts               # токен үүсгэх + sha256 hash
+   │  ├─ db/          index.ts  migrations.ts  saves.ts
+   │  ├─ domain/      actionEngine.ts # shared/core-ийг гүйлгээнд уяна
+   │  ├─ content/     load.ts         # контент validation + degraded health
+   │  ├─ errors/      problem.ts      # RFC 9457 зураглал
+   │  ├─ logging/     logger.ts       # PII денилист
+   │  └─ middleware/  rateLimit.ts
+   └─ tests/  api.test.ts  smoke.test.ts  unit/  contract/  architecture.test.ts
 ```
 
 ⚠ Репогийн root дээр `package.json` **байхгүй**. Гадаргуу тутам нэг команд
@@ -158,8 +167,8 @@ editors-ascension/
 | `web-app/src/ui/**` | `web-app/src/services/**`, `@shared/types` | `@shared/core/**`, `@shared/content/**`, `fetch` |
 | `web-app/src/app/**` | `ui/**`, `services/**`, `@shared/types` | `@shared/core/**` |
 | `web-app/src/services/**` | `@shared/*` бүгд, `fetch` | `ui/**` |
-| `server/src/routes/**` | `server/src/{db,domain,middleware}`, `@shared/types` | `@shared/core/**` шууд |
-| `server/src/domain/**` | `@shared/core/**`, `@shared/content` | `server/src/routes/**` |
+| `server/src/app.ts` (route handler-ууд) | `server/src/{db,domain,middleware,auth,content,errors,logging}`, `@shared/types` | `@shared/core/**` шууд |
+| `server/src/domain/**` | `@shared/core/**`, `@shared/content` | `server/src/app.ts` |
 | `shared/core/**` | `shared/{types,validate}`, `shared/core/**` | `shared/content/**`, node/DOM API |
 | `shared/content/**` | `shared/types` | бусад бүгд |
 
@@ -1114,17 +1123,24 @@ return { state: r.state }
 ```ts
 // actionQueue.ts — localStorage `ea.queue.v1` дотор
 enqueue(a: Action): void
-peekAll(): Action[]
+peekAll(): Action[]           // peekBatch() = эхний 50 (контрактын maxItems)
 dropUpTo(actionIds: string[]): void
+isCorrupted(): boolean        // JSON задраагүй — §7.6 алхам 5-ыг өдөөнө
 
 // sync.ts
-kick(): void            // онлайн эсэхийг шалгаад flush эхлүүлнэ
+push(): Promise<void>         // flush — дуудлагууд ЦУВААЛНА (нэг үйлдэл хоёр хүсэлт болохгүй)
+pull(): Promise<GameState|null>            // GET /save болзолгүй (шилжүүлэг)
+pushFullSave(state, at): Promise<boolean>  // PUT /save — import ба эвдэрсэн дараалал
+createTransferCode(): Promise<{code,expiresAt}|null>   // §6.9
+redeemTransferCode(code): Promise<boolean>             // §6.9
 status(): 'offline' | 'syncing' | 'synced' | 'error'
 ```
 
 **Flush алгоритм:**
 ```
 1. q = queue.peekAll();  хэрэв хоосон → GET /save (сервер илүү шинэ эсэхийг шалгах)
+   ⚠ «Илүү шинэ» = серверийн `updatedAt` > локал `ea.save.lastAt`. Эс бөгөөс
+     энэ төхөөрөмжийн шинэ ажил серверийн хуучнаар ДАРАГДАНА.
 2. batch = q.slice(0, 50)                          ← контрактын maxItems
 3. POST /players/{id}/actions  { actions: batch }  (If-Match = сүүлд мэдэгдэж буй etag)
 4. 200 →  store.setState(res.state)                ← СЕРВЕРИЙН төлөв ЭРХ БҮХИЙ
