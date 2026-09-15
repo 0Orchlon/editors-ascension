@@ -135,7 +135,7 @@ describe('offline queue and reconciliation (T-49; BE-7, BE-12)', () => {
     const seen: Action[][] = [];
     const serverState: GameState = { ...newGame(), xp: 999, level: 5 };
 
-    const fetchImpl = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
+    const fetchImpl = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
       const body = JSON.parse(String(init?.body ?? '{}'));
       if (Array.isArray(body.actions)) {
         seen.push(body.actions);
@@ -145,6 +145,10 @@ describe('offline queue and reconciliation (T-49; BE-7, BE-12)', () => {
           updatedAt: at,
           etag: '"abc"',
         });
+      }
+      // Дараалал хоосон үед sync нь `GET /save` хийнэ (lld.md §7.6 алхам 1).
+      if (String(url).endsWith('/save')) {
+        return jsonResponse({ schemaVersion: serverState.schemaVersion, updatedAt: at, state: serverState });
       }
       return jsonResponse({ playerId: 'p1', token: 't'.repeat(43) }, 201);
     }) as unknown as typeof fetch;
@@ -222,6 +226,7 @@ describe('api client resilience (T-37; BE-7)', () => {
       api: createApiClient('', offlineFetch),
       queue: createActionQueue(storage),
       storage,
+      getState: () => newGame(),
       onState: () => undefined,
     });
     expect(await sync.ensurePlayer()).toBeNull();

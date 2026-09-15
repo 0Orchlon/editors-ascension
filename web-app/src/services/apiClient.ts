@@ -9,7 +9,7 @@ import type { Action, ActionBatchResponse, ContentPack, SavePayload } from '@sha
 
 export type ApiResult<T> =
   | { ok: true; value: T; etag?: string }
-  | { ok: false; status: number; code?: string; offline: boolean };
+  | { ok: false; status: number; code?: string; offline: boolean; retryAfterSeconds?: number };
 
 export type Credentials = { playerId: string; token: string };
 
@@ -39,9 +39,15 @@ export function createApiClient(baseUrl: string, fetchImpl: typeof fetch = fetch
 
     if (!response.ok) {
       const code = typeof parsed === 'object' && parsed !== null ? (parsed as { code?: string }).code : undefined;
-      return code === undefined
-        ? { ok: false, status: response.status, offline: false }
-        : { ok: false, status: response.status, code, offline: false };
+      // 429 дээр `Retry-After`-гүйгээр дахин илгээх нь яг тэр хаалгыг дахин цохино.
+      const retry = retryAfterSeconds(response.headers.get('retry-after'));
+      return {
+        ok: false,
+        status: response.status,
+        offline: false,
+        ...(code === undefined ? {} : { code }),
+        ...(retry === undefined ? {} : { retryAfterSeconds: retry }),
+      };
     }
 
     const etag = response.headers.get('etag');
@@ -71,10 +77,13 @@ export function createApiClient(baseUrl: string, fetchImpl: typeof fetch = fetch
         body: JSON.stringify(payload),
       }),
 
-    postActions: (creds: Credentials, actions: Action[]) =>
+    // ⚠ `ifMatch` нь заавал: сервер нь бидний мэдэж буй хувилбар дээр л үйлдлийг
+    // хэрэглэнэ (lld.md §7.6 алхам 3). Өөр төхөөрөмж завсарт бичсэн бол 409 ирнэ.
+    postActions: (creds: Credentials, actions: Action[], ifMatch = '*') =>
       call<ActionBatchResponse>(`/api/players/${creds.playerId}/actions`, {
         method: 'POST',
         token: creds.token,
+        headers: { 'if-match': ifMatch },
         body: JSON.stringify({ actions }),
       }),
 
@@ -87,6 +96,15 @@ export function createApiClient(baseUrl: string, fetchImpl: typeof fetch = fetch
     redeemTransferCode: (code: string) =>
       call<Credentials>('/api/transfer/redeem', { method: 'POST', body: JSON.stringify({ code }) }),
   };
+}
+
+/** `Retry-After` нь секунд эсвэл HTTP-огноо байж болно — хоёуланг нь секунд болгоно. */
+function retryAfterSeconds(header: string | null): number | undefined {
+  if (header === null) return undefined;
+  const seconds = Number(header);
+  if (Number.isFinite(seconds)) return Math.max(0, seconds);
+  const at = Date.parse(header);
+  return Number.isNaN(at) ? undefined : Math.max(0, Math.ceil((at - Date.now()) / 1000));
 }
 
 function safeJson(text: string): unknown {

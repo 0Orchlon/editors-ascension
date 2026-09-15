@@ -12,14 +12,21 @@ export const QUEUE_KEY = 'ea.queue.v1';
 export const MAX_BATCH = 50;
 
 export function createActionQueue(storage: Storage) {
+  // ⚠ Гэмтсэн дараалал нь ЧИМЭЭГҮЙ алдагдал: тэр үйлдлүүд сервер рүү хэзээ ч
+  // очихгүй. Тиймээс баримт үлдээнэ — sync нь бүтэн `PUT /save`-аар эвлэрүүлнэ
+  // (lld.md §7.6 алхам 5).
+  let corrupted = false;
+
   const read = (): Action[] => {
     const raw = storage.getItem(QUEUE_KEY);
     if (raw === null) return [];
     try {
       const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? (parsed as Action[]) : [];
+      if (Array.isArray(parsed)) return parsed as Action[];
+      corrupted = true;
+      return [];
     } catch {
-      // Гэмтсэн дараалал нь апп-ыг зогсоохгүй — хоосон гэж үзнэ.
+      corrupted = true;
       return [];
     }
   };
@@ -42,7 +49,11 @@ export function createActionQueue(storage: Storage) {
     },
     clear(): void {
       write([]);
+      corrupted = false;
     },
+
+    /** Уншихад задарсангүй юу? `read` дуудагдсаны дараа л утгатай. */
+    isCorrupted: (): boolean => corrupted,
     size: (): number => read().length,
   };
 }

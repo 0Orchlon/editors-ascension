@@ -41,6 +41,10 @@ export function createApp(deps: AppDeps): App {
     api,
     queue,
     storage: deps.storage,
+    getState: () => holder.game?.state$.getState() ?? loaded.state,
+    // «Сервер илүү шинэ үү» гэдгийг ЛОКАЛ хадгалалтын хугацаагаар шүүнэ —
+    // эс бөгөөс энэ төхөөрөмжийн шинэ ажил серверийн хуучнаар дарагдана.
+    localUpdatedAt: () => persistence.lastSavedAt(),
     onState: (state) => holder.game?.replaceState(state),
     ...(deps.onStatus === undefined ? {} : { onStatus: deps.onStatus }),
   });

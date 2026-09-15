@@ -17,7 +17,7 @@ import type { Storage } from '../services/persistence.ts';
 const ONBOARDED_KEY = 'ea.onboarded.v1';
 
 export function boot(root: HTMLElement, storage: Storage = window.localStorage): void {
-  let status: SyncStatus = 'local-only';
+  let status: SyncStatus = 'offline';
   const app = createApp({ storage, onStatus: (next) => { status = next; renderTopBar(app.game, status); } });
 
   buildShell(root);

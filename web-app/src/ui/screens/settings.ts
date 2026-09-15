@@ -71,7 +71,7 @@ export function renderSettings(deps: SettingsDeps): HTMLElement {
   const applyImport = (text: string): void => {
     const result = game.importSave(text);
     if (!result.ok) {
-      // ⚠ AC SV-5 — татгалзсан файл ОДООГИЙН төлвийг УСТГАХГҮЙ.
+      // ⚠ AC SV-5 — татгалзсан файл ОДООГИЙН төлвийг УСТГАХГҮЙ, сервер рүү ч явахгүй.
       importStatus.textContent = `${result.reason} Your current progress was left untouched.`;
       announce(importStatus.textContent);
       toast('Import rejected. Nothing was changed.', 'warn');
@@ -79,6 +79,9 @@ export function renderSettings(deps: SettingsDeps): HTMLElement {
     }
     importStatus.textContent = 'Save imported.';
     announce('Save imported.');
+    // lld.md §7.7 — импортолсон төлөв нь серверт БҮТНЭЭР тавигдана, эс бөгөөс
+    // дараагийн sync нь серверийн хуучин save-ыг буцааж татна.
+    void deps.sync?.pushFullSave(game.state$.getState(), new Date().toISOString());
     rerender();
   };
 
@@ -97,24 +100,50 @@ export function renderSettings(deps: SettingsDeps): HTMLElement {
       el('h2', { text: 'Move to another device' }),
       el('p', { class: 'muted', text: 'A transfer code copies your progress to another device. It works once and expires in 15 minutes. Your save here is kept.' }),
     ]);
+    // ⚠ `output` нь `rerender()`-ээр УСТДАГ. Тиймээс энэ хэсэг дахин зурагдахгүй:
+    // хариу нь тоглогчийн нүдэн дээр үлдэнэ.
     const output = el('p', { class: 'outcome', role: 'status' });
 
     transfer.append(button('Create a transfer code', () => {
-      void (async () => {
-        const creds = sync.credentials();
-        if (creds === null) {
-          output.textContent = 'No server connection yet — transfer codes need the server.';
+      output.textContent = 'Requesting a code…';
+      void sync.createTransferCode().then((result) => {
+        if (result === null) {
+          output.textContent = 'Could not reach the server. Try again when you are online.';
+          announce(output.textContent);
           return;
         }
-        output.textContent = 'Requesting a code…';
-        rerender();
-      })();
+        // Код нь НЭГ удаа ажиллана — тоглогч бүтэн байдлаар нь харах ёстой.
+        output.textContent = `Your transfer code: ${result.code} — enter it on the other device within 15 minutes.`;
+        announce(output.textContent);
+      });
     }));
 
     const redeemInput = el('input', { type: 'text', id: 'redeem-code', placeholder: 'XXXX-XXXX-XXXX' });
+    const redeem = (): void => {
+      const code = redeemInput.value.trim();
+      if (code.length === 0) {
+        output.textContent = 'Enter the code from your other device first.';
+        return;
+      }
+      output.textContent = 'Checking the code…';
+      void sync.redeemTransferCode(code).then((ok) => {
+        // ⚠ Олдсонгүй · ашигласан · хугацаа дууссан — ГУРВУУЛАА ижил мессеж
+        // (lld.md §6.9 шийдвэр 2: ялгаатай хариу нь кодын оршихыг задруулна).
+        output.textContent = ok
+          ? 'Progress moved to this device.'
+          : 'That code did not work. It may be expired or already used.';
+        announce(output.textContent);
+        if (ok) rerender();
+      });
+    };
+    redeemInput.addEventListener('keydown', (event) => {
+      if ((event as KeyboardEvent).key === 'Enter') redeem();
+    });
+
     transfer.append(
       el('label', { for: 'redeem-code', text: 'Enter a transfer code from your other device' }),
       redeemInput,
+      button('Use this code', redeem),
       output,
     );
     root.append(transfer);

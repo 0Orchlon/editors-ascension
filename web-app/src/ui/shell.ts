@@ -54,12 +54,12 @@ function syncLabel(status: SyncStatus): string {
   switch (status) {
     case 'synced':
       return 'Synced';
-    case 'pending':
-      return 'Sync pending';
-    case 'offline':
-      return 'Offline — progress saved on this device';
+    case 'syncing':
+      return 'Syncing…';
+    case 'error':
+      return 'Sync problem — progress saved on this device';
     default:
-      return 'Local only';
+      return 'Offline — progress saved on this device';
   }
 }
 
