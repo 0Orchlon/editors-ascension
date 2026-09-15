@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<!-- PERSONAL-1 · lld · Дэлгэрэнгүй загвар (LLD) · 2026-09-15 -->
+<html lang="mn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editor's Ascension — LLD харагдац (PERSONAL-1)</title>
+<style>
+  :root{
+    --bg:#12141a; --panel:#1b1e26; --panel2:#232733; --line:#343a49;
+    --ink:#e8eaf0; --ink2:#a8b0c2; --ink3:#7d869c;
+    --accent:#6ea8fe; --ok:#4ec9a5; --warn:#e8b84b; --bad:#f07a7a; --lock:#6b7488;
+    --radius:10px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:15px/1.55 ui-sans-serif,system-ui,"Segoe UI",Roboto,Arial,sans-serif}
+  a{color:var(--accent)}
+  code,pre{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:13px}
+  .wrap{max-width:1180px;margin:0 auto;padding:20px 16px 72px}
+  header.top{border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:18px}
+  h1{font-size:22px;margin:0 0 4px}
+  .sub{color:var(--ink2);font-size:13px}
+  .warnbar{margin-top:12px;background:#2a2213;border:1px solid #5c4a1c;border-left:4px solid var(--warn);
+           padding:10px 12px;border-radius:var(--radius);color:#f0dfb4;font-size:13px}
+
+  /* ---- tabs ---- */
+  nav.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px}
+  nav.tabs button{background:var(--panel);color:var(--ink2);border:1px solid var(--line);
+    border-radius:999px;padding:7px 13px;font:inherit;font-size:13px;cursor:pointer}
+  nav.tabs button:hover{color:var(--ink);border-color:#4a5468}
+  nav.tabs button[aria-selected="true"]{background:var(--accent);color:#0d1117;border-color:var(--accent);font-weight:600}
+  nav.tabs button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+  [role="tabpanel"][hidden]{display:none}
+
+  /* ---- generic ---- */
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+  .panel h2{margin:0 0 4px;font-size:16px}
+  .panel h3{margin:18px 0 6px;font-size:14px;color:var(--ink2);text-transform:uppercase;letter-spacing:.06em}
+  .note{color:var(--ink3);font-size:12.5px;margin-top:8px}
+  .grid{display:grid;gap:12px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(215px,1fr))}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+  th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:var(--ink2);font-weight:600}
+  pre{background:#0e1015;border:1px solid var(--line);border-radius:8px;padding:12px;overflow:auto;color:#cfd6e6}
+
+  /* ---- mock app shell ---- */
+  .mock{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#14161d}
+  .mock .bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    background:var(--panel2);border-bottom:1px solid var(--line);padding:9px 12px;font-size:13px}
+  .mock .bar .who{font-weight:700}
+  .mock .bar .spacer{flex:1}
+  .mock .body{padding:14px}
+  .mocknav{display:flex;flex-wrap:wrap;gap:4px;padding:8px 12px;border-bottom:1px solid var(--line);background:#181b23}
+  .mocknav span{font-size:12px;padding:4px 9px;border-radius:6px;color:var(--ink3);border:1px solid transparent}
+  .mocknav span.cur{background:var(--panel2);color:var(--ink);border-color:var(--line);font-weight:600}
+  .mocknav span.cur::after{content:" ●";color:var(--accent)}
+
+  .xpbar{height:9px;background:#2a3040;border-radius:99px;overflow:hidden;min-width:130px;flex:1;max-width:260px}
+  .xpbar i{display:block;height:100%;background:var(--accent)}
+  .pips{letter-spacing:2px;color:var(--ok);font-size:14px}
+  .pips b{color:#3a4152;font-weight:400}
+
+  .card{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px}
+  .card h4{margin:0 0 4px;font-size:14px}
+  .meta{color:var(--ink3);font-size:12px}
+  .tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:99px;
+       border:1px solid var(--line);color:var(--ink2);margin:3px 3px 0 0}
+  .badge{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:99px;font-weight:600}
+  .b-ok{background:#123328;color:#7ce0bf;border:1px solid #1e5e47}
+  .b-av{background:#152a44;color:#9cc6ff;border:1px solid #27527f}
+  .b-lk{background:#23262f;color:#98a1b5;border:1px solid #3b4256}
+  .b-bd{background:#3a1c1c;color:#ffb3b3;border:1px solid #6d3030}
+  .btn{display:inline-block;background:var(--accent);color:#0d1117;border:0;border-radius:7px;
+       padding:7px 13px;font:inherit;font-size:13px;font-weight:600}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  .btn[disabled]{background:#333a49;color:#79839a;font-weight:500}
+  .modal{border:1px solid #4a5468;border-radius:11px;background:#1e222c;padding:14px;max-width:520px;
+         box-shadow:0 10px 40px rgba(0,0,0,.5)}
+  ul.check{list-style:none;padding:0;margin:8px 0}
+  ul.check li{padding:4px 0;color:var(--ink2);font-size:13.5px}
+  .live{border:1px dashed #40506e;border-radius:8px;padding:8px 10px;color:#9cc6ff;font-size:12.5px;background:#141a26}
+  .cap{color:var(--ink3);font-size:12px;margin:6px 0 10px}
+  .flow{white-space:pre;overflow:auto;background:#0e1015;border:1px solid var(--line);
+        border-radius:8px;padding:12px;color:#cfd6e6;font:12.5px/1.5 ui-monospace,Consolas,monospace}
+  .m{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;color:#cfd6e6}
+  .k{color:var(--warn)}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>Editor's Ascension — Дэлгэрэнгүй загварын харагдац</h1>
+  <div class="sub">PERSONAL-1 · Design шат · 2026-09-15 · Хамт унших: <code>lld.md</code> (бүтэц) · <code>contracts.yaml</code> (API)</div>
+  <div class="warnbar">
+    ⚠ Энэ бол <b>дуурайлт (mockup)</b> — ажиллах апп биш. Дэлгэцүүд нь бодит DOM биш,
+    зөвхөн мэдээллийн байрлал, төлөвийн ялгаа, хүртээмжийн шийдвэрийг харуулна.
+    Эрх бүхий эх нь <code>contracts.yaml</code>; бүтцийн тайлбар нь <code>lld.md</code>.
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="LLD хэсгүүд">
+  <button role="tab" aria-selected="true"  aria-controls="p-arch"  id="t-arch">Архитектур</button>
+  <button role="tab" aria-selected="false" aria-controls="p-camp"  id="t-camp">1 Camp</button>
+  <button role="tab" aria-selected="false" aria-controls="p-main"  id="t-main">2 Main Quests</button>
+  <button role="tab" aria-selected="false" aria-controls="p-side"  id="t-side">3 Side Quests</button>
+  <button role="tab" aria-selected="false" aria-controls="p-dung"  id="t-dung">4 Dungeons</button>
+  <button role="tab" aria-selected="false" aria-controls="p-skill" id="t-skill">5 Skill Tree</button>
+  <button role="tab" aria-selected="false" aria-controls="p-forge" id="t-forge">6 Forge</button>
+  <button role="tab" aria-selected="false" aria-controls="p-ach"   id="t-ach">7 Achievements</button>
+  <button role="tab" aria-selected="false" aria-controls="p-set"   id="t-set">8 Settings</button>
+  <button role="tab" aria-selected="false" aria-controls="p-flow"  id="t-flow">Урсгал</button>
+  <button role="tab" aria-selected="false" aria-controls="p-api"   id="t-api">API</button>
+</nav>
+
+<!-- ══════════════════════════════════ АРХИТЕКТУР ══════════════════════════════════ -->
+<section role="tabpanel" id="p-arch" aria-labelledby="t-arch">
+  <div class="panel">
+    <h2>Гурван хавтас, нэг дүрэм</h2>
+    <div class="cap">Дэлгэрэнгүй: <code>lld.md §1–§3</code></div>
+<div class="flow">┌───────────────────── web-app/ (Vite · TS · Vitest) ─────────────────────┐
+│  src/app        бүрхүүл · hash router · layout                          │
+│  src/ui         8 дэлгэц · 3 модал · компонент                          │
+│       │ ЗӨВХӨН доошоо — core руу шууд импорт ХОРИОТОЙ (AC UI-3)          │
+│  src/services   store · gameService · persistence · actionQueue · sync   │
+└───────┬─────────────────────────────────────────────┬───────────────────┘
+        │ import (path alias @shared/*)                │ HTTP /api
+        ▼                                              ▼
+┌───────────────── shared/ ─────────────────┐  ┌──────── server/ (Node · TS) ────────┐
+│  validate/  мини DSL → runtime шалгалт    │  │  middleware  10 үе шат (§6.1)       │
+│  types/     DSL-ээс infer хийсэн төрөл    │◀─│  routes      9 endpoint             │
+│  core/      ⚑ ТОГЛООМЫН БҮХ ДҮРЭМ ⚑       │◀─│  domain/actionEngine  гүйлгээ+idem. │
+│  content/   JSON пакет                    │◀─│  db/  SQLite (WAL) + migration      │
+│  save/      schemaVersion + migration     │  │  content/load  validate → degraded  │
+│  ГАДААД ХАМААРАЛ = 0                      │  └──────────────┬──────────────────────┘
+└───────────────────────────────────────────┘                 ▼
+                                                       server/data/*.sqlite</div>
+  </div>
+
+  <div class="grid g2">
+    <div class="panel">
+      <h2>Яагаад дүрэм <code>shared/</code>-д байна</h2>
+      <table>
+        <tr><th>Шаардлага</th><th>Үр дагавар</th></tr>
+        <tr><td><b>AC BE-7</b> — сервергүй бүрэн ажиллана</td><td>Дүрэм клиент дээр ажиллах ёстой</td></tr>
+        <tr><td><b>BE-11</b> — сервер эрх бүхий</td><td>Дүрэм сервер дээр ч ажиллах ёстой</td></tr>
+        <tr><td><b>BE-10</b> — нэг хувилбар</td><td>⟹ <code>shared/core</code>, хоёр талаас дуудагдана</td></tr>
+      </table>
+      <p class="note">Үнэ: эвлэрүүлгийн нарийвчлал (§7.6). Хамгаалалт: клиент <code>action.seed</code>
+      илгээдэг тул loot/encounter хоёр талд ижил гарна.</p>
+    </div>
+    <div class="panel">
+      <h2>Машинаар хамгаалагдсан хил</h2>
+      <table>
+        <tr><th>Тест</th><th>Юуг унагаана</th></tr>
+        <tr><td>импортын чиглэл</td><td><code>ui/**</code> → <code>core/**</code> шууд импорт</td></tr>
+        <tr><td>домэйн давхардал</td><td><code>100·250·…·7500·35·45·52</code> литерал <code>web-app/src</code> эсвэл <code>server/src</code> дотор</td></tr>
+        <tr><td>цэвэр байдал</td><td><code>Date.now(</code> · <code>Math.random(</code> · <code>fetch(</code> <code>shared/core</code> дотор</td></tr>
+        <tr><td>cosmetic хил</td><td><code>coins</code>/<code>inventory</code> уншилт прогрессийн модульд</td></tr>
+        <tr><td>контракт паритет</td><td><code>schemas.ts</code> ↔ <code>contracts.yaml</code> зөрөх</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Фазын дараалал</h2>
+<div class="flow">P0 Bootstrap ─▶ P1 shared/{types,validate,save}
+                      │
+        ┌─────────────┼──────────────┐
+        ▼             ▼              ▼
+   P2 core       P3 content     P4 server суурь        ← ГУРАВ ПАРАЛЛЕЛЬ
+        └──────┬──────┴──────────────┤
+               │                P4b server өргөтгөл (actions·snapshot·transfer·ops)
+             P5 UI                   │
+               └──────────┬──────────┘
+                     P6 Integration ─▶ P7 a11y/polish ─▶ P8 Release</div>
+    <p class="note">Дэлгэрэнгүй ба гарах хаалга: <code>plan.md §2–§3</code>.</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════ 1 CAMP ══════════════════════════════════ -->
+<section role="tabpanel" id="p-camp" aria-labelledby="t-camp" hidden>
+  <div class="panel">
+    <h2>Camp — гэрийн суурь</h2>
+    <div class="cap">AC UI-2: rank · level · XP bar · stamina · өдрийн даалгавар · streak · дараагийн төслийн үйлдэл — <b>нэг дэлгэцэнд</b>.</div>
+    <div class="mock">
+      <div class="bar">
+        <span class="who">Cadet · Lv 3</span>
+        <span class="xpbar"><i style="width:46%"></i></span>
+        <span class="meta">320 / 500 XP</span>
+        <span class="pips" aria-label="Stamina 7 of 10">●●●●●●●<b>○○○</b></span>
+        <span class="spacer"></span>
+        <span class="badge b-ok">✓ Synced · 12:04</span>
+      </div>
+      <div class="mocknav">
+        <span class="cur">Camp</span><span>Main Quests</span><span>Side Quests</span><span>Dungeons</span>
+        <span>Skill Tree</span><span>Forge</span><span>Achievements</span><span>Settings</span>
+      </div>
+      <div class="body">
+        <div class="grid g2">
+          <div class="card">
+            <h4>Өнөөдрийн даалгавар</h4>
+            <div class="meta">Main · World 2 · 45 мин · 3 stamina · 120 XP</div>
+            <p style="margin:8px 0 6px"><b>Ten-Second Cinematic</b> — нэг санааг 10 секундэд багтаа.</p>
+            <span class="tag">video-editing</span><span class="tag">storytelling</span>
+            <div style="margin-top:10px"><button class="btn">Open quest</button>
+              <button class="btn ghost">Reroll хийхгүй — өдөрт нэг</button></div>
+            <p class="note">DM-1 детерминистик: ижил огноо + ижил төлөв = ижил сонголт.
+              Нэр дэвшигч байхгүй бол «Rest day».</p>
+          </div>
+          <div class="grid" style="align-content:start">
+            <div class="card">
+              <h4>Streak</h4>
+              <p class="meta">Одоогийн <b style="color:var(--ok)">5 өдөр</b> · Дээд амжилт 11 · Combo өнөөдөр ×2</p>
+              <p class="note">Өдөрт ≥1 quest/dungeon = тухайн өдөр тооцогдоно. Алгасвал 1-ээс эхэлнэ;
+                <code>best</code> хэзээ ч буурахгүй (AC ACH-2). Combo нь cosmetic (A-LLD-1).</p>
+            </div>
+            <div class="card">
+              <h4>Дараагийн төслийн үйлдэл</h4>
+              <p style="margin:6px 0"><b>Kitchen Robot Short</b> — «Storyboard: 6 фрэйм зурах»</p>
+              <div class="meta">4 / 10 milestone дууссан</div>
+              <div style="margin-top:9px"><button class="btn ghost">Forge рүү очих</button></div>
+            </div>
+            <div class="card">
+              <h4>Санамсаргүй тохиолдол</h4>
+              <p style="margin:6px 0"><b>Reference Oracle</b> — Reference-гүй 60 секунд загварчилж үз.</p>
+              <div class="meta">≤2 мин · claim тутам ≤1 удаа (AC ENC-2)</div>
+              <div style="margin-top:9px"><button class="btn">Дуусгав</button> <button class="btn ghost">Алгасах</button></div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:12px" class="live" role="status">
+          aria-live="polite": “Gained 40 XP. Level up: Cadet. Achievement unlocked: First Blood.”
+        </div>
+      </div>
+    </div>
+    <p class="note">⚠ Camp нь мэдээлэл <b>харуулна</b>, дүрэм ажиллуулахгүй. Бүх өөрчлөлт
+      <code>services.dispatch()</code> дамжина (AC UI-3, spec D-1).</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════ 2 MAIN ══════════════════════════════════ -->
+<section role="tabpanel" id="p-main" aria-labelledby="t-main" hidden>
+  <div class="panel">
+    <h2>Main Quest Board — 18 quest, 5 дэлхий</h2>
+    <div class="cap">Төлөв нь <b>текст + дүрс</b>-ээр дамжина, зөвхөн өнгөөр биш (AC A11Y-3).</div>
+    <div class="mock"><div class="body">
+      <h3 style="margin-top:0">World 1 — Recruit</h3>
+      <div class="grid g3">
+        <div class="card"><h4>First Cut ✓</h4><div class="meta">2 stamina · 60 XP · 40 мин</div>
+          <span class="badge b-ok">✓ Done</span></div>
+        <div class="card"><h4>Blender Toybox ✓</h4><div class="meta">2 stamina · 60 XP</div>
+          <span class="badge b-ok">✓ Done</span></div>
+        <div class="card"><h4>Movement Lab</h4><div class="meta">3 stamina · 80 XP · 50 мин</div>
+          <span class="badge b-av">▸ Available</span>
+          <div style="margin-top:9px"><button class="btn">Claim victory</button></div></div>
+      </div>
+      <h3>World 2 — Apprentice</h3>
+      <div class="grid g3">
+        <div class="card"><h4>Ten-Second Cinematic</h4><div class="meta">3 stamina · 120 XP</div>
+          <span class="badge b-av">▸ Available</span> <span class="badge b-ok">★ Өнөөдрийн</span></div>
+        <div class="card"><h4>Pacing Duel 🔒</h4><div class="meta">Lv 4 шаардана — одоо Lv 3</div>
+          <span class="badge b-lk">🔒 LEVEL_TOO_LOW</span></div>
+        <div class="card"><h4>Soundscape 🔒</h4><div class="meta">Prereq: Ten-Second Cinematic</div>
+          <span class="badge b-lk">🔒 PREREQ_NOT_MET</span></div>
+      </div>
+      <h3>World 3 — Cadet</h3>
+      <div class="grid g3">
+        <div class="card"><h4>Camera Academy 🔒</h4><span class="badge b-lk">🔒 Locked</span></div>
+        <div class="card" style="border-color:#6d3030"><h4>The Strange Room 👑</h4>
+          <div class="meta">BOSS · 6 ангилал × 0–10</div><span class="badge b-bd">👑 Boss</span>
+          <p class="note">Boss нь <code>claimQuest</code>-ээр БИШ, <code>bossAttempt</code>-аар (§5.4.3 мөр 2).</p></div>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="panel">
+    <h2>Claim модал — ил claim (AC MQ-6)</h2>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cl-h">
+      <h4 id="cl-h" style="margin:0 0 2px">Movement Lab — Claim victory</h4>
+      <div class="meta">3 stamina · 80 XP · World 1</div>
+      <p style="margin:10px 0 2px;font-size:13.5px;color:var(--ink2)"><b>Victory conditions</b> — бүгдийг тэмдэглэнэ:</p>
+      <ul class="check">
+        <li>☑ Blender-т 3 объектыг G/R/S-ээр хөдөлгөв</li>
+        <li>☑ Нэг объектыг 3 тэнхлэгээр эргүүлэв</li>
+        <li>☐ 10 секундын хөдөлгөөний clip рэндэрлэв</li>
+      </ul>
+      <p style="font-size:13px;color:var(--ink3);margin:6px 0"><b>Reflection:</b> Аль хэсэг нь удаан байв, яагаад?</p>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn" disabled aria-disabled="true">Claim victory</button>
+        <button class="btn ghost">Болих (Esc)</button>
+      </div>
+      <p class="note">⚠ Товч нь БҮХ нөхцөл тэмдэглэгдтэл <code>disabled</code>. Систем автоматаар
+        дуусгахгүй — claim нь зөвхөн тоглогчийн ил үйлдэл (PRD §9).</p>
+    </div>
+    <h3>Татгалзал гарвал</h3>
+    <table>
+      <tr><th>Код</th><th>Хэзээ</th><th>UI мессеж</th></tr>
+      <tr><td class="m k">LEVEL_TOO_LOW</td><td>levelRequired &gt; level</td><td>“Needs level 4. You are level 3.”</td></tr>
+      <tr><td class="m k">PREREQ_NOT_MET</td><td>урьдчилсан quest дуусаагүй</td><td>“Finish Ten-Second Cinematic first.”</td></tr>
+      <tr><td class="m k">ALREADY_COMPLETED</td><td>main quest дахин</td><td>“Already completed.”</td></tr>
+      <tr><td class="m k">NOT_REPEATABLE</td><td>side quest <code>repeatable:false</code></td><td>“This one is a one-time run.”</td></tr>
+      <tr><td class="m k">INSUFFICIENT_STAMINA</td><td>cost &gt; stamina</td><td>“Not enough stamina — Rest restores 3.”</td></tr>
+    </table>
+    <p class="note">Шалгах дараалал нь ГЭРЭЭ (<code>lld.md §5.4.3</code>): бүтцийн саад нөөцийн саадаас ӨМНӨ.</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════ 3 SIDE ══════════════════════════════════ -->
+<section role="tabpanel" id="p-side" aria-labelledby="t-side" hidden>
+  <div class="panel">
+    <h2>Side Quest Board — дасгалын танхим</h2>
+    <div class="cap">Давтан XP нь <b>ил харагдана</b> — anti-grind нь нуугдмал шийтгэл биш, ил мэдээлэл.</div>
+    <div class="mock"><div class="body"><div class="grid g2">
+      <div class="card"><h4>Hotkey Hunter</h4>
+        <div class="meta">1 stamina · 15 мин · base 40 XP</div>
+        <span class="tag">blender</span>
+        <p style="margin:8px 0 2px;font-size:13px">Гүйцэтгэсэн: <b>3 удаа</b> · Дараагийн шагнал: <b style="color:var(--warn)">5 XP</b></p>
+        <div style="margin-top:8px"><button class="btn">Claim</button></div></div>
+      <div class="card"><h4>Three-Cut Story</h4>
+        <div class="meta">2 stamina · 25 мин · base 60 XP</div>
+        <span class="tag">video-editing</span><span class="tag">storytelling</span>
+        <p style="margin:8px 0 2px;font-size:13px">Гүйцэтгэсэн: <b>0 удаа</b> · Дараагийн шагнал: <b style="color:var(--ok)">60 XP</b></p>
+        <div style="margin-top:8px"><button class="btn">Claim</button></div></div>
+    </div>
+    <h3>Давтан XP муруй — <code>max(ceil(base×0.1), floor(base × m^(n-1)))</code>, base 40, m 0.5</h3>
+    <table>
+      <tr><th>n</th><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7+</td></tr>
+      <tr><th>XP</th><td>40</td><td>20</td><td>10</td><td><b style="color:var(--warn)">5</b></td><td>4</td><td>4</td><td>4</td></tr>
+    </table>
+    <p class="note">⚠ <code>spec.md SQ-2</code>-ийн жишээ n=4 дээр <code>4</code> гэсэн — арифметик алдаа.
+      Томьёо эрх бүхий, тестийн вектор <b>5</b> болов (<code>lld.md §10.1</code>).</p>
+    </div></div>
+  </div>
+  <div class="panel">
+    <h2>Anti-grind — контентын хаалга, домэйны хаалга биш</h2>
+    <table>
+      <tr><th>Шалгуур</th><th>Контентын тест</th></tr>
+      <tr><td>SQ-3</td><td>Дэлхий бүрд <code>max(side.xp) &lt; min(main.xp)</code></td></tr>
+      <tr><td>SQ-4</td><td>4 дэх давталтын XP/минут &lt; тухайн дэлхийн main-ийн дундаж XP/минут</td></tr>
+    </table>
+    <p class="note">Тестүүд контент бичихээс <b>ӨМНӨ</b> бичигдэнэ (<code>T-18</code>) — эхнээсээ улаан,
+      контент нэмэх тусам ногоон. Ингэснээр тэнцвэр нь санамсаргүй биш, шалгагдсан.</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════ 4 DUNGEONS ══════════════════════════════════ -->
+<section role="tabpanel" id="p-dung" aria-labelledby="t-dung" hidden>
+  <div class="panel">
+    <h2>Study Dungeon — ангийн танхим</h2>
+    <div class="mock"><div class="body">
+      <div class="card" style="max-width:560px">
+        <h4>Graph Editor Basics</h4>
+        <div class="meta">18 мин · 40 XP · Concept: interpolation нь timing-ийг хэрхэн өөрчилдөг</div>
+        <p style="margin:9px 0 4px;font-size:13px;color:var(--ink2)"><b>Tutorials (1–3)</b></p>
+        <ul style="margin:0;padding-left:18px;font-size:13px;color:var(--ink2)">
+          <li>Bezier vs Linear — 7 мин · <span class="meta">⚠ эх сурвалж хүний баталгаа хүлээж байна (T-22)</span></li>
+          <li>Ease in / ease out — 6 мин</li>
+        </ul>
+        <div style="margin-top:10px">
+          <button class="btn ghost">Tutorial нээх — <b>0 XP</b></button>
+          <button class="btn">Mastery шалгалт</button>
+        </div>
+        <p class="note">AC DG-2: tutorial нээх нь XP олгохгүй. Домэйнд <code>openTutorial()</code>
+          функц байгаа шалтгаан нь энэ шаардлагыг <b>машинаар</b> шалгах боломж.</p>
+      </div>
+    </div></div>
+  </div>
+  <div class="grid g2">
+    <div class="panel">
+      <h2>Унасан үр дүн (AC DG-4) — «Failed» гэж БИЧИХГҮЙ</h2>
+      <div class="modal">
+        <h4 style="margin:0">Attempt logged — 2 / 4 зөв (70% шаардана)</h4>
+        <p style="margin:9px 0 3px;font-size:13.5px"><b>Q2.</b> Ease-out гэж юу вэ?</p>
+        <p style="margin:0;font-size:13px;color:var(--bad)">Чиний хариулт: “Эхлэлдээ хурдан”</p>
+        <p style="margin:3px 0 0;font-size:13px;color:var(--ink2)">Зөв: “Төгсгөл рүүгээ удаашрах”.
+          Ease-out нь <i>гарах</i> хэсгийг зөөлрүүлнэ — объект зогсох мэдрэмж төрүүлнэ.</p>
+        <p style="margin:11px 0 3px;font-size:13.5px"><b>Q4.</b> Graph Editor-т handle-ийг юунд ашиглах вэ?</p>
+        <p style="margin:0;font-size:13px;color:var(--ink2)">Зөв: keyframe хоорондын хурдны муруйг хэлбэржүүлнэ.</p>
+        <p style="margin:12px 0 0;font-size:13.5px;color:#9cc6ff"><b>Дараагийн алхам:</b>
+          «Graph Editor Gym» side quest-ийг 15 минут ажиллуулаад буцаж ир.</p>
+        <div style="margin-top:11px"><button class="btn">Дахин оролдох</button>
+          <button class="btn ghost">Side quest руу</button></div>
+      </div>
+      <p class="note">Дахин оролдлого <b>хязгааргүй</b>. Унах нь домэйн татгалзал БИШ —
+        <code>ok:true</code> + <code>DUNGEON_FAILED</code> event, төлөв өөрчлөгдөхгүй.</p>
+    </div>
+    <div class="panel">
+      <h2>Тэнцэх арифметик (AC DG-3)</h2>
+      <pre>passed  =  correct × 10  &gt;=  total × 7
+
+total=3 → 3 зөв шаардана  (⌈2.1⌉)
+total=4 → 3 зөв шаардана  (⌈2.8⌉)
+total=5 → 4 зөв шаардана  (⌈3.5⌉)</pre>
+      <p class="note">Бүхэл тооны арифметик — хөвөгч цэгийн дугуйрлын алдаа гарахгүй
+        (<code>0.7×3 = 2.0999…</code> гэх мэт).</p>
+      <h3>XP дүрэм</h3>
+      <table>
+        <tr><th>Тохиолдол</th><th>XP</th><th>Event</th></tr>
+        <tr><td>Анх тэнцэв</td><td><b>dungeon.xp</b></td><td>DUNGEON_PASSED + XP_GAINED</td></tr>
+        <tr><td>Дахин тэнцэв</td><td><b>0</b></td><td>DUNGEON_PASSED</td></tr>
+        <tr><td>Унав</td><td>0</td><td>DUNGEON_FAILED</td></tr>
+        <tr><td>Tutorial нээв</td><td>0</td><td>—</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════ 5 SKILL ══════════════════════════════════ -->
+<section role="tabpanel" id="p-skill" aria-labelledby="t-skill" hidden>
+  <div class="panel">
+    <h2>Skill Tree</h2>
+    <div class="cap">Түвшин бүрт яг 1 SP. Нэг үйлдлээр олон түвшин үсэрвэл үсэрсэн бүрд нэг (AC PRG-3).</div>
+    <div class="mock"><div class="body">
+      <p style="margin:0 0 10px"><b>Skill points: 2</b> · Lv 3 Cadet</p>
+      <div class="grid g3">
+        <div class="card"><h4>Cut on Action ✓</h4><div class="meta">video-editing · 1 SP</div>
+          <span class="badge b-ok">✓ Unlocked</span></div>
+        <div class="card"><h4>Rhythm Sense</h4><div class="meta">Prereq: Cut on Action · 1 SP</div>
+          <span class="badge b-av">▸ Unlockable</span>
+          <div style="margin-top:8px"><button class="btn">Unlock — 1 SP</button></div></div>
+        <div class="card"><h4>Modifier Stack 🔒</h4><div class="meta">Prereq: Blender Basics</div>
+          <span class="badge b-lk">🔒 PREREQ_NOT_MET</span></div>
+        <div class="card"><h4>Color Eye 🔒</h4><div class="meta">1 SP · SP хүрэлцэхгүй бол</div>
+          <span class="badge b-lk">🔒 INSUFFICIENT_SKILL_POINTS</span></div>
+      </div>
+      <p class="note">⚠ Аль хэдийн нээгдсэн skill дээр дарахад <code>ALREADY_COMPLETED</code> —
+        <b>SP хасагдахгүй</b> (AC PRG-5). Энэ нь «хоёр удаа дарахад мөнгө алдах» алдааг хаана.</p>
+    </div></div>
+  </div>
+  <div class="panel">
+    <h2>XP → түвшин → ранк</h2>
+    <table>
+      <tr><th>Lv</th><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td></tr>
+      <tr><th>XP</th><td>0</td><td>100</td><td>250</td><td>500</td><td>1000</td><td>1750</td><td>2750</td><td>4000</td><td>5500</td><td>7500</td></tr>
+      <tr><th>Rank</th><td>Recruit</td><td>Apprentice</td><td>Cadet</td><td>Editor</td><td>Animator</td><td>Specialist</td><td>Director</td><td>Cinematic&nbsp;Artist</td><td>Senior&nbsp;Generalist</td><td>Cinematic&nbsp;Master</td></tr>
+    </table>
+    <p class="note">Эдгээр тоо нь <code>contracts.yaml → ProgressionConstants</code>-д <code>const</code>-оор
+      бэхлэгдсэн. <code>web-app/src</code> эсвэл <code>server/src</code> дотор литералаар дахин бичвэл
+      архитектурын тест УНАНА (AC BE-10).</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════ 6 FORGE ══════════════════════════════════ -->
+<section role="tabpanel" id="p-forge" aria-labelledby="t-forge" hidden>
+  <div class="panel">
+    <h2>Project Forge — цех</h2>
+    <div class="cap">10 milestone, PRD §13-ийн яг тэр дарааллаар. Milestone бүр төсөл тутамд нэг удаа 25 XP.</div>
+    <div class="mock"><div class="body">
+      <div class="card" style="max-width:620px">
+        <h4>Kitchen Robot Short</h4>
+        <div class="meta">Эхэлсэн 2026-08-22 · 4 / 10 · Self-score: 6 / 10</div>
+        <ul class="check" style="columns:2">
+          <li>☑ Concept</li><li>☑ Brief</li><li>☑ Storyboard / Shot List</li><li>☑ Assets</li>
+          <li>☐ Animation</li><li>☐ Render</li><li>☐ Edit / Audio / Color</li><li>☐ Review</li>
+          <li>☐ Final Export</li><li>☐ Portfolio package</li>
+        </ul>
+        <p style="margin:6px 0 2px;font-size:13px"><b>Next action:</b> «Robot-ийн алхалтын cycle — 24 фрэйм»</p>
+        <p style="margin:2px 0;font-size:13px;color:var(--ink3)"><b>Notes:</b> Гэрэлтүүлэг хэт хавтгай. Rim light нэмэх.</p>
+        <p style="margin:2px 0;font-size:13px;color:var(--ink3)"><b>Evidence:</b> drive://kitchen-robot/v3.mp4</p>
+        <div style="margin-top:10px"><button class="btn">Milestone тэмдэглэх (+25 XP)</button>
+          <button class="btn ghost">Тэмдэглэл засах</button></div>
+      </div>
+      <p class="note">⚠ Аль хэдийн тэмдэглэсэн milestone-ыг дахин дарахад <b>татгалзахгүй</b> —
+        зүгээр л XP нэмэгдэхгүй (AC PJ-3). Checkbox хоёр удаа дарах нь алдаа биш.
+        10/10 болмогц <code>PROJECT_COMPLETED</code> гарч <code>completedAt</code> бичигдэнэ (PJ-4).</p>
+    </div></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════ 7 ACHIEVEMENTS + BOSS ══════════════════════════════════ -->
+<section role="tabpanel" id="p-ach" aria-labelledby="t-ach" hidden>
+  <div class="panel">
+    <h2>Achievements — ≥12, бүгд машинаар шалгагдана</h2>
+    <div class="mock"><div class="body"><div class="grid g3">
+      <div class="card"><h4>First Blood ✓</h4><div class="meta">predicate: mainQuestsCompleted ≥ 1</div><span class="badge b-ok">✓ Earned</span></div>
+      <div class="card"><h4>Week Warrior ✓</h4><div class="meta">predicate: streakDays ≥ 7</div><span class="badge b-ok">✓ Earned</span></div>
+      <div class="card"><h4>Gym Rat</h4><div class="meta">predicate: sideQuestCompletions ≥ 25 — одоо 11</div><span class="badge b-lk">◌ 11 / 25</span></div>
+      <div class="card"><h4>Boss Slayer</h4><div class="meta">predicate: bossTier ≥ advanced</div><span class="badge b-lk">◌ Locked</span></div>
+    </div>
+    <p class="note">Предикат бүр төлөв өөрчлөгдөх <b>бүрд</b> үнэлэгдэж, нэг л удаа олгогдоно (AC ACH-1).
+      Прогрессийн тоо ил харагдана — «нууц амжилт» байхгүй.</p>
+    </div></div>
+  </div>
+
+  <div class="panel">
+    <h2>Boss үнэлгээ — портфолиогийн шалгалт</h2>
+    <div class="modal">
+      <h4 style="margin:0">The Strange Room — self-assessment</h4>
+      <p class="note" style="margin:4px 0 10px;color:var(--warn)">
+        ⚠ Эдгээр оноо нь <b>дасгалжуулах хэрэгсэл</b>, гэрчилгээ БИШ (AC BS-5, PRD §14).</p>
+      <table>
+        <tr><th>Ангилал</th><th>Оноо 0–10</th></tr>
+        <tr><td>Story</td><td>7</td></tr>
+        <tr><td>Editing</td><td>6</td></tr>
+        <tr><td>Camera</td><td><b style="color:var(--bad)">3</b></td></tr>
+        <tr><td>Visual Craft</td><td>5</td></tr>
+        <tr><td>Animation</td><td>6</td></tr>
+        <tr><td>Audio / Post</td><td>5</td></tr>
+        <tr><th>Нийт</th><th>32 / 60 → failed</th></tr>
+      </table>
+      <p style="margin:11px 0 0;font-size:13.5px;background:#141a26;border:1px dashed #40506e;padding:9px;border-radius:8px">
+        Attempt logged. Weakest category: Camera. Recommended side quest: Camera Copycat.</p>
+      <div style="margin-top:10px"><button class="btn ghost">Side quest руу</button>
+        <button class="btn ghost">Түүх харах</button></div>
+    </div>
+    <h3>Зэрэглэлийн хил (AC BS-2)</h3>
+    <table>
+      <tr><th>Нийт</th><td>0–34</td><td>35–44</td><td>45–51</td><td>52–60</td></tr>
+      <tr><th>Tier</th><td>failed</td><td>mvp</td><td>advanced</td><td>mastery</td></tr>
+    </table>
+    <p class="note">Хилийн тест: 34 · 35 · 44 · 45 · 51 · 52. Оролдлого бүр — тэнцсэн эсэхээс
+      үл хамааран — <code>bossAttempts</code>-д огноо, оноотойгоо бичигдэнэ (AC BS-4).
+      Дахин тэнцвэл XP <b>0</b>.</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════ 8 SETTINGS ══════════════════════════════════ -->
+<section role="tabpanel" id="p-set" aria-labelledby="t-set" hidden>
+  <div class="panel">
+    <h2>Settings — хүртээмж · өгөгдөл · төхөөрөмж</h2>
+    <div class="mock"><div class="body"><div class="grid g2">
+      <div class="card">
+        <h4>Хүртээмж</h4>
+        <p style="font-size:13.5px;margin:8px 0">☑ Reduce motion <span class="meta">(<code>prefers-reduced-motion</code>-ыг ч хүндэтгэнэ)</span></p>
+        <p style="font-size:13.5px;margin:8px 0">☐ Sound <span class="meta">Унтраасан үед бүх функц ажиллана (AC A11Y-5)</span></p>
+      </div>
+      <div class="card">
+        <h4>Өгөгдөл</h4>
+        <p class="meta">Сүүлд хадгалсан: 12:04:31 · localStorage + сервер</p>
+        <div style="margin-top:8px"><button class="btn ghost">Export JSON</button>
+          <button class="btn ghost">Import JSON</button></div>
+        <p class="note">Import нь схемээр шалгагдана. <b>Буруу файл одоогийн төлвийг УСТГАХГҮЙ</b> —
+          алдааны жагсаалт харуулаад зогсоно (AC SV-4).</p>
+      </div>
+      <div class="card">
+        <h4>Өөр төхөөрөмж рүү шилжүүлэх</h4>
+        <p style="font:600 21px/1.3 ui-monospace,Consolas,monospace;letter-spacing:2px;margin:9px 0 3px">K7QM-2X4T-9BRH</p>
+        <p class="meta">14:52-д хүчингүй болно · нэг удаа ашиглана</p>
+        <div style="margin-top:9px"><button class="btn ghost">Шинэ код</button>
+          <button class="btn ghost">Код оруулах</button></div>
+        <p class="note">Код нь серверт hash хэлбэрээр хадгалагдана. Ашигласан · хугацаа дууссан ·
+          олдоогүй — гурвуулаа <b>ижил 410</b> (кодын оршин тогтнолыг задруулахгүй).</p>
+      </div>
+      <div class="card">
+        <h4>Snapshot түүх</h4>
+        <table>
+          <tr><th>Үүссэн</th><th>Шалтгаан</th><th></th></tr>
+          <tr><td>12:04</td><td>actions</td><td>Сэргээх</td></tr>
+          <tr><td>11:31</td><td>actions</td><td>Сэргээх</td></tr>
+          <tr><td>10:02</td><td>put</td><td>Сэргээх</td></tr>
+        </table>
+        <p class="note">Сүүлийн <b>10</b> хадгалагдана. Сэргээлт өөрөө шинэ snapshot үүсгэнэ —
+          сэргээсэн үйлдэл ч буцаагдах боломжтой (AC BE-13).</p>
+      </div>
+    </div></div></div>
+  </div>
+
+  <div class="panel">
+    <h2>Гэмтсэн save — апп ХЭЗЭЭ Ч унахгүй (AC SV-2)</h2>
+    <div class="modal">
+      <h4 style="margin:0;color:var(--warn)">⚠ Save could not be read</h4>
+      <p style="font-size:13.5px;margin:8px 0">Хадгалсан өгөгдөл задарсангүй (<code>schema</code>).
+        Гэмтсэн хуулбарыг <code>ea.save.corrupt.1757923471</code> түлхүүрт <b>хадгалав</b>.
+        Шинэ тоглоом эхлэв.</p>
+      <div><button class="btn">Ойлголоо</button> <button class="btn ghost">Гэмтсэн файлыг татах</button></div>
+    </div>
+    <p class="note">⚠ Гэмтсэн хуулбар <b>устгагдахгүй</b>. Тоглогчийн ажлыг чимээгүй алдах нь
+      энэ системийн хамгийн муу бүтэлгүйтэл — тиймээс сэргээх боломж үргэлж үлдэнэ.</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════ УРСГАЛ ══════════════════════════════════ -->
+<section role="tabpanel" id="p-flow" aria-labelledby="t-flow" hidden>
+  <div class="panel">
+    <h2>Онлайн claim — optimistic, дараа нь эрх бүхий</h2>
+<div class="flow">Тоглогч          ui/ClaimModal      services            shared/core        server            SQLite
+   │  Claim ✓          │                  │                    │                 │                │
+   ├──────────────────▶│ dispatch('claimQuest')                │                 │                │
+   │                   ├─────────────────▶│ applyAction(локал) │                 │                │
+   │                   │                  ├───────────────────▶│                 │                │
+   │                   │                  │◀── {state, events} │                 │                │
+   │   XP bar хөдлөв ◀─┤  store.setState  │                    │                 │                │
+   │                   │                  ├─ persistence.scheduleWrite() (500ms) │                │
+   │                   │                  ├─ queue.enqueue(action)               │                │
+   │                   │                  ├─ POST /players/{id}/actions ────────▶│                │
+   │                   │                  │   If-Match: "a91f…"                  ├ BEGIN IMMEDIATE│
+   │                   │                  │                    │                 ├ action_log? ───▶│
+   │                   │                  │                    │◀─ applyAction ──┤                │
+   │                   │                  │                    │                 ├ snapshot(өмнөх)▶│
+   │                   │                  │                    │                 ├ UPSERT saves ─▶│
+   │                   │                  │                    │                 ├ COMMIT         │
+   │                   │                  │◀── 200 {state, results, etag} ───────┤                │
+   │                   │◀─ store.setState(СЕРВЕРИЙН state)     │                 │                │
+   │  aria-live: “Gained 40 XP. Level up: Cadet.”              │                 │                │</div>
+    <p class="note">Клиент нь <code>action.seed</code>-ыг өөрөө үүсгэж илгээдэг тул loot/encounter
+      хоёр талд <b>ижил</b> гарна — optimistic төлөв серверийнхтэй зөрөхгүй.</p>
+  </div>
+
+  <div class="grid g2">
+    <div class="panel">
+      <h2>Офлайн → онлайн</h2>
+<div class="flow">[офлайн] claim ×3 · rest ×1 · dungeon ×1
+         локал домэйн ажиллана, дараалал өснө
+         localStorage: ea.save.v1 + ea.queue.v1
+
+[онлайн]  window 'online' → sync.kick()
+         POST /actions {actions:[5]}   ← НЭГ багц
+         ← 200 results: 5× applied
+         store ← серверийн state (ЭРХ БҮХИЙ)
+         queue.dropUpTo([5 actionId])
+
+[давхар илгээлт — сүлжээ хариу алдсан]
+         POST /actions {ижил 5}
+         ← 200 results: 5× replayed
+         state ӨӨРЧЛӨГДӨӨГҮЙ
+         ✓ AC BE-12: XP яг НЭГ удаа</div>
+    </div>
+    <div class="panel">
+      <h2>Домэйн татгалзал — атом буцаалт</h2>
+<div class="flow">stamina = 6
+POST /actions {[claim(5), claim(5)]}
+
+server: 1-р үйлдэл ok  (6 → 1)
+        2-р үйлдэл → INSUFFICIENT_STAMINA
+        throw → ROLLBACK
+
+← 422 application/problem+json
+  { "type":"about:blank",
+    "title":"Action rejected",
+    "status":422,
+    "code":"INSUFFICIENT_STAMINA",
+    "actionId":"b7c1-…" }
+
+DB: saves ӨӨРЧЛӨГДӨӨГҮЙ
+    action_log-д 1-р үйлдэл ч БИЧИГДЭЭГҮЙ
+
+клиент: тэр actionId-г дарааллаас ХАСНА
+        (эс бөгөөс мөнхийн давталт)</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Төхөөрөмж солих</h2>
+<div class="flow">Төхөөрөмж A                                Сервер                         Төхөөрөмж B
+  Settings → «Transfer»                        │                                │
+  POST /players/{A}/transfer-code ────────────▶│ code = crockford32(8 байт)     │
+                                               │ INSERT sha256(code), +15 мин   │
+  ◀── 201 {code:"K7QM-2X4T-9BRH", expiresAt} ──┤                                │
+  «K7QM-2X4T-9BRH» гэж харуулна                │                                │
+                                               │◀── POST /transfer/redeem {code}┤
+                                               │ BEGIN IMMEDIATE                │
+                                               │ hash хайх → used? expired? →410│
+                                               │ шинэ player + save-ийн ХУУЛБАР │
+                                               │ used_at = now · COMMIT         │
+                                               ├── 201 {playerId:B, token:B} ──▶│
+                                               │                    GET /save ◀─┤
+  A-ийн save ХЭВЭЭР үлдэнэ                     │                                │
+                                               │◀── ижил код 2 дахь удаа ───────┤
+                                               ├── 410 TRANSFER_CODE_INVALID ──▶│</div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════ API ══════════════════════════════════ -->
+<section role="tabpanel" id="p-api" aria-labelledby="t-api" hidden>
+  <div class="panel">
+    <h2>Endpoint газрын зураг — <code>contracts.yaml</code> v1.1.0</h2>
+    <table>
+      <tr><th>Method · Зам</th><th>Auth</th><th>Үүрэг</th><th>AC</th></tr>
+      <tr><td class="m">GET /api/health</td><td>—</td><td>200 ok + contentVersion · <b>503 degraded</b></td><td>BE-9, BE-15</td></tr>
+      <tr><td class="m">POST /api/players</td><td>—</td><td>Нэргүй <code>{playerId, token}</code>. PII 0.</td><td>BE-2</td></tr>
+      <tr><td class="m">GET /api/players/{id}/save</td><td>Bearer</td><td>200 + <code>ETag</code> · 404</td><td>BE-3, BE-4</td></tr>
+      <tr><td class="m">PUT /api/players/{id}/save</td><td>Bearer</td><td><code>If-Match</code> заавал · 409 · <b>хэрэглээ хязгаарлагдсан</b></td><td>BE-3, BE-5</td></tr>
+      <tr style="background:#161d2a"><td class="m">POST /api/players/{id}/actions</td><td>Bearer</td><td><b>Эрх бүхий домэйн.</b> Атом багц · idempotent · 422 татгалзал</td><td>BE-11, BE-12</td></tr>
+      <tr style="background:#161d2a"><td class="m">GET /api/players/{id}/save/history</td><td>Bearer</td><td>Сүүлийн 10 snapshot (лавлагаа л)</td><td>BE-13</td></tr>
+      <tr style="background:#161d2a"><td class="m">POST /api/players/{id}/save/restore</td><td>Bearer</td><td>Сэргээлт өөрөө snapshot үүсгэнэ</td><td>BE-13</td></tr>
+      <tr style="background:#161d2a"><td class="m">POST /api/players/{id}/transfer-code</td><td>Bearer</td><td>TTL 15 мин · hash хадгална</td><td>BE-14</td></tr>
+      <tr style="background:#161d2a"><td class="m">POST /api/transfer/redeem</td><td>—</td><td>Нэг удаа · бүтэлгүй бүгд 410</td><td>BE-14</td></tr>
+      <tr><td class="m">GET /api/content/pack</td><td>—</td><td>ETag + Cache-Control · 304 · 503</td><td>BE-6</td></tr>
+    </table>
+    <p class="note">Тодруулсан мөрүүд = энэ шатанд <b>нэмэгдсэн</b> (<code>T-42</code>, хянагчийн саналаар).</p>
+  </div>
+
+  <div class="grid g2">
+    <div class="panel">
+      <h2>Middleware гинж — дараалал нь ГЭРЭЭ</h2>
+<div class="flow"> 1 requestId
+ 2 logger(start)            PII-гүй JSON мөр
+ 3 bodyLimit(1MB)   → 413   ⚠ задлахаас ӨМНӨ
+ 4 rateLimit:global → 429   зөвхөн /players, /redeem
+ 5 jsonParse        → 400
+ 6 auth (Bearer)    → 401   sha256 → token_hash
+ 7 rateLimit:token  → 429   ⚠ auth-ийн ДАРАА
+ 8 ownership        → 403   path id ≠ auth id
+ 9 validate(schema) → 400   + errors[] (JSON Pointer)
+10 handler
+11 problemMapper           бүгд RFC 9457</div>
+    </div>
+    <div class="panel">
+      <h2>Алдааны зураглал (AC BE-16)</h2>
+      <table>
+        <tr><th>status</th><th><code>code</code></th></tr>
+        <tr><td>400</td><td class="m">INVALID_BODY + errors[]</td></tr>
+        <tr><td>401</td><td class="m">UNAUTHORIZED</td></tr>
+        <tr><td>403</td><td class="m">FORBIDDEN</td></tr>
+        <tr><td>404</td><td class="m">NOT_FOUND</td></tr>
+        <tr><td>409</td><td class="m">ETAG_MISMATCH</td></tr>
+        <tr><td>410</td><td class="m">TRANSFER_CODE_INVALID</td></tr>
+        <tr><td>413</td><td class="m">BODY_TOO_LARGE</td></tr>
+        <tr><td>422</td><td class="m k">RejectionReason + actionId</td></tr>
+        <tr><td>429</td><td class="m">RATE_LIMITED + Retry-After</td></tr>
+        <tr><td>500</td><td class="m">INTERNAL <span class="meta">(stack trace ОРОХГҮЙ)</span></td></tr>
+        <tr><td>503</td><td class="m">CONTENT_UNAVAILABLE</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>SQLite — 6 хүснэгт, PII тэг</h2>
+<div class="flow">players(player_id PK, token_hash UNIQUE, created_at)
+saves(player_id PK→players, schema_version, state_json, updated_at, etag)
+save_snapshots(snapshot_id PK, player_id→, schema_version, state_json, created_at,
+               reason CHECK IN ('put','actions','restore'))        ix(player_id, created_at DESC)
+action_log(player_id, action_id, applied_at, events_json,
+           PRIMARY KEY (player_id, action_id))   ⚠ ХОСОЛСОН — өөр тоглогчийн actionId уншигдахгүй
+transfer_codes(code_hash PK, player_id→, created_at, expires_at, used_at)
+schema_migrations(version PK, applied_at)
+
+PRAGMA journal_mode=WAL · foreign_keys=ON · busy_timeout=5000
+⚠ IP · user-agent · и-мэйл · нэр — нэг ч багана БАЙХГҮЙ (AC BE-2)
+⚠ token ба transfer code хоёулаа ЗӨВХӨН sha256 hex хэлбэрээр</div>
+  </div>
+
+  <div class="panel">
+    <h2>Хоёр команд — өөр юу ч биш</h2>
+    <pre>cd web-app &amp;&amp; npm test      # typecheck &amp;&amp; lint &amp;&amp; vitest run
+cd server  &amp;&amp; npm test      # typecheck &amp;&amp; lint &amp;&amp; vitest run</pre>
+    <p class="note">Репогийн root дээр <code>package.json</code> байхгүй нь <b>санаатай</b>:
+      нэгтгэх скрипт нэмэх нь дүрмийн хоёр дахь эх үүсгэнэ. Гадаргуу тутам нэг команд
+      (<code>plan.md P-7</code>).</p>
+  </div>
+</section>
+
+</div>
+
+<script>
+(function(){
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+  function show(tab){
+    tabs.forEach(function(t){
+      var sel = t === tab;
+      t.setAttribute('aria-selected', sel ? 'true' : 'false');
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !sel;
+    });
+    tab.focus();
+  }
+  tabs.forEach(function(t, i){
+    t.addEventListener('click', function(){ show(t); });
+    t.addEventListener('keydown', function(e){
+      var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if(!d) return;
+      e.preventDefault();
+      show(tabs[(i + d + tabs.length) % tabs.length]);
+    });
+  });
+})();
+</script>
+</body>
+</html>
