@@ -1116,7 +1116,9 @@ return { state: r.state }
 хамгийн муу бүтэлгүйтэл.
 
 `flush()` нь `visibilitychange`(hidden) ба `pagehide` дээр дуудагдана — `beforeunload`
-нь мобайл дээр найдваргүй.
+нь мобайл дээр найдваргүй. Утас нь `App.flush` (`app/createGame.ts`) → `app/main.ts`-ийн
+хоёр сонсогч: эхлээд СИНХРОН `flush()`, дараа нь `kick()` (async push нь хуудас
+хаагдахад дуусахгүй байж болно).
 
 ### 7.6 Үйлдлийн дараалал ба эвлэрүүлэг (AC BE-7, BE-11, BE-12)
 
@@ -1150,6 +1152,8 @@ status(): 'offline' | 'syncing' | 'synced' | 'error'
    409 →  GET /save → серверийн төлвийг авна → үлдсэн дарааллыг ТҮҮН ДЭЭР дахин илгээнэ
    422 →  тухайн actionId-г дарааллаас ХАСНА, тоглогчид шалтгааныг харуулна,
           үлдсэнийг үргэлжлүүлнэ  ⚠ давталтад орохгүйн тулд ЗААВАЛ хасна
+          ⚠ actionId нь `problem+json`-оос ирнэ (§6.10). Сервер аль үйлдэл болохыг
+            НЭРЛЭЭГҮЙ тохиолдолд Л бүтэн багц хаягдана — эс бөгөөс дараалал гацна
    429 →  Retry-After секундын дараа дахин
    сүлжээний алдаа → status='offline', дараагийн `online` event хүртэл зогсоно
 5. Дараалал эвдэрсэн бол (JSON задрахгүй, actionId давхардсан):
@@ -1161,8 +1165,9 @@ localStorage. Дараалал өснө. Холболт сэргэхэд (`windo
 `kick()` дуудагдаж дээрх урсгал явна.
 
 ⚠ **Зөрүүний цонх.** Локал optimistic төлөв ба серверийн эрх бүхий төлөв нь loot/encounter
-дээр зөрж болзошгүй. Тиймээс `dispatch` нь `action.seed`-ыг **клиент дээр** үүсгэж илгээнэ
-(`crypto.getRandomValues`-аас нэг 32-бит тоо) — сервер ижил seed-ээр ижил үр дүн гаргана.
+дээр зөрж болзошгүй. Тиймээс seed нь **`actionId`-аас тодорхойлогддог**: клиент `fnv1a(actionId)`-ээр
+rng үүсгэнэ, сервер нь `action.seed ?? fnv1a(actionId)` — ижил үйлдэл хоёр талд ижил
+loot гаргана (давтан илгээхэд ч ижил).
 Зөрөх цорын ганц тохиолдол нь өөр төхөөрөмжөөс өөрчлөлт орсон үед бөгөөд тэр үед
 серверийн төлөв ялна (документчилсан last-write-wins, `spec.md A4`).
 
@@ -1188,7 +1193,7 @@ export function importSave(file: File): Promise<{ ok: true; state } | { ok: fals
 | A11Y-2 | `@media (prefers-reduced-motion: reduce)` бүх `transition`/`animation`-ыг `0.01ms` болгоно. Settings-ийн `reducedMotion` нь `<html data-reduced-motion="true">` тавьж ижил CSS дүрмийг идэвхжүүлнэ |
 | A11Y-3 | Төлөв бүр текст + дүрстэй: `Locked 🔒` · `Done ✓` · `Available` — зөвхөн өнгө ХЭЗЭЭ Ч биш |
 | A11Y-4 | Өнгөний палитр нь ≥4.5:1 контрасттай (`theme.css` дотор тогтоогдоно). Layout нь CSS Grid + `minmax` — 360/768/1280px дээр хэвтээ гүйлгэлтгүй |
-| A11Y-5 | Дуу нь **нэмэлт** давхарга: `soundEnabled:false` үед ямар ч функц алдагдахгүй. Дуу нь зөвхөн `events$`-ийн 4 event дээр тоглоно |
+| A11Y-5 | Дуу нь **нэмэлт** давхарга: `soundEnabled:false` үед ямар ч функц алдагдахгүй. Дуу нь зөвхөн `events$`-ийн 4 event дээр тоглоно: `LEVEL_UP` · `QUEST_COMPLETED` · `DUNGEON_PASSED` · `ACHIEVEMENT_UNLOCKED` (`ui/sound.ts` — WebAudio осциллятор, 120ms; `AudioContext` байхгүй бол ЧИМЭЭГҮЙ өнгөрнө) |
 | A11Y-6 | `web-app/tests/a11y/*.test.ts` — дэлгэц бүрийг jsdom-д mount хийж `axe-core` ажиллуулна, `critical` зөрчил **0** |
 
 ⚠ `axe-core` нь `web-app`-ийн **devDependency** — `shared/`-ыг хамааралгүй байлгана.

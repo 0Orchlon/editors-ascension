@@ -29,8 +29,8 @@ cd server  && npm ci && npm test && npm start       # http://127.0.0.1:8787
 ## Шалгах — гадаргуу тутамд НЭГ команд
 
 ```bash
-cd web-app && npm test      # typecheck + lint + vitest (423 тест)
-cd server  && npm test      # typecheck + lint + vitest (75 тест)
+cd web-app && npm test      # typecheck + lint + vitest (439 тест)
+cd server  && npm test      # typecheck + lint + vitest (76 тест)
 ```
 
 Репогийн ROOT дээр `package.json` БАЙХГҮЙ нь зөв — CI нь гадаргуу тутам ажиллана.

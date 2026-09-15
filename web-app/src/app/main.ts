@@ -10,6 +10,7 @@ import { renderSkills } from '../ui/screens/skills.ts';
 import { renderForge } from '../ui/screens/forge.ts';
 import { renderAchievements } from '../ui/screens/achievements.ts';
 import { applyMotionPreference, renderSettings } from '../ui/screens/settings.ts';
+import { createSoundCues } from '../ui/sound.ts';
 import type { SyncStatus } from '../services/sync.ts';
 // ⚠ DOM-ийн глобал `Storage` БИШ — сервисийн нарийссан интерфейс (тестэд солигдоно).
 import type { Storage } from '../services/persistence.ts';
@@ -50,6 +51,9 @@ export function boot(root: HTMLElement, storage: Storage = window.localStorage):
     // Route солигдоход гарчиг руу фокус — гарны хэрэглэгч байрлалаа мэднэ (AC A11Y-1).
     document.getElementById('screen-title')?.focus();
   };
+
+  // A11Y-5 — дуу нь `events$`-ийн дөрвөн event дээр л тоглоно, тохиргоогоор унтрана.
+  app.game.events$(createSoundCues(() => app.game.view.settings().soundEnabled));
 
   onRouteChange(paint);
   applyMotionPreference(app.game.view.settings().reducedMotion);
