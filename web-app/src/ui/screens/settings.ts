@@ -72,12 +72,23 @@ export function renderSettings(deps: SettingsDeps): HTMLElement {
     const result = game.importSave(text);
     if (!result.ok) {
       // ⚠ AC SV-5 — татгалзсан файл ОДООГИЙН төлвийг УСТГАХГҮЙ, сервер рүү ч явахгүй.
-      importStatus.textContent = `${result.reason} Your current progress was left untouched.`;
-      announce(importStatus.textContent);
+      // §7.7 — эхний 5 алдааг талбарын замтай нь нэрлэнэ, эс бөгөөс тоглогч
+      // файлаа засах ямар ч мэдээлэлгүй үлдэнэ.
+      const first = (result.issues ?? []).slice(0, 5);
+      importStatus.replaceChildren(
+        el('span', { text: `${result.reason} Your current progress was left untouched.` }),
+        ...(first.length === 0
+          ? []
+          : [el('ul', { class: 'issue-list' }, first.map((i) => el('li', { text: `${i.field}: ${i.message}` })))]),
+        ...((result.issues?.length ?? 0) > 5
+          ? [el('span', { class: 'muted', text: `…and ${result.issues!.length - 5} more.` })]
+          : []),
+      );
+      announce(importStatus.textContent ?? '');
       toast('Import rejected. Nothing was changed.', 'warn');
       return;
     }
-    importStatus.textContent = 'Save imported.';
+    importStatus.replaceChildren(el('span', { text: 'Save imported.' }));
     announce('Save imported.');
     // lld.md §7.7 — импортолсон төлөв нь серверт БҮТНЭЭР тавигдана, эс бөгөөс
     // дараагийн sync нь серверийн хуучин save-ыг буцааж татна.

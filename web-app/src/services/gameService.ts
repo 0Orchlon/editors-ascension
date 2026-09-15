@@ -24,7 +24,15 @@ import type {
   RejectionReason,
   SkillDefinition,
 } from '@shared/types/index.ts';
+import type { Issue } from '@shared/validate/dsl.ts';
 import { createStore, type Store } from './store.ts';
+
+/** Татгалзлын кодыг хүний өгүүлбэр болгоно (§7.7). */
+const REJECTION_TEXT: Record<string, string> = {
+  parse: 'That file is not a save file — it could not be read as JSON.',
+  schema: 'That save file does not match this game’s save format.',
+  'too-new': 'That save came from a newer version of the game. Update first, then import.',
+};
 import type { Persistence } from './persistence.ts';
 
 export type QuestCardView = {
@@ -206,9 +214,17 @@ export function createGameService(deps: GameServiceDeps) {
     exportSave: (): string => exportSave(store.getState(), now()),
 
     /** ⚠ Татгалзвал ОДООГИЙН төлөв ХЭВЭЭР үлдэнэ (AC SV-5). */
-    importSave(text: string): { ok: true } | { ok: false; reason: string } {
+    importSave(text: string): { ok: true } | { ok: false; reason: string; issues?: Issue[] } {
       const result = importSave(text);
-      if (!result.ok) return { ok: false, reason: `Save file rejected (${result.reason}).` };
+      if (!result.ok) {
+        // §7.7 — тоглогч файлынхаа ЮУ нь буруу болохыг мэдэх ёстой.
+        const rejected: { ok: false; reason: string; issues?: Issue[] } = {
+          ok: false,
+          reason: REJECTION_TEXT[result.reason] ?? `Save file rejected (${result.reason}).`,
+        };
+        if (result.issues !== undefined) rejected.issues = result.issues;
+        return rejected;
+      }
       store.setState(result.state);
       deps.persistence?.scheduleWrite(result.state);
       return { ok: true };
