@@ -432,9 +432,9 @@ export function createApp(options: AppOptions = {}) {
     db,
     content,
     handle,
-    listen(port: number): Promise<number> {
+    listen(port: number, host = '127.0.0.1'): Promise<number> {
       return new Promise((resolve) => {
-        server.listen(port, '127.0.0.1', () => {
+        server.listen(port, host, () => {
           const address = server.address();
           resolve(typeof address === 'object' && address ? address.port : port);
         });

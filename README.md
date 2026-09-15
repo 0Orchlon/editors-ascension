@@ -34,12 +34,9 @@ docker compose -f docker-compose.dev.yml up -d --build
 # web-app: http://localhost:18085   server: http://localhost:18787/api/health
 ```
 
-⚠ **Мэдэгдэж буй хязгаарлал:** `server/src/app.ts`-ийн `server.listen(port, '127.0.0.1', …)`
-нь зөвхөн container-ийн loopback дээр сонсдог тул өөр container-с (жш web-app-ийн
-nginx `proxy_pass`) болон host-ийн port-forward-оор хүрэх боломжгүй (`connect() failed
-(111: Connection refused)`). Container дотроосоо (`/api/health`) бол хэвийн. Энэ бол
-эх кодын зан төлөв тул байршуулалтын алхмаар засаагүй — `0.0.0.0`-д сонсох эсэхийг
-хэрэгжүүлэгч шийднэ.
+Сонсох хаяг нь `HOST` орчны хувьсагчаас уншигдана (анхдагч `0.0.0.0`) — container-ийн
+port-forward ба web-app-ийн nginx `proxy_pass` хоёулаа ажиллана. Зөвхөн локал loopback
+дээр сонсох бол `HOST=127.0.0.1` гэж өг.
 
 ## Шалгах — гадаргуу тутамд НЭГ команд
 

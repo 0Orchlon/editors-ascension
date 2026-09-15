@@ -10,12 +10,14 @@ const SHUTDOWN_GRACE_MS = 10_000;
 function main(): void {
   const port = Number(process.env.PORT ?? 8787);
   const dbFile = process.env.DB_FILE ?? 'data/editors-ascension.sqlite';
+  // Container дотор 127.0.0.1 нь гаднаас хүрэхгүй — анхдагчаар бүх интерфэйс дээр сонсоно.
+  const host = process.env.HOST ?? '0.0.0.0';
   const app = createApp({ dbFile });
 
   const cleanup = setInterval(() => cleanupExpired(app.db, new Date().toISOString()), CLEANUP_INTERVAL_MS);
   cleanup.unref();
 
-  void app.listen(port).then((bound) => {
+  void app.listen(port, host).then((bound) => {
     process.stdout.write(
       `${JSON.stringify({ ts: new Date().toISOString(), level: 'info', msg: 'listening', port: bound })}\n`,
     );
