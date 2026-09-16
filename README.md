@@ -75,6 +75,9 @@ Blackmagic DaVinci Resolve) — бүтцийн шаардлагыг (DG-1: 1–3
 
 ## Баримт
 
+- [`docs/PERSONAL-2/spec.md`](docs/PERSONAL-2/spec.md) — **PERSONAL-2 гүнзгийрүүлэлтийн спек**
+  (vibrant · addictive · офлайн · гадны холболтгүй); суурь нь доорх PERSONAL-1 спек
+- [`docs/AAA-SPEC.md`](docs/AAA-SPEC.md) — AAA гүнзгийрүүлэлтийн эх спек (PERSONAL-2-ийн эх шаардлага)
 - [`docs/PERSONAL-1/spec.md`](docs/PERSONAL-1/spec.md) — шаардлага ба хүлээн авах шалгуур
 - [`docs/PERSONAL-1/plan.md`](docs/PERSONAL-1/plan.md) · [`tasks.md`](docs/PERSONAL-1/tasks.md) — төлөвлөгөө ба ажлын задаргаа
 - [`docs/PERSONAL-1/lld.md`](docs/PERSONAL-1/lld.md) — дэлгэрэнгүй загвар
