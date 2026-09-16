@@ -1,6 +1,6 @@
 /**
  * Drift хамгаалалт (lld.md §5.1): `shared/validate/schemas.ts` нь ГАРААР бичигдсэн тул
- * `docs/PERSONAL-1/contracts.yaml`-аас салж болзошгүй. Зөрвөл ЭНЭ ТЕСТ УНАНА.
+ * `docs/PERSONAL-2/contracts.yaml` v1.2.0-аас салж болзошгүй. Зөрвөл ЭНЭ ТЕСТ УНАНА.
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -10,7 +10,7 @@ import type { Check } from '@shared/validate/dsl.ts';
 import * as S from '@shared/validate/schemas.ts';
 
 // vitest нь `web-app/` дотроос ажиллана (plan.md P-7).
-const contractPath = resolve(process.cwd(), '../docs/PERSONAL-1/contracts.yaml');
+const contractPath = resolve(process.cwd(), '../docs/PERSONAL-2/contracts.yaml');
 const doc = parse(readFileSync(contractPath, 'utf8')) as {
   components: { schemas: Record<string, any> };
 };
@@ -47,14 +47,49 @@ const MAP: Record<string, Check<any>> = {
   SkillDefinition: S.SkillDefinition,
   ContentPack: S.ContentPack,
   ProgressionConstants: S.ProgressionConstants,
+  // ── v1.2.0 (T-05)
+  MasteryTrack: S.MasteryTrack,
+  DifficultyTier: S.DifficultyTier,
+  ReplayLogEntry: S.ReplayLogEntry,
+  Rarity: S.Rarity,
+  CosmeticSlot: S.CosmeticSlot,
+  CosmeticUnlockSource: S.CosmeticUnlockSource,
+  CosmeticItem: S.CosmeticItem,
+  CampLayout: S.CampLayout,
+  CampLayoutSlots: S.CampLayoutSlots,
+  GuildDefinition: S.GuildDefinition,
+  SideQuestChain: S.SideQuestChain,
+  BossAttempt: S.BossAttempt,
+  DomainEventType: S.DomainEventType,
 };
+
+/**
+ * `ActionPayload*` схемүүд нь `shared/validate/index.ts → PAYLOADS`-д ЖИЖИГ
+ * бүтэцтэй (`$ref` биш) тул `MAP`-д ОРОХГҮЙ — тэднийг `T-18`-ийн payload validator
+ * тест хамарна. Энд ил жагсаах шалтгаан: «бүрхэвч» тест нь тэднийг дутуу гэж
+ * тооцох ёсгүй, гэхдээ чимээгүй алгасах ч болохгүй.
+ */
+const PAYLOAD_SCHEMA_NAMES = [
+  'ActionPayloadPrestigeMastery',
+  'ActionPayloadRespecTree',
+  'ActionPayloadSetCampLayout',
+  'ActionPayloadUpdateSettings',
+  'ActionPayloadBossAttempt',
+];
 
 const sorted = (xs: readonly (string | number)[] | undefined) => [...(xs ?? [])].sort();
 
 describe('contract parity: schemas.ts ↔ contracts.yaml (T-04)', () => {
   it('covers every contract schema that has a TypeScript counterpart', () => {
     // DomainEvent · ActionBatchResponse-ийн дэд хэсгүүд MAP-д тусдаа биш — тэднийг оруулав.
-    const covered = new Set([...Object.keys(MAP), 'DomainEvent', 'MilestoneKey', 'TransferCodeString']);
+    const covered = new Set([
+      ...Object.keys(MAP),
+      ...PAYLOAD_SCHEMA_NAMES,
+      'DomainEvent',
+      'MilestoneKey',
+      'TransferCodeString',
+      'SkillTag',
+    ]);
     const missing = Object.keys(yamlSchemas).filter((n) => !covered.has(n));
     expect(missing).toEqual([]);
   });
