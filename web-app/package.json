@@ -8,6 +8,7 @@
     "build": "vite build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
+    "validate:content": "node scripts/validate-content.mjs",
     "test": "npm run typecheck && npm run lint && vitest run"
   },
   "devDependencies": {

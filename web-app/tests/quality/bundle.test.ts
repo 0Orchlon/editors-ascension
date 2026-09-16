@@ -32,7 +32,7 @@ function gzippedAssetBytes(outDir: string): number {
 
 describe('QX-3 — the shipped bundle stays inside its budget (T-02)', () => {
   it('builds and keeps gzipped JS+CSS at or below 130% of the measured baseline', async () => {
-    const outDir = join(webRoot, 'dist-bundle-test');
+    const outDir = join(webRoot, 'dist', 'bundle-test');
     await build({
       root: webRoot,
       logLevel: 'silent',
