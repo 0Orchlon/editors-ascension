@@ -1,5 +1,7 @@
-/** Өдрийн даалгавар сонгогч (lld.md §5.4.6; AC DM-1, DM-2, DM-3). */
+/** Өдрийн даалгавар сонгогч (lld.md §5.4.6; AC DM-1, DM-2, DM-3, RET-4). */
 import type { ContentPack, GameState, QuestDefinition } from '../types/index.ts';
+import { REFRESHER_MIN_DAYS } from './constants.ts';
+import { daysBetween } from './result.ts';
 import { fnv1a } from './rng.ts';
 
 /** Сонголтын эрэмбэ — main хамгийн түрүүнд (AC DM-3). */
@@ -39,5 +41,30 @@ export function pickDailyMission(state: GameState, date: string, pack: ContentPa
     return tierPool[fnv1a(date) % tierPool.length]!.id;
   }
 
+  // AC RET-4 — refresher нь СҮҮЛИЙН АРГА: дээрх гурван эрэмбэд шинэ ажил байхгүй
+  // үед л ээлж ирнэ (plan.md §12.4 — байрлал нь ЭНЭ, `return null`-ийн ӨМНӨ).
+  const refresher = refresherCandidates(state, date, pack);
+  if (refresher.length > 0) return refresher[fnv1a(date) % refresher.length]!.id;
+
   return null; // AC DM-3 — UI «Rest day» харуулна.
+}
+
+/**
+ * ≥14 тоглоомын өдрийн өмнө тэнцсэн dungeon-ууд (AC RET-4).
+ *
+ * ⚠ Огноо нь `dungeonStats[id].lastPassedDate`-ээс (plan.md P-15). `null` нь
+ * «хэзээ тэнцсэн нь тодорхойгүй» гэсэн үг — нэр дэвшихГҮЙ: хуучин save-д огноо
+ * байхгүй тул зохиовол migration-ий дараа өдөр бүр refresher гарна.
+ * ⚠ `daysBetween` нь UTC хуанлийн зөрүү (P-18) — `Date.now()` дуудагдахгүй тул
+ * детерминизмын хориг зөрчигдөхгүй.
+ */
+function refresherCandidates(state: GameState, date: string, pack: ContentPack): QuestDefinition[] {
+  return pack.quests
+    .filter((q) => q.track === 'dungeon')
+    .filter((q) => state.completedDungeonIds.includes(q.id))
+    .filter((q) => {
+      const last = state.dungeonStats[q.id]?.lastPassedDate;
+      return last !== undefined && last !== null && daysBetween(last, date) >= REFRESHER_MIN_DAYS;
+    })
+    .sort((a, b) => a.world - b.world || (a.id < b.id ? -1 : 1));
 }
