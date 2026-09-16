@@ -9,11 +9,13 @@ import { levelFor, rankName, xpToNextLevel } from '@shared/core/progression.ts';
 import { sideQuestXp } from '@shared/core/sideQuests.ts';
 import { tierFor } from '@shared/core/boss.ts';
 import { createRng, fnv1a } from '@shared/core/rng.ts';
-import { BOSS_CATEGORIES, BOSS_CATEGORY_LABELS, MILESTONE_KEYS, XP_THRESHOLDS } from '@shared/core/constants.ts';
+import { BOSS_CATEGORIES, BOSS_CATEGORY_LABELS, MILESTONE_KEYS, SKILL_TAGS, XP_THRESHOLDS } from '@shared/core/constants.ts';
+import { rankOf } from '@shared/core/reputation.ts';
 import { exportSave, importSave } from '@shared/core/saves.ts';
 import type {
   Action,
   ActionType,
+  SkillTag,
   AchievementDefinition,
   ContentPack,
   DomainEvent,
@@ -81,6 +83,28 @@ export type SkillNodeView = SkillDefinition & {
 export type AchievementView = AchievementDefinition & { earned: boolean; requirement: string };
 
 export type ProjectView = ProjectState & { doneCount: number; nextMilestone: string | null };
+
+/** Camp ба Skills хоёулаа ЭНЭ хэлбэрийг уншина — хоёр тооцоолол үлдэхгүй. */
+export type MasteryTrackView = {
+  tag: SkillTag;
+  label: string;
+  level: number;
+  xp: number;
+  /** Дараагийн түвшний нийт XP; дээд түвшинд `null`. */
+  xpToNext: number | null;
+  /** Одоогийн түвшний эхлэл — мини bar-ын хувь энэ хоёрын хооронд тооцогдоно. */
+  xpFloor: number;
+  prestigeCount: number;
+};
+
+export type GuildView = {
+  id: string;
+  title: string;
+  rep: number;
+  /** `0..4` — ЗӨВХӨН cosmetic (AC RET-6). */
+  rank: number;
+  placeholder: boolean;
+};
 
 export type DispatchResult = { events: DomainEvent[]; rejected?: RejectionReason; detail?: string };
 
@@ -151,6 +175,17 @@ export function createGameService(deps: GameServiceDeps) {
       tutorialRefs: quest.tutorialRefs,
     };
   }
+
+  /** `video-editing` → `Video Editing`. ⚠ UI-ийн текст — домэйн тогтмол БИШ. */
+  const TAG_LABELS: Record<string, string> = {
+    'video-editing': 'Video Editing',
+    blender: 'Blender',
+    animation: 'Animation',
+    cinematography: 'Cinematography',
+    audio: 'Audio',
+    vfx: 'VFX',
+    storytelling: 'Storytelling',
+  };
 
   function requirementText(def: AchievementDefinition): string {
     const { kind, value } = def.predicate;
@@ -342,6 +377,39 @@ export function createGameService(deps: GameServiceDeps) {
       encounter: (id: string) => pack.encounters.find((e) => e.id === id) ?? null,
 
       levelOf: (xp: number): number => levelFor(xp),
+
+      /** AC MST-6 — 7 track, контентын дарааллаас ҮЛ ХАМААРАН `SKILL_TAGS`-ийн эрэмбээр. */
+      masteryTracks(): MasteryTrackView[] {
+        const state = store.getState();
+        return SKILL_TAGS.map((tag) => {
+          const track = state.mastery[tag] ?? { tag, xp: 0, level: 1, prestigeCount: 0 };
+          const remaining = xpToNextLevel(track.xp);
+          return {
+            tag,
+            label: TAG_LABELS[tag] ?? tag,
+            level: track.level,
+            xp: track.xp,
+            xpToNext: remaining === null ? null : track.xp + remaining,
+            xpFloor: XP_THRESHOLDS.filter((t) => t <= track.xp).at(-1) ?? 0,
+            prestigeCount: track.prestigeCount,
+          };
+        });
+      },
+
+      /** AC RET-5 — guild бүрийн rep ба зэрэглэл; нэр нь контентоос. */
+      guilds(): GuildView[] {
+        const state = store.getState();
+        return pack.guilds.map((guild) => {
+          const rep = state.reputation[guild.id] ?? 0;
+          return {
+            id: guild.id,
+            title: guild.title,
+            rep,
+            rank: rankOf(rep),
+            placeholder: guild.placeholder === true,
+          };
+        });
+      },
 
       /**
        * Дэлгэцийн палитрыг сонгоно (lld.md §9.2). ⚠ Домэйн БИШ — цэвэр дүрслэл,

@@ -388,3 +388,21 @@ input[type="checkbox"], input[type="radio"] { width: 1.15rem; height: 1.15rem; }
 .fx-levelup, .fx-achieve, .fx-mastery, .fx-chain { animation: fx-pop 280ms ease-out; }
 .fx-claim, .fx-side, .fx-pass, .fx-loot, .fx-streak, .fx-rep, .fx-boss { animation: fx-pop 200ms ease-out; }
 .fx-fail { animation: fx-shake 240ms ease-in-out; }
+
+/* ── Camp v2 (T-29) — 360px өргөнд хэвтээ гүйлгэлт үүсгэхгүй (VIS-5). */
+.mastery-mini, .guild-list { list-style: none; margin: 0; padding: 0; }
+.mastery-row {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 0.25rem 0.6rem;
+  align-items: center;
+  margin: 0.45rem 0;
+  min-width: 0;
+}
+.mastery-row .statbar { grid-column: 1 / -1; min-width: 0; }
+.mastery-tag { font-weight: 600; }
+.mastery-lv, .mastery-prestige { color: var(--muted); font-size: 0.9rem; }
+.guild-row { margin: 0.35rem 0; }
+.guild-name { font-weight: 600; }
+.guild-rank { color: var(--muted); }
+.link-button { display: inline-block; margin-top: 0.6rem; color: var(--accent); }
