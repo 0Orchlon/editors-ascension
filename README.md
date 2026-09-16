@@ -38,6 +38,32 @@ docker compose -f docker-compose.dev.yml up -d --build
 port-forward ба web-app-ийн nginx `proxy_pass` хоёулаа ажиллана. Зөвхөн локал loopback
 дээр сонсох бол `HOST=127.0.0.1` гэж өг.
 
+## Гэрээ (API contract) — нийтлэгдсэн v1.2.0
+
+Гэрээ нь **код бичигдэхээс ӨМНӨ** нийтлэгддэг. Гурван зүйл нэг зэрэг байна:
+
+```bash
+cd server
+npm run contract:lint    # 14 хаалга (G-1…G-14) — гэрээ нийтлэгдэхэд бэлэн үү
+npm run contract:mock    # дуурайлт → http://127.0.0.1:4010/api  (prism-ийн орлуулагч)
+npm run contract:docs    # docs/PERSONAL-2/contract-docs.md-ыг ДАХИН үүсгэнэ
+```
+
+- **Эрх бүхий эх:** [`docs/PERSONAL-2/contracts.yaml`](docs/PERSONAL-2/contracts.yaml) (v1.2.0).
+- **Уншигдах баримт:** [`docs/PERSONAL-2/contract-docs.md`](docs/PERSONAL-2/contract-docs.md) —
+  **ҮҮСГЭГДДЭГ**. Гараар бичих хэсэг нь зөвхөн
+  [`contract-docs.prologue.md`](docs/PERSONAL-2/contract-docs.prologue.md).
+- Гурвуулаа `cd server && npm test`-д залгагдсан
+  ([`server/tests/contract/publish.test.ts`](server/tests/contract/publish.test.ts)):
+  гэрээ зөрчилтэй болох, баримт хуучрах, дуурайлт гэрээнээс гарах — гурвуулангийнх нь
+  замд хаалга бий.
+
+⚠ Дуурайлт нь **төлөв ХАДГАЛАХГҮЙ** — гэрээний ХЭЛБЭР шалгахад зориулагдсан. Зан төлөвийн
+тест нь жинхэнэ сервер дээр (`server/tests/contract/contract.test.ts`).
+⚠ `@stoplight/prism-cli` ашиглаагүй: гадны холболтгүй байх дүрэм (AC OFF-2…OFF-5) ба
+«гадаргуу тутамд ганц команд» зарчмын улмаас дуурайлт нь `node:http` + аль хэдийн суусан
+`yaml`-аар бичигдсэн — шинэ хамаарал ТЭГ.
+
 ## Шалгах — гадаргуу тутамд НЭГ команд
 
 ```bash
@@ -88,8 +114,10 @@ Blackmagic DaVinci Resolve) — бүтцийн шаардлагыг (DG-1: 1–3
   палитрын лаборатори, дэлгэцийн дуурайлт, FX бүртгэл, boss/rep тооцоолуур
 - [`docs/PERSONAL-2/contracts.yaml`](docs/PERSONAL-2/contracts.yaml) — **API гэрээ v1.2.0**
   (mastery · guild · chain · hard mode · cosmetic; endpoint нэмэгдээгүй)
-- [`docs/PERSONAL-2/contract-docs.md`](docs/PERSONAL-2/contract-docs.md) — гэрээний
-  уншигдах хэлбэр (зөвхөн v1.1.0 → v1.2.0-ийн дельта)
+- [`docs/PERSONAL-2/contract-docs.md`](docs/PERSONAL-2/contract-docs.md) — **гэрээний
+  нийтлэгдсэн баримт** (ҮҮСГЭГДСЭН): нийтлэлийн бүртгэл, нийцтэй байдлын ангилал,
+  save v1→v2-ийн талбар тутмын анхдагч, клиент/сервер нүүлгэх зам, татгалзлын матриц,
+  дуурайлтын жорууд, 14 хаалгын тайлбар, 10 үйлдэл + 50 схемийн бүрэн лавлах
 - [`docs/AAA-SPEC.md`](docs/AAA-SPEC.md) — AAA гүнзгийрүүлэлтийн эх спек (PERSONAL-2-ийн эх шаардлага)
 - [`docs/PERSONAL-1/spec.md`](docs/PERSONAL-1/spec.md) — шаардлага ба хүлээн авах шалгуур
 - [`docs/PERSONAL-1/plan.md`](docs/PERSONAL-1/plan.md) · [`tasks.md`](docs/PERSONAL-1/tasks.md) — төлөвлөгөө ба ажлын задаргаа

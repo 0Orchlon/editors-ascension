@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES2023",
-    "lib": ["ES2023"],
+    "lib": [
+      "ES2023"
+    ],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "strict": true,
@@ -14,7 +16,17 @@
     "isolatedModules": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "types": ["node", "vitest/globals"]
+    "types": [
+      "node",
+      "vitest/globals"
+    ]
   },
-  "include": ["src", "tests", "vitest.config.ts", "eslint.config.js", "../shared"]
+  "include": [
+    "src",
+    "tools",
+    "tests",
+    "vitest.config.ts",
+    "eslint.config.js",
+    "../shared"
+  ]
 }

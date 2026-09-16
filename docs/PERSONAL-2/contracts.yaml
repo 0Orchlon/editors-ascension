@@ -1,4 +1,19 @@
-# PERSONAL-2 · contracts · Дэлгэрэнгүй загвар (Design) · 2026-09-16
+# PERSONAL-2 · contracts · Гэрээ нийтлэх · 2026-09-16
+# (Анх Дэлгэрэнгүй загвар (Design) шатанд гаргасан; НИЙТЛЭХ шатанд шалгагдаж эцэслэв.)
+#
+# НИЙТЛЭГДСЭН. Хаалга: `cd server && npm run contract:lint` (G-1…G-14) —
+#   `server/tests/contract/publish.test.ts`-ээр `npm test`-д мөн ажиллана.
+# Дуурайлт: `cd server && npm run contract:mock` → http://127.0.0.1:4010/api
+# Уншигдах баримт: docs/PERSONAL-2/contract-docs.md (ЭНЭ файлаас ҮҮСГЭГДДЭГ).
+#
+# Нийтлэх шатанд оруулсан ГУРВАН засвар (схемийн зан төлөв ӨӨРЧЛӨГДӨӨГҮЙ тул 1.2.0 хэвээр):
+#   1. `/health → 503` нь `x-problem-exempt`-ээр ИЛ чөлөөлөгдөв. Өмнө нь энэ хариу
+#      `server/CLAUDE.md`-ийн «бүх 4xx/5xx нь problem+json» дүрмийг ЧИМЭЭГҮЙ зөрчиж
+#      байсан — одоо чөлөөлөлт нь шалтгаантай, хамрах хүрээтэй бичигдсэн (G-6).
+#   2. `Action.payload`-ийн тайлбар нь 5 `ActionPayload*` схемийг НЭРЛЭВ. Өмнө нь тэдгээр
+#      нь `$ref`-гүй, нэрээр нь дурдагдаагүй тул ӨНЧИН схем байсан (G-4).
+#   3. `SavePayload.schemaVersion`-д `example: 2` нэмэгдэв — `minimum: 1` нь v1-ийг
+#      хүлээн авах ЗОРИЛГОТОЙ боловч дуурайлт ба баримт нь ОДООГИЙН хувилбарыг харуулна.
 # Editor's Ascension — backend API ба домэйн схемийн контракт, v1.2.0.
 #
 # Эрх бүхий эх сурвалж (машин уншигдах). Тайлбар:
@@ -106,6 +121,15 @@ paths:
               schema: { $ref: "#/components/schemas/HealthOk" }
         "503":
           description: Контент хүчингүй — degraded (AC BE-15)
+          # ⚠ ИЛ ЧӨЛӨӨЛӨЛТ (RFC 9457-оос). Бусад БҮХ 4xx/5xx нь `application/problem+json`
+          #   (AC BE-16). Энэ ГАНЦ хариу нь эрүүл мэндийн БАРИМТ буцаана: хэрэглэгч
+          #   (uptime шалгагч · клиентийн health poll) нь `status` · `version` · `reason`-ыг
+          #   200-тай ИЖИЛ хэлбэрээр уншдаг. Problem болговол health-ийн хоёр хэлбэр үүсч,
+          #   шалгагч бүр хоёр замыг барих шаардлагатай болно.
+          #   Эзэн: PERSONAL-1 AC BE-15 · хамрах хүрээ: зөвхөн `getHealth`.
+          x-problem-exempt: >-
+            Health нь 200 ба 503-д ИЖИЛ баримтын хэлбэр буцаана (AC BE-15). Problem руу
+            шилжүүлбэл health-ийн хоёр дахь хэлбэр үүснэ.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/HealthDegraded" }
@@ -534,7 +558,10 @@ components:
       additionalProperties: false
       required: [schemaVersion, state, updatedAt]
       properties:
-        schemaVersion: { type: integer, minimum: 1 }
+        # ⚠ `minimum: 1` нь ЗОРИУД — сервер v1 биеийг ХҮЛЭЭН АВЧ `MIGRATIONS[2]`-оор
+        #   дээшлүүлнэ (AC SVX-3). `example: 2` нь ОДООГИЙН хувилбарыг заана:
+        #   дуурайлт ба баримт хоёулаа v2 харуулна, гэхдээ v1 хүлээн авагдсан хэвээр.
+        schemaVersion: { type: integer, minimum: 1, example: 2 }
         updatedAt: { type: string, format: date-time }
         state: { $ref: "#/components/schemas/GameState" }
 
@@ -633,8 +660,15 @@ components:
 
             ⚠ Энэ талбар нь ЗОРИУД нээлттэй объект — `oneOf` дискриминатор нэмэх нь
             v1.1.0-ийн клиентүүдийг эвдэнэ. v1.2.0-ийн шинэ/өргөтгөсөн 5 payload-ийн
-            БАРИМТЖУУЛСАН хэлбэр нь `ActionPayload*` схемүүд (доор) — тэдгээр нь
-            `shared/validate/index.ts → validateActionPayload`-ийн гэрээ.
+            БАРИМТЖУУЛСАН хэлбэр нь доорх ТАВАН схем — тэдгээр нь
+            `shared/validate/index.ts → validateActionPayload`-ийн гэрээ:
+            `ActionPayloadPrestigeMastery` (prestigeMastery) ·
+            `ActionPayloadRespecTree` (respecTree) ·
+            `ActionPayloadSetCampLayout` (setCampLayout) ·
+            `ActionPayloadUpdateSettings` (updateSettings) ·
+            `ActionPayloadBossAttempt` (bossAttempt).
+            ⚠ Эдгээрийг `$ref`-ээр ЗААГААГҮЙ нь ЗОРИУД — `payload` нээлттэй хэвээр
+            үлдэх ёстой. Нийтлэлийн хаалга (G-4) тэднийг НЭРЭЭР нь хайж олно.
           type: object
 
     ActionPayloadPrestigeMastery:
