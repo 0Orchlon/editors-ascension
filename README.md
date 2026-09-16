@@ -81,6 +81,15 @@ Blackmagic DaVinci Resolve) — бүтцийн шаардлагыг (DG-1: 1–3
   PERSONAL-2-ийн хэрэгжүүлэлтийн төлөвлөгөө (7 давалгаа, 26 шийдвэр) ба 37 ажлын нэгж.
   `plan.md §11…§14` нь схемийн дельта, функцийн гарын үсэг, томьёо, action/event-ийн
   payload, палитрын токен ба FX бүртгэлийн **гэрээ** — код бичихийн ӨМНӨ уншина
+- [`docs/PERSONAL-2/lld.md`](docs/PERSONAL-2/lld.md) — **PERSONAL-2-ийн дэлгэрэнгүй загвар**;
+  модуль тутмын псевдокод, event-ийн дараалал, save v2 migration, палитрын 122 hex
+  (228 контраст шалгагдсан), FX-ийн 12 мөр, bundle-ийн хэмжигдсэн суурь (46,606 B gzip)
+- [`docs/PERSONAL-2/lld.html`](docs/PERSONAL-2/lld.html) — загварын харагдац: амьд
+  палитрын лаборатори, дэлгэцийн дуурайлт, FX бүртгэл, boss/rep тооцоолуур
+- [`docs/PERSONAL-2/contracts.yaml`](docs/PERSONAL-2/contracts.yaml) — **API гэрээ v1.2.0**
+  (mastery · guild · chain · hard mode · cosmetic; endpoint нэмэгдээгүй)
+- [`docs/PERSONAL-2/contract-docs.md`](docs/PERSONAL-2/contract-docs.md) — гэрээний
+  уншигдах хэлбэр (зөвхөн v1.1.0 → v1.2.0-ийн дельта)
 - [`docs/AAA-SPEC.md`](docs/AAA-SPEC.md) — AAA гүнзгийрүүлэлтийн эх спек (PERSONAL-2-ийн эх шаардлага)
 - [`docs/PERSONAL-1/spec.md`](docs/PERSONAL-1/spec.md) — шаардлага ба хүлээн авах шалгуур
 - [`docs/PERSONAL-1/plan.md`](docs/PERSONAL-1/plan.md) · [`tasks.md`](docs/PERSONAL-1/tasks.md) — төлөвлөгөө ба ажлын задаргаа
