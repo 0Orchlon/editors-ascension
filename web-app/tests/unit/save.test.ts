@@ -44,8 +44,21 @@ describe('save schema version + migration registry (T-05)', () => {
     }
   });
 
+  /**
+   * ⚠ v1.2.0-д бүртгэл ХООСОН БИШ: `MIGRATIONS[2]` бий. Дүрэм өөрчлөгдөөгүй —
+   * «хоосон/дэмий migration бичихгүй» (plan.md P-6). Тиймээс шалгалт нь
+   * «бүртгэл хоосон» гэснээс «бүртгэгдсэн бүхэн төлвийг ҮНЭХЭЭР өөрчилдөг»
+   * болж хөрвөв: no-op migration нь хувилбарыг ахиулаад юу ч хийхгүй, тэр нь
+   * P-6-ийн хориглосон зүйл.
+   */
   it('ships no empty migrations (plan.md P-6)', () => {
-    expect(Object.keys(MIGRATIONS)).toEqual([]);
+    const noop: string[] = [];
+    for (const [version, migration] of Object.entries(MIGRATIONS)) {
+      const before = { schemaVersion: Number(version) - 1 };
+      if (JSON.stringify(migration({ ...before })) === JSON.stringify(before)) noop.push(version);
+    }
+    expect(noop).toEqual([]);
+    expect(Object.keys(MIGRATIONS)).toEqual(['2']);
   });
 
   it('runs a registry chain in order and stamps the target version', () => {

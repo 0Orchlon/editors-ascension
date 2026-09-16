@@ -1,7 +1,13 @@
 /** Цуваалт, ачаалалт, migration (lld.md §5.3; AC SV-1, SV-2, SV-4). */
 import type { GameState, Issue, SavePayload } from '../types/index.ts';
 import { validateGameState } from '../validate/index.ts';
-import { runMigrations, type Migration } from './migrations.ts';
+import {
+  defaultCampLayout,
+  defaultMastery,
+  defaultReputation,
+  runMigrations,
+  type Migration,
+} from './migrations.ts';
 import { CURRENT_SCHEMA_VERSION } from './version.ts';
 
 export type LoadResult =
@@ -28,7 +34,18 @@ export function newGame(): GameState {
     bossAttempts: [],
     dailyMission: null,
     projects: [],
-    settings: { reducedMotion: false, soundEnabled: true },
+    settings: { reducedMotion: false, soundEnabled: true, colorBlindSafe: false, soundVolume: 1 },
+
+    // ⚠ v2 — анхдагч нь `MIGRATIONS[2]`-той ИЖИЛ эхээс гарна (`migrations.ts`),
+    // эс бөгөөс шинэ тоглоом ба нүүлгэсэн save хоёр өөр хэлбэртэй болно.
+    mastery: defaultMastery() as GameState['mastery'],
+    masteryPoints: 0,
+    reputation: defaultReputation(),
+    replayLog: [],
+    campLayout: defaultCampLayout() as GameState['campLayout'],
+    completedChainIds: [],
+    respecAt: null,
+    dungeonStats: {},
   };
 }
 
