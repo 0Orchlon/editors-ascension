@@ -342,6 +342,18 @@ export function createGameService(deps: GameServiceDeps) {
       encounter: (id: string) => pack.encounters.find((e) => e.id === id) ?? null,
 
       levelOf: (xp: number): number => levelFor(xp),
+
+      /**
+       * Дэлгэцийн палитрыг сонгоно (lld.md §9.2). ⚠ Домэйн БИШ — цэвэр дүрслэл,
+       * `D-6`-ийн хүчний хоригт хамаарахгүй: энэ утга ямар ч нээлт, XP-д нөлөөлөхгүй.
+       */
+      activeWorld(): 1 | 2 | 3 | 4 | 5 {
+        const state = store.getState();
+        const pending = pack.quests
+          .filter((q) => q.track === 'main' && !state.completedMainQuestIds.includes(q.id))
+          .map((q) => q.world);
+        return (pending.length === 0 ? 5 : Math.min(...pending)) as 1 | 2 | 3 | 4 | 5;
+      },
     },
   };
 

@@ -11,11 +11,15 @@ import { renderForge } from '../ui/screens/forge.ts';
 import { renderAchievements } from '../ui/screens/achievements.ts';
 import { applyMotionPreference, renderSettings } from '../ui/screens/settings.ts';
 import { createSoundCues } from '../ui/sound.ts';
+import { applyTheme, worldPalette } from '../ui/theme.ts';
 import type { SyncStatus } from '../services/sync.ts';
 // ⚠ DOM-ийн глобал `Storage` БИШ — сервисийн нарийссан интерфейс (тестэд солигдоно).
 import type { Storage } from '../services/persistence.ts';
 
 const ONBOARDED_KEY = 'ea.onboarded.v1';
+
+/** lld.md §9.2 — эдгээр маршрут л тоглогчийн идэвхтэй дэлхийн палитрыг өмсөнө. */
+const WORLD_ROUTES = new Set<string>(['#/quests', '#/side', '#/dungeons', '#/skills']);
 
 export function boot(root: HTMLElement, storage: Storage = window.localStorage): void {
   let status: SyncStatus = 'offline';
@@ -36,6 +40,11 @@ export function boot(root: HTMLElement, storage: Storage = window.localStorage):
 
     renderTopBar(app.game, status);
     renderNav(route);
+    // VIS-1 — палитр нь МАРШРУТААС гарна; дэлгэцийн DOM нь дэлхийг мэдэхгүй.
+    applyTheme(
+      WORLD_ROUTES.has(route) ? worldPalette(app.game.view.activeWorld()) : 'camp',
+      app.game.view.settings().colorBlindSafe,
+    );
 
     const screen =
       route === '#/quests' ? renderQuests(app.game, 'main', paint)

@@ -1,22 +1,156 @@
 /**
- * Хэв маяг (T-39, T-40).
+ * Хэв маяг (T-39, T-40, T-27, T-28).
  *
- * ⚠ Контраст: үндсэн текст #e9eef6 дээр #10141c = ~14:1 (AC A11Y-4 ≥4.5:1 шаарддаг).
- * ⚠ Фокусын хүрээ нь дэвсгэрээс ≥3:1 (AC A11Y-4) — `--focus` нь тод шар.
- * ⚠ Мэдээлэл ЗӨВХӨН өнгөөр дамжихгүй: badge, статус бүр текст/дүрстэй.
+ * ⚠ P-26 — өнгөний ЦОРЫН ГАНЦ эх нь `ui/theme.ts`. Энэ файлын hex нь доорх
+ * `:root[data-world]` / `:root[data-cb]` блокуудад л байрлана; өөр дүрэмд хатуу
+ * hex бичих нь `tests/a11y/contrast.test.ts`-ийг УНАГААНА.
+ * ⚠ Мэдээлэл ЗӨВХӨН өнгөөр дамжихгүй: badge, статус бүр текст/дүрстэй (VIS-4).
  */
-:root {
-  --bg: #10141c;
-  --surface: #182030;
-  --surface-2: #1f2937;
-  --text: #e9eef6;
-  --muted: #a9b6c9;
-  --accent: #6ea8ff;
-  --ok: #56d364;
-  --warn: #f0b429;
-  --focus: #ffd43b;
-  --radius: 10px;
+:root,
+:root[data-world="camp"] {
+  --bg: #0c0f16;
+  --surface: #161b25;
+  --surface-2: #1f2530;
+  --border: #5c6d8a;
+  --border-strong: #7486a6;
+  --text: #e9ecf1;
+  --muted: #a5afc0;
+  --text-on-focus: #000000;
+  --accent: #5c9aeb;
+  --ok: #5ae293;
+  --warn: #f7bc45;
+  --focus: #ffdd33;
+  --btn-bg: #1b2a43;
+  --btn-bg-hover: #24395e;
+  --badge-ok-bg: #0c2717;
+  --badge-ok-text: #98ebbb;
+  --badge-warn-bg: #291f0d;
+  --badge-warn-text: #f9d894;
+  --pip-off: #69758b;
 }
+
+:root[data-world="w1"] {
+  --bg: #0c1116;
+  --surface: #161f25;
+  --surface-2: #1f2930;
+  --border: #587284;
+  --border-strong: #6d8ca2;
+  --text: #e9eef1;
+  --muted: #a5b5c0;
+  --text-on-focus: #000000;
+  --accent: #5cc7eb;
+  --ok: #5ae293;
+  --warn: #f7bc45;
+  --focus: #ffdd33;
+  --btn-bg: #1b3243;
+  --btn-bg-hover: #24465e;
+  --badge-ok-bg: #0c2717;
+  --badge-ok-text: #98ebbb;
+  --badge-warn-bg: #291f0d;
+  --badge-warn-text: #f9d894;
+  --pip-off: #667987;
+}
+
+:root[data-world="w2"] {
+  --bg: #100c16;
+  --surface: #1d1625;
+  --surface-2: #271f30;
+  --border: #786192;
+  --border-strong: #917bab;
+  --text: #ede9f1;
+  --muted: #b2a5c0;
+  --text-on-focus: #000000;
+  --accent: #b15feb;
+  --ok: #5ae293;
+  --warn: #f7bc45;
+  --focus: #ffdd33;
+  --btn-bg: #2e1b43;
+  --btn-bg-hover: #3f245e;
+  --badge-ok-bg: #0c2717;
+  --badge-ok-text: #98ebbb;
+  --badge-warn-bg: #291f0d;
+  --badge-warn-text: #f9d894;
+  --pip-off: #7c6c8f;
+}
+
+:root[data-world="w3"] {
+  --bg: #0c1612;
+  --surface: #16251f;
+  --surface-2: #1f302a;
+  --border: #517a6b;
+  --border-strong: #639b87;
+  --text: #e9f1ee;
+  --muted: #a5c0b6;
+  --text-on-focus: #000000;
+  --accent: #5cebc7;
+  --ok: #5ae293;
+  --warn: #f7bc45;
+  --focus: #ffdd33;
+  --btn-bg: #1b4334;
+  --btn-bg-hover: #245e49;
+  --badge-ok-bg: #0c2717;
+  --badge-ok-text: #98ebbb;
+  --badge-warn-bg: #291f0d;
+  --badge-warn-text: #f9d894;
+  --pip-off: #618075;
+}
+
+:root[data-world="w4"] {
+  --bg: #160f0c;
+  --surface: #251b16;
+  --surface-2: #30251f;
+  --border: #846858;
+  --border-strong: #a2816e;
+  --text: #f1ece9;
+  --muted: #c0afa5;
+  --text-on-focus: #000000;
+  --accent: #eb9e5c;
+  --ok: #5ae293;
+  --warn: #f7bc45;
+  --focus: #ffdd33;
+  --btn-bg: #432a1b;
+  --btn-bg-hover: #5e3924;
+  --badge-ok-bg: #0c2717;
+  --badge-ok-text: #98ebbb;
+  --badge-warn-bg: #291f0d;
+  --badge-warn-text: #f9d894;
+  --pip-off: #877266;
+}
+
+:root[data-world="w5"] {
+  --bg: #160c11;
+  --surface: #25161d;
+  --surface-2: #301f28;
+  --border: #8d5e75;
+  --border-strong: #a8768f;
+  --text: #f1e9ed;
+  --muted: #c0a5b3;
+  --text-on-focus: #000000;
+  --accent: #eb5caf;
+  --ok: #5ae293;
+  --warn: #f7bc45;
+  --focus: #ffdd33;
+  --btn-bg: #431b2f;
+  --btn-bg-hover: #5e2441;
+  --badge-ok-bg: #0c2717;
+  --badge-ok-text: #98ebbb;
+  --badge-warn-bg: #291f0d;
+  --badge-warn-text: #f9d894;
+  --pip-off: #8d6a7b;
+}
+
+:root[data-cb="1"] {
+  --accent: #eb5ceb;
+  --ok: #5ab0e2;
+  --warn: #f7c845;
+  --focus: #ffe433;
+  --badge-ok-bg: #0c1d27;
+  --badge-ok-text: #98cdeb;
+  --badge-warn-bg: #29210d;
+  --badge-warn-text: #f9de94;
+}
+
+:root { --radius: 10px; }
 
 * { box-sizing: border-box; }
 
@@ -51,7 +185,7 @@ body, #app { overflow-x: hidden; }
   left: -9999px;
   top: 0;
   background: var(--focus);
-  color: #000;
+  color: var(--text-on-focus);
   padding: 0.6rem 1rem;
   z-index: 100;
 }
@@ -64,7 +198,7 @@ body, #app { overflow-x: hidden; }
   align-items: center;
   padding: 0.75rem 1rem;
   background: var(--surface);
-  border-bottom: 1px solid #2b3648;
+  border-bottom: 1px solid var(--surface-2);
 }
 
 .nav { background: var(--surface-2); padding: 0.25rem 0.5rem; }
@@ -83,10 +217,10 @@ body, #app { overflow-x: hidden; }
   text-decoration: none;
   border-radius: var(--radius);
 }
-.nav-list a:hover { background: #2b3648; }
+.nav-list a:hover { background: var(--surface-2); }
 /* Идэвхтэй хуудас нь өнгө + доогуур зураас + `aria-current` гурвуулаа. */
 .nav-list a[aria-current="page"] {
-  background: #2b3648;
+  background: var(--surface-2);
   text-decoration: underline;
   text-underline-offset: 4px;
   font-weight: 600;
@@ -100,7 +234,7 @@ h1:focus { outline: 3px solid var(--focus); outline-offset: 4px; }
 
 .card {
   background: var(--surface);
-  border: 1px solid #2b3648;
+  border: 1px solid var(--surface-2);
   border-radius: var(--radius);
   padding: 1rem;
   margin: 0 0 1rem;
@@ -118,25 +252,25 @@ h1:focus { outline: 3px solid var(--focus); outline-offset: 4px; }
   padding: 0.15rem 0.55rem;
   border-radius: 999px;
   font-size: 0.85rem;
-  background: #2b3648;
-  border: 1px solid #3a475e;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
 }
-.badge-ok { background: #16351f; border-color: var(--ok); color: #b7f0be; }
-.badge-warn { background: #3a2f10; border-color: var(--warn); color: #ffe2a3; }
+.badge-ok { background: var(--badge-ok-bg); border-color: var(--ok); color: var(--badge-ok-text); }
+.badge-warn { background: var(--badge-warn-bg); border-color: var(--warn); color: var(--badge-warn-text); }
 
 .btn {
   font: inherit;
   padding: 0.55rem 1rem;
   border-radius: var(--radius);
   border: 1px solid var(--accent);
-  background: #1d2f4d;
+  background: var(--btn-bg);
   color: var(--text);
   cursor: pointer;
   min-height: 44px;
 }
-.btn:hover { background: #24406b; }
+.btn:hover { background: var(--btn-bg-hover); }
 .btn[disabled] { opacity: 0.55; cursor: not-allowed; border-style: dashed; }
-.btn-quiet { border-color: #3a475e; background: transparent; }
+.btn-quiet { border-color: var(--border); background: transparent; }
 
 label { display: block; margin: 0.6rem 0 0.2rem; }
 input[type="text"], input[type="number"], textarea, input[type="file"] {
@@ -145,7 +279,7 @@ input[type="text"], input[type="number"], textarea, input[type="file"] {
   max-width: 34rem;
   padding: 0.5rem;
   border-radius: var(--radius);
-  border: 1px solid #3a475e;
+  border: 1px solid var(--border);
   background: var(--surface-2);
   color: var(--text);
 }
@@ -155,21 +289,21 @@ input[type="checkbox"], input[type="radio"] { width: 1.15rem; height: 1.15rem; }
 
 .statbar { min-width: 12rem; flex: 1 1 14rem; }
 .statbar-head { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.9rem; }
-.statbar-track { height: 10px; background: #2b3648; border-radius: 999px; overflow: hidden; }
+.statbar-track { height: 10px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
 .statbar-fill { height: 100%; background: var(--accent); }
 
 .pips { display: inline-flex; align-items: center; gap: 0.15rem; }
 .pip-on { color: var(--ok); }
-.pip-off { color: #55637a; }
+.pip-off { color: var(--pip-off); }
 .pips-text { margin-left: 0.35rem; color: var(--muted); }
 
 .sync { font-size: 0.85rem; color: var(--muted); }
 
 .banner-host { position: sticky; top: 0; z-index: 20; }
 .banner {
-  background: #16351f;
+  background: var(--badge-ok-bg);
   border: 1px solid var(--ok);
-  color: #ccf5d2;
+  color: var(--badge-ok-text);
   padding: 0.75rem 1rem;
   text-align: center;
 }
@@ -188,7 +322,7 @@ input[type="checkbox"], input[type="radio"] { width: 1.15rem; height: 1.15rem; }
   display: flex;
   gap: 0.5rem;
   background: var(--surface-2);
-  border: 1px solid #3a475e;
+  border: 1px solid var(--border);
   border-left-width: 4px;
   border-radius: var(--radius);
   padding: 0.65rem 0.85rem;
@@ -209,12 +343,12 @@ input[type="checkbox"], input[type="radio"] { width: 1.15rem; height: 1.15rem; }
 }
 .modal {
   background: var(--surface);
-  border: 1px solid #3a475e;
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 1.25rem;
   width: min(44rem, 100%);
 }
-.question { border: 1px solid #3a475e; border-radius: var(--radius); margin: 0.75rem 0; }
+.question { border: 1px solid var(--border); border-radius: var(--radius); margin: 0.75rem 0; }
 .outcome { background: var(--surface-2); border-radius: var(--radius); padding: 0.75rem; }
 .issue-list { margin: 0.5rem 0 0; padding-left: 1.1rem; }
 .issue-list li { margin: 0.15rem 0; }
