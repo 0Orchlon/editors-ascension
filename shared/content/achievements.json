@@ -288,7 +288,7 @@
   {
     "id": "ach-prestige-three",
     "title": "Third Lap",
-    "description": "Prestige mastery tracks three times in total.",
+    "description": "Prestige any one mastery track three times.",
     "predicate": {
       "kind": "prestigeCount",
       "value": 3
