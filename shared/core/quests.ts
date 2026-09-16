@@ -1,6 +1,9 @@
 /** Quest claim хөдөлгүүр (lld.md §5.4.3; AC MQ-3…6, PRG-6, D-1, D-2). */
 import type { DomainEvent, GameState, QuestDefinition } from '../types/index.ts';
 import { evaluateAchievements } from './achievements.ts';
+import { evaluateChains } from './chains.ts';
+import { addMasteryXp } from './mastery.ts';
+import { grantReputation, type RepTrack } from './reputation.ts';
 import { applyRewards, rollRewards } from './economy.ts';
 import { maybeEncounter } from './encounters.ts';
 import { addXp } from './progression.ts';
@@ -62,6 +65,14 @@ export function claimQuest(state: GameState, input: ClaimInput, ctx: Ctx): Domai
   next = awarded.state;
   events.push(...awarded.events);
 
+  // 3a — mastery roll-up. ⚠ ОЛГОГДСОН XP очно (plan.md P-17), контентын суурь XP БИШ:
+  // давталтад суурь XP өгвөл mastery нь SQ-4-ийн anti-grind таазыг тойрч гарна.
+  // ⚠ Байрлал нь амжилтын үнэлгээнээс ӨМНӨ — эс бөгөөс `masteryLevel` предикаттай
+  // амжилт нэг үйлдэл ХОЦРОЖ олгогдоно (plan.md §13.2).
+  const mastery = addMasteryXp(next, quest.tags, xpAward);
+  next = mastery.state;
+  events.push(...mastery.events);
+
   // 4 — бүртгэл.
   if (quest.track === 'main') {
     next = { ...next, completedMainQuestIds: [...next.completedMainQuestIds, quest.id] };
@@ -82,6 +93,25 @@ export function claimQuest(state: GameState, input: ClaimInput, ctx: Ctx): Domai
       data: { questId: quest.id, title: quest.title, completions: priorCompletions + 1 },
     });
   }
+
+  // 4a — guild reputation (амжилтын үнэлгээнээс ӨМНӨ — plan.md §13.2).
+  const completionIndex = quest.track === 'side' ? priorCompletions + 1 : 1;
+  const reputation = grantReputation(
+    next,
+    quest.tags,
+    quest.track as RepTrack,
+    completionIndex,
+    ctx.pack,
+    quest.repeatXpMultiplier,
+  );
+  next = reputation.state;
+  events.push(...reputation.events);
+
+  // 4b — side quest chain. Дараалал нь `sideQuestStats`-аас гаргагдана (plan.md P-21)
+  // тул ДЭЭРХ бүртгэлийн ДАРАА дуудагдах ёстой.
+  const chains = evaluateChains(next, ctx.pack);
+  next = chains.state;
+  events.push(...chains.events);
 
   // 5 — streak ба combo.
   const day = qualifyDay(next, ctx.at);

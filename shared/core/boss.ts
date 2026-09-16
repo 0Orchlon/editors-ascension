@@ -15,7 +15,9 @@ import {
   BOSS_TIERS,
   HARD_BOSS_TIERS,
 } from './constants.ts';
+import { addMasteryXp } from './mastery.ts';
 import { addXp } from './progression.ts';
+import { grantReputation } from './reputation.ts';
 import { appendReplay } from './replayLog.ts';
 import { ok, reject, type Ctx, type DomainResult } from './result.ts';
 
@@ -145,6 +147,16 @@ export function attemptBoss(state: GameState, input: BossInput, ctx: Ctx): Domai
     next = { ...awarded.state, completedMainQuestIds: [...awarded.state.completedMainQuestIds, boss.id] };
     events.push({ type: 'BOSS_PASSED', data: { bossId: boss.id, tier, total, difficulty } });
     events.push(...awarded.events);
+
+    // Mastery ба rep нь ЭХНИЙ тэнцэлтэд л олгогдоно — дахин тэнцэх нь 0 XP (BS-2)
+    // тул 0 mastery, 0 rep. Амжилтын үнэлгээнээс ӨМНӨ (plan.md §13.2).
+    const mastery = addMasteryXp(next, boss.tags, boss.xp);
+    next = mastery.state;
+    events.push(...mastery.events);
+
+    const reputation = grantReputation(next, boss.tags, 'boss', 1, ctx.pack);
+    next = reputation.state;
+    events.push(...reputation.events);
   } else if (tier !== 'failed') {
     // Дахин тэнцэх нь 0 XP (AC BS-2) — hard mode ч гэсэн (шагнал нь cosmetic ба дээд амжилт).
     events.push({ type: 'BOSS_PASSED', data: { bossId: boss.id, tier, total, difficulty } });
