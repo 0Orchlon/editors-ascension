@@ -4,7 +4,9 @@
     "title": "Edit Fundamentals",
     "description": "Assemble a timeline with confident in and out points, ripple trims and clean hard cuts.",
     "cost": 1,
-    "prerequisites": []
+    "prerequisites": [],
+    "track": "video-editing",
+    "tier": 1
   },
   {
     "id": "sk-pacing",
@@ -13,7 +15,9 @@
     "cost": 1,
     "prerequisites": [
       "sk-edit-fundamentals"
-    ]
+    ],
+    "track": "video-editing",
+    "tier": 2
   },
   {
     "id": "sk-color-correction",
@@ -22,7 +26,9 @@
     "cost": 1,
     "prerequisites": [
       "sk-edit-fundamentals"
-    ]
+    ],
+    "track": "video-editing",
+    "tier": 1
   },
   {
     "id": "sk-color-grading",
@@ -32,14 +38,18 @@
     "prerequisites": [
       "sk-color-correction",
       "sk-lighting"
-    ]
+    ],
+    "track": "video-editing",
+    "tier": 2
   },
   {
     "id": "sk-blender-navigation",
     "title": "Blender Navigation",
     "description": "Move around the viewport, switch modes and apply transforms without fighting the tool.",
     "cost": 1,
-    "prerequisites": []
+    "prerequisites": [],
+    "track": "blender",
+    "tier": 1
   },
   {
     "id": "sk-modeling",
@@ -48,7 +58,9 @@
     "cost": 1,
     "prerequisites": [
       "sk-blender-navigation"
-    ]
+    ],
+    "track": "blender",
+    "tier": 2
   },
   {
     "id": "sk-uv-texturing",
@@ -57,7 +69,9 @@
     "cost": 1,
     "prerequisites": [
       "sk-modeling"
-    ]
+    ],
+    "track": "blender",
+    "tier": 2
   },
   {
     "id": "sk-shading",
@@ -66,7 +80,9 @@
     "cost": 1,
     "prerequisites": [
       "sk-uv-texturing"
-    ]
+    ],
+    "track": "blender",
+    "tier": 2
   },
   {
     "id": "sk-lighting",
@@ -75,7 +91,9 @@
     "cost": 1,
     "prerequisites": [
       "sk-blender-navigation"
-    ]
+    ],
+    "track": "blender",
+    "tier": 2
   },
   {
     "id": "sk-rendering",
@@ -85,14 +103,18 @@
     "prerequisites": [
       "sk-shading",
       "sk-lighting"
-    ]
+    ],
+    "track": "blender",
+    "tier": 2
   },
   {
     "id": "sk-keyframing",
     "title": "Keyframing",
     "description": "Set keys and read F-curves so timing is designed rather than discovered by accident.",
     "cost": 1,
-    "prerequisites": []
+    "prerequisites": [],
+    "track": "animation",
+    "tier": 1
   },
   {
     "id": "sk-easing",
@@ -101,7 +123,9 @@
     "cost": 1,
     "prerequisites": [
       "sk-keyframing"
-    ]
+    ],
+    "track": "animation",
+    "tier": 2
   },
   {
     "id": "sk-rigging",
@@ -111,7 +135,9 @@
     "prerequisites": [
       "sk-modeling",
       "sk-keyframing"
-    ]
+    ],
+    "track": "animation",
+    "tier": 2
   },
   {
     "id": "sk-character-animation",
@@ -121,14 +147,18 @@
     "prerequisites": [
       "sk-rigging",
       "sk-easing"
-    ]
+    ],
+    "track": "animation",
+    "tier": 2
   },
   {
     "id": "sk-framing",
     "title": "Framing and Composition",
     "description": "Choose shot size, headroom and lens length that place the audience where the story needs them.",
     "cost": 1,
-    "prerequisites": []
+    "prerequisites": [],
+    "track": "cinematography",
+    "tier": 1
   },
   {
     "id": "sk-camera-movement",
@@ -138,7 +168,9 @@
     "prerequisites": [
       "sk-framing",
       "sk-keyframing"
-    ]
+    ],
+    "track": "cinematography",
+    "tier": 2
   },
   {
     "id": "sk-coverage",
@@ -148,14 +180,18 @@
     "prerequisites": [
       "sk-framing",
       "sk-edit-fundamentals"
-    ]
+    ],
+    "track": "cinematography",
+    "tier": 2
   },
   {
     "id": "sk-audio-capture",
     "title": "Audio Capture",
     "description": "Record clean dialogue with headroom, usable room tone and a controlled noise floor.",
     "cost": 1,
-    "prerequisites": []
+    "prerequisites": [],
+    "track": "audio",
+    "tier": 1
   },
   {
     "id": "sk-sound-design",
@@ -164,7 +200,9 @@
     "cost": 1,
     "prerequisites": [
       "sk-audio-capture"
-    ]
+    ],
+    "track": "audio",
+    "tier": 2
   },
   {
     "id": "sk-mixing",
@@ -173,14 +211,18 @@
     "cost": 1,
     "prerequisites": [
       "sk-sound-design"
-    ]
+    ],
+    "track": "audio",
+    "tier": 2
   },
   {
     "id": "sk-compositing",
     "title": "Compositing",
     "description": "Combine elements with alpha, spill suppression and render passes in a linear working space.",
     "cost": 1,
-    "prerequisites": []
+    "prerequisites": [],
+    "track": "vfx",
+    "tier": 1
   },
   {
     "id": "sk-vfx-integration",
@@ -190,14 +232,18 @@
     "prerequisites": [
       "sk-compositing",
       "sk-rendering"
-    ]
+    ],
+    "track": "vfx",
+    "tier": 2
   },
   {
     "id": "sk-story-structure",
     "title": "Story Structure",
     "description": "Build setup, turn and payoff that survive compression into short form.",
     "cost": 1,
-    "prerequisites": []
+    "prerequisites": [],
+    "track": "storytelling",
+    "tier": 1
   },
   {
     "id": "sk-visual-storytelling",
@@ -208,6 +254,91 @@
       "sk-story-structure",
       "sk-pacing",
       "sk-coverage"
-    ]
+    ],
+    "track": "storytelling",
+    "tier": 2
+  },
+  {
+    "id": "sk-edit-signature",
+    "title": "Signature Edit",
+    "description": "Carry one recognisable editorial voice through a whole piece: rhythm, transitions and colour read as a single hand.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-pacing",
+      "sk-color-grading"
+    ],
+    "track": "video-editing",
+    "tier": 3
+  },
+  {
+    "id": "sk-blender-lookdev",
+    "title": "Look Development",
+    "description": "Drive a shot from blockout to final frame in Blender, holding one material and lighting language across every asset.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-rendering",
+      "sk-shading"
+    ],
+    "track": "blender",
+    "tier": 3
+  },
+  {
+    "id": "sk-animation-performance",
+    "title": "Performance Animation",
+    "description": "Animate a full beat of acting — intent, hesitation and reaction — instead of a technically clean move.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-character-animation",
+      "sk-easing"
+    ],
+    "track": "animation",
+    "tier": 3
+  },
+  {
+    "id": "sk-camera-language",
+    "title": "Camera Language",
+    "description": "Design a shot list whose sizes, lenses and movement form a deliberate grammar the audience can follow.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-camera-movement",
+      "sk-coverage"
+    ],
+    "track": "cinematography",
+    "tier": 3
+  },
+  {
+    "id": "sk-audio-final-mix",
+    "title": "Final Mix",
+    "description": "Deliver a mix that holds its loudness target and stays intelligible on phone speakers and headphones alike.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-mixing",
+      "sk-sound-design"
+    ],
+    "track": "audio",
+    "tier": 3
+  },
+  {
+    "id": "sk-vfx-invisible",
+    "title": "Invisible Effects",
+    "description": "Place a synthetic element a viewer never questions: grain, motion blur and edge treatment all match the plate.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-vfx-integration"
+    ],
+    "track": "vfx",
+    "tier": 3
+  },
+  {
+    "id": "sk-story-authorship",
+    "title": "Authorship",
+    "description": "Write and deliver a short piece whose theme is visible in its structure, not stated in narration.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-visual-storytelling",
+      "sk-story-structure"
+    ],
+    "track": "storytelling",
+    "tier": 3
   }
 ]
