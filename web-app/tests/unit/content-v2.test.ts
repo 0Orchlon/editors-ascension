@@ -214,3 +214,58 @@ describe('RET-5 — four guilds partition the seven learning domains (T-21)', ()
     expect(guilds).toHaveLength(GUILD_COUNT);
   });
 });
+
+describe('RET-1 · RET-3 — side quest chains (T-22)', () => {
+  const chains = pack.chains;
+  const sideIds = new Set(pack.quests.filter((q) => q.track === 'side').map((q) => q.id));
+  const mains = pack.quests.filter((q) => q.track === 'main');
+
+  it('ships at least three chains', () => {
+    expect(chains.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('gives every chain exactly four steps', () => {
+    const bad = chains.filter((c) => c.steps.length !== 4);
+    expect(bad.map((c) => c.id)).toEqual([]);
+  });
+
+  it('references only real side quests', () => {
+    const bad: string[] = [];
+    for (const c of chains)
+      for (const s of c.steps) if (!sideIds.has(s)) bad.push(`${c.id} → ${s}`);
+    expect(bad).toEqual([]);
+  });
+
+  /** ⚠ Хоёр chain-д орсон side quest нь «чанд дараалал»-ыг хоёрдмол болгоно. */
+  it('never puts a side quest in two chains', () => {
+    const seen = new Map<string, string>();
+    const clashes: string[] = [];
+    for (const c of chains)
+      for (const s of c.steps) {
+        const owner = seen.get(s);
+        if (owner !== undefined) clashes.push(`${s}: ${owner} + ${c.id}`);
+        seen.set(s, c.id);
+      }
+    expect(clashes).toEqual([]);
+  });
+
+  it('keeps bonusXp at or below the cheapest main quest of the chain’s world (RET-3)', () => {
+    const bad: string[] = [];
+    for (const c of chains) {
+      const here = mains.filter((q) => q.world === c.world).map((q) => q.xp);
+      if (here.length === 0) {
+        bad.push(`${c.id}: world ${c.world} has no main quest to set the ceiling`);
+        continue;
+      }
+      const ceiling = Math.min(...here);
+      if (c.bonusXp > ceiling) bad.push(`${c.id}: ${c.bonusXp} > ${ceiling}`);
+    }
+    expect(bad).toEqual([]);
+  });
+
+  it('uses unique chain ids and unique steps inside a chain', () => {
+    expect(new Set(chains.map((c) => c.id)).size).toBe(chains.length);
+    const bad = chains.filter((c) => new Set(c.steps).size !== c.steps.length);
+    expect(bad.map((c) => c.id)).toEqual([]);
+  });
+});

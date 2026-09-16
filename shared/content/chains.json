@@ -1,0 +1,50 @@
+[
+  {
+    "id": "chain-first-week",
+    "title": "First Week on the Bench",
+    "world": 1,
+    "steps": [
+      "sq-hotkey-hunter",
+      "sq-three-cut-story",
+      "sq-camera-copycat",
+      "sq-modeling-sprint"
+    ],
+    "bonusXp": 40
+  },
+  {
+    "id": "chain-craft-forge",
+    "title": "The Craft Forge",
+    "world": 2,
+    "steps": [
+      "sq-transition-blacksmith",
+      "sq-foley-goblin",
+      "sq-light-puzzle",
+      "sq-material-duel"
+    ],
+    "bonusXp": 80
+  },
+  {
+    "id": "chain-motion-study",
+    "title": "Motion Study",
+    "world": 3,
+    "steps": [
+      "sq-pose-sheet",
+      "sq-loop-arena",
+      "sq-texture-detective",
+      "sq-environment-microstory"
+    ],
+    "bonusXp": 120
+  },
+  {
+    "id": "chain-delivery-run",
+    "title": "The Delivery Run",
+    "world": 4,
+    "steps": [
+      "sq-walk-cycle-fixer",
+      "sq-impact-lab",
+      "sq-fog-and-depth",
+      "sq-trailer-cut"
+    ],
+    "bonusXp": 170
+  }
+]
