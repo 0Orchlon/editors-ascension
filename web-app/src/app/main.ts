@@ -9,13 +9,18 @@ import { renderDungeons } from '../ui/screens/dungeons.ts';
 import { renderSkills } from '../ui/screens/skills.ts';
 import { renderForge } from '../ui/screens/forge.ts';
 import { renderAchievements } from '../ui/screens/achievements.ts';
+import { renderTrophies } from '../ui/screens/trophies.ts';
 import { applyMotionPreference, renderSettings } from '../ui/screens/settings.ts';
-import { createSoundCues } from '../ui/sound.ts';
+import { play } from '../ui/fx.ts';
+import { applyTheme, worldPalette } from '../ui/theme.ts';
 import type { SyncStatus } from '../services/sync.ts';
 // ⚠ DOM-ийн глобал `Storage` БИШ — сервисийн нарийссан интерфейс (тестэд солигдоно).
 import type { Storage } from '../services/persistence.ts';
 
 const ONBOARDED_KEY = 'ea.onboarded.v1';
+
+/** lld.md §9.2 — эдгээр маршрут л тоглогчийн идэвхтэй дэлхийн палитрыг өмсөнө. */
+const WORLD_ROUTES = new Set<string>(['#/quests', '#/side', '#/dungeons', '#/skills']);
 
 export function boot(root: HTMLElement, storage: Storage = window.localStorage): void {
   let status: SyncStatus = 'offline';
@@ -36,6 +41,11 @@ export function boot(root: HTMLElement, storage: Storage = window.localStorage):
 
     renderTopBar(app.game, status);
     renderNav(route);
+    // VIS-1 — палитр нь МАРШРУТААС гарна; дэлгэцийн DOM нь дэлхийг мэдэхгүй.
+    applyTheme(
+      WORLD_ROUTES.has(route) ? worldPalette(app.game.view.activeWorld()) : 'camp',
+      app.game.view.settings().colorBlindSafe,
+    );
 
     const screen =
       route === '#/quests' ? renderQuests(app.game, 'main', paint)
@@ -44,6 +54,7 @@ export function boot(root: HTMLElement, storage: Storage = window.localStorage):
       : route === '#/skills' ? renderSkills(app.game, paint)
       : route === '#/forge' ? renderForge(app.game, paint)
       : route === '#/achievements' ? renderAchievements(app.game)
+      : route === '#/trophies' ? renderTrophies(app.game, paint)
       : route === '#/settings' ? renderSettings({ game: app.game, sync: app.sync, rerender: paint })
       : renderCamp(app.game, paint);
 
@@ -52,8 +63,18 @@ export function boot(root: HTMLElement, storage: Storage = window.localStorage):
     document.getElementById('screen-title')?.focus();
   };
 
-  // A11Y-5 — дуу нь `events$`-ийн дөрвөн event дээр л тоглоно, тохиргоогоор унтрана.
-  app.game.events$(createSoundCues(() => app.game.view.settings().soundEnabled));
+  // FX-1…FX-7 — анимац, дуу, `aria-live` мэдэгдэл нь ГАНЦ хаалгаар (`fx.play`).
+  // ⚠ Тохиргоо нь дуудалт БҮРД шинээр уншигдана: горим солиход дахин бүртгэх шаардлагагүй.
+  app.game.events$((events) => {
+    play(events, () => {
+      const settings = app.game.view.settings();
+      return {
+        reducedMotion: settings.reducedMotion,
+        soundEnabled: settings.soundEnabled,
+        soundVolume: settings.soundVolume,
+      };
+    });
+  });
 
   onRouteChange(paint);
   applyMotionPreference(app.game.view.settings().reducedMotion);

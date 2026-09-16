@@ -34,6 +34,19 @@ export type TransferCode = Infer<typeof S.TransferCode>;
 export type RedeemRequest = Infer<typeof S.RedeemRequest>;
 
 export type SkillTag = Infer<typeof S.SkillTag>;
+
+// ── v1.2.0 — гүнзгийрүүлэлтийн төрлүүд (plan.md §11.2)
+export type MasteryTrack = Infer<typeof S.MasteryTrack>;
+export type DifficultyTier = Infer<typeof S.DifficultyTier>;
+export type ReplayLogEntry = Infer<typeof S.ReplayLogEntry>;
+export type Rarity = Infer<typeof S.Rarity>;
+export type CosmeticSlot = Infer<typeof S.CosmeticSlot>;
+export type CosmeticUnlockSource = Infer<typeof S.CosmeticUnlockSource>;
+export type CosmeticItem = Infer<typeof S.CosmeticItem>;
+export type CampLayout = Infer<typeof S.CampLayout>;
+export type CampLayoutSlots = Infer<typeof S.CampLayoutSlots>;
+export type GuildDefinition = Infer<typeof S.GuildDefinition>;
+export type SideQuestChain = Infer<typeof S.SideQuestChain>;
 export type TutorialRef = Infer<typeof S.TutorialRef>;
 export type QuestDefinition = Infer<typeof S.QuestDefinition>;
 export type DungeonDefinition = Infer<typeof S.DungeonDefinition>;

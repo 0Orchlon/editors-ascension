@@ -9,9 +9,21 @@ import { buildPack, contentVersion } from '@shared/content/index.ts';
 import { sideQuestXp } from '@shared/core/sideQuests.ts';
 import { BOSS_CATEGORY_TAGS, SKILL_TAGS } from '@shared/core/constants.ts';
 import { validateContentPack } from '@shared/validate/index.ts';
+import { checkContentRules } from '@shared/validate/content-rules.ts';
 import type { QuestDefinition } from '@shared/types/index.ts';
 
 const pack = buildPack();
+
+/**
+ * ⚠ plan.md P-12 — `[C]` дүрэм бүр `shared/validate/content-rules.ts`-д ГАНЦ
+ * хувилбартай. Доорх тестүүд ТЭР модулийг дуудна: гараар хуулбарласан хувилбар нь
+ * CLI-аас чимээгүй салах хоёр дахь үнэн болно (`npm run validate:content`).
+ * Дүрэм тус бүрийн «зөрчил тарихад унана» нотолгоо нь `content-rules.test.ts`-д.
+ */
+const violations = (rule: string): string[] =>
+  checkContentRules(pack)
+    .filter((v) => v.rule === rule)
+    .map((v) => `${v.path}: ${v.message}`);
 const mains = pack.quests.filter((q) => q.track === 'main');
 const sides = pack.quests.filter((q) => q.track === 'side');
 const worlds = [1, 2, 3, 4, 5] as const;
@@ -81,40 +93,18 @@ describe('C2 — the campaign matches PRD §5 (MQ-1)', () => {
 });
 
 describe('C3 — the prerequisite graph is sound (MQ-2)', () => {
-  const byId = new Map(pack.quests.map((q) => [q.id, q]));
-
   it('references only quests that exist', () => {
-    const missing: string[] = [];
-    for (const q of pack.quests)
-      for (const p of q.prerequisites) if (!byId.has(p)) missing.push(`${q.id} → ${p}`);
-    expect(missing).toEqual([]);
+    expect(violations('MQ-2')).toEqual([]);
+    // Сканнер бодит граф уншиж байгаа эсэх — урьдчилсан нөхцөл ҮНЭХЭЭР бий.
+    expect(pack.quests.some((q) => q.prerequisites.length > 0)).toBe(true);
   });
 
   it('contains no cycles', () => {
-    const state = new Map<string, 'visiting' | 'done'>();
-    const cycles: string[] = [];
-    const walk = (id: string, trail: string[]): void => {
-      if (state.get(id) === 'done') return;
-      if (state.get(id) === 'visiting') {
-        cycles.push([...trail, id].join(' → '));
-        return;
-      }
-      state.set(id, 'visiting');
-      for (const p of byId.get(id)?.prerequisites ?? []) walk(p, [...trail, id]);
-      state.set(id, 'done');
-    };
-    for (const q of pack.quests) walk(q.id, []);
-    expect(cycles).toEqual([]);
+    expect(violations('MQ-2').filter((v) => v.includes('cycle'))).toEqual([]);
   });
 
   it('never requires a quest from a later world', () => {
-    const backwards: string[] = [];
-    for (const q of pack.quests)
-      for (const p of q.prerequisites) {
-        const prereq = byId.get(p);
-        if (prereq && prereq.world > q.world) backwards.push(`${q.id}(w${q.world}) → ${p}(w${prereq.world})`);
-      }
-    expect(backwards).toEqual([]);
+    expect(violations('MQ-2').filter((v) => v.includes('later world'))).toEqual([]);
   });
 
   it('never gates a quest behind a level the player cannot have reached', () => {
@@ -128,15 +118,16 @@ describe('C3 — the prerequisite graph is sound (MQ-2)', () => {
 
 describe('C4 — side quests (SQ-1)', () => {
   it('ships at least 20', () => {
+    expect(violations('SQ-1')).toEqual([]);
     expect(sides.length).toBeGreaterThanOrEqual(20);
   });
 
   it('gives each side quest one or two skill tags', () => {
-    const bad = sides.filter((q) => q.tags.length < 1 || q.tags.length > 2);
-    expect(bad.map((q) => q.id)).toEqual([]);
+    expect(violations('SQ-1').filter((v) => v.includes('tags'))).toEqual([]);
   });
 
   it('marks side quests repeatable so the practice gym stays open (SQ-2)', () => {
+    expect(violations('SQ-1').filter((v) => v.includes('repeatable'))).toEqual([]);
     expect(sides.every((q) => q.repeatable)).toBe(true);
   });
 });
@@ -176,8 +167,7 @@ describe('C5/C6 — anti-grind economy (SQ-3, SQ-4)', () => {
 
 describe('C7 — quest fields are complete and in range (MQ-5, STA-4)', () => {
   it('costs between 1 and 6 stamina everywhere (STA-4)', () => {
-    const bad = pack.quests.filter((q) => q.staminaCost < 1 || q.staminaCost > 6);
-    expect(bad.map((q) => q.id)).toEqual([]);
+    expect(violations('STA-4')).toEqual([]);
   });
 
   it('fills every narrative and evidence field (MQ-5)', () => {
@@ -253,46 +243,40 @@ describe('C8/C14 — dungeons (DG-1)', () => {
 
 describe('C9 — encounters (ENC-1)', () => {
   it('ships at least five', () => {
+    expect(violations('ENC-1')).toEqual([]);
     expect(pack.encounters.length).toBeGreaterThanOrEqual(5);
   });
 
   it('keeps every encounter short and actionable (ENC-1)', () => {
-    const bad: string[] = [];
-    for (const e of pack.encounters) {
-      if (!e.callToAction.trim()) bad.push(`${e.id}: no call to action`);
-      if ((e.maxMinutes ?? 1) > 2) bad.push(`${e.id}: longer than 2 minutes`);
-      if (e.weight <= 0) bad.push(`${e.id}: non-positive weight`);
-    }
-    expect(bad).toEqual([]);
+    expect(violations('ENC-1')).toEqual([]);
   });
 });
 
 describe('C10 — achievements (ACH-1)', () => {
   it('ships at least twelve', () => {
+    // ⚠ v1.2.0-д тааз 40 болов (RET-7) — PERSONAL-1-ийн 12-ийн доод хязгаар ХҮЧИНТЭЙ хэвээр.
+    expect(violations('RET-7')).toEqual([]);
     expect(pack.achievements.length).toBeGreaterThanOrEqual(12);
   });
 
+  /**
+    * ⚠ Зөвшөөрөгдөх `kind`-ийн жагсаалтыг ЭНД гараар бичихгүй: `content-rules.ts`
+    * нь түүнийг `schemas.ts`-ийн энумаас гаргадаг. Хуулбар нь гэрээ өргөжихөд
+    * (v1.2.0-д 5 kind нэмэгдсэн) чимээгүй хоцорч, тест худал улаан болно.
+    */
   it('uses only predicate kinds the domain can evaluate (ACH-1)', () => {
-    const known = [
-      'level', 'totalXp', 'mainQuestsCompleted', 'sideQuestCompletions',
-      'dungeonsCompleted', 'projectsCompleted', 'bossTier', 'streakDays',
-    ];
-    const bad = pack.achievements.filter((a) => !known.includes(a.predicate.kind));
-    expect(bad.map((a) => a.id)).toEqual([]);
+    expect(violations('ACH-1')).toEqual([]);
   });
 
   it('uses a valid tier name for every bossTier predicate (ACH-1)', () => {
-    const bad = pack.achievements
-      .filter((a) => a.predicate.kind === 'bossTier')
-      .filter((a) => !['mvp', 'advanced', 'mastery'].includes(String(a.predicate.value)));
-    expect(bad.map((a) => a.id)).toEqual([]);
+    expect(violations('ACH-1').filter((v) => v.includes('bossTier'))).toEqual([]);
+    expect(pack.achievements.some((a) => a.predicate.kind === 'bossTier')).toBe(true);
   });
 });
 
 describe('C11 — loot stays cosmetic (EC-1)', () => {
   it('marks every item cosmetic — nothing may buy progression', () => {
-    const bad = pack.loot.filter((i) => i.effect !== 'cosmetic');
-    expect(bad.map((i) => i.id)).toEqual([]);
+    expect(violations('EC-1')).toEqual([]);
   });
 
   it('ships enough items that the drop table is not instantly exhausted', () => {
@@ -311,8 +295,9 @@ describe('C12 — boss coaching always has something to recommend (BS-3)', () =>
 
 describe('C13 — the skill tree is a sound DAG (PRG-5)', () => {
   it('costs exactly one skill point per skill', () => {
-    const bad = pack.skills.filter((s) => s.cost !== 1);
-    expect(bad.map((s) => s.id)).toEqual([]);
+    // ⚠ v1.2.0-д ВАЛЮТ хуваагдсан (tier-1 skillPoint · tier-2/3 mastery point),
+    // ҮНЭ нь 1 хэвээр (SKL-5) — `PRG-5`-ийн зам хөндөгдөөгүй.
+    expect(violations('SKL-5')).toEqual([]);
   });
 
   it('references only skills that exist and forms no cycle', () => {

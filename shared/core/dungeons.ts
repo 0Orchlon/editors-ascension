@@ -1,12 +1,36 @@
 /** Study Dungeon — tutorial ба mastery шалгалт (lld.md §5.4.5; AC DG-2, DG-3, DG-4). */
 import type { ContentPack, DomainEvent, GameState, SkillTag } from '../types/index.ts';
 import { evaluateAchievements } from './achievements.ts';
+import { addMasteryXp } from './mastery.ts';
+import { grantReputation } from './reputation.ts';
 import { applyRewards, rollRewards } from './economy.ts';
 import { addXp } from './progression.ts';
-import { ok, reject, type Ctx, type DomainResult } from './result.ts';
+import { dayOf, ok, reject, type Ctx, type DomainResult } from './result.ts';
 import { qualifyDay } from './streak.ts';
 
 export type DungeonInput = { dungeonId: string; answers: number[] };
+
+/**
+ * `completedDungeonIds` ба `dungeonStats`-ыг ХАМТ бичих ЦОРЫН ГАНЦ зам (lld.md §6.8 · Δ-1).
+ *
+ * ⚠ Хоёр зам, нэг талбар: `attemptDungeon` ба `quests.ts`-ийн `track: 'dungeon'`
+ * quest хоёулаа dungeon дуусгадаг. Хоёрын аль нэг нь `dungeonStats`-ыг бичихээ
+ * мартвал `RET-4`-ийн refresher нь тухайн dungeon-ыг ХЭЗЭЭ Ч нэр дэвшүүлэхгүй —
+ * тестээр барихад бэрх, чимээгүй алдаа. Сканнер (`architecture.test.ts`) нь
+ * `dungeonStats:` бичилтийг зөвхөн ЭНЭ файл ба `saves.ts`-д зөвшөөрнө.
+ * ⚠ `lastPassedDate` нь дахин тэнцэх БҮРД шинэчлэгдэнэ (XP 0 байсан ч): refresher нь
+ * «хамгийн сүүлд хэзээ хүрсэн»-ийг хэмждэг, «анх хэзээ»-г биш (P-15).
+ */
+export function markDungeonPassed(state: GameState, dungeonId: string, at: string): GameState {
+  const completedDungeonIds = state.completedDungeonIds.includes(dungeonId)
+    ? state.completedDungeonIds
+    : [...state.completedDungeonIds, dungeonId];
+  return {
+    ...state,
+    completedDungeonIds,
+    dungeonStats: { ...state.dungeonStats, [dungeonId]: { lastPassedDate: dayOf(at) } },
+  };
+}
 
 type WrongAnswer = { questionId: string; chosen: number; correct: number; explanation: string };
 
@@ -73,12 +97,22 @@ export function attemptDungeon(state: GameState, input: DungeonInput, ctx: Ctx):
   ];
 
   // Дахин тэнцэх нь 0 XP (AC DG-3) — давтан бөглөх нь grind болохгүй.
-  if (state.completedDungeonIds.includes(dungeon.id)) return ok(state, events);
+  if (state.completedDungeonIds.includes(dungeon.id))
+    return ok(markDungeonPassed(state, dungeon.id, ctx.at), events);
 
   const awarded = addXp(state, dungeon.xp);
   if (!awarded.ok) return awarded;
-  let next: GameState = { ...awarded.state, completedDungeonIds: [...state.completedDungeonIds, dungeon.id] };
+  let next: GameState = markDungeonPassed(awarded.state, dungeon.id, ctx.at);
   events.push(...awarded.events);
+
+  // Mastery ба rep нь амжилтын үнэлгээнээс ӨМНӨ (plan.md §13.2).
+  const mastery = addMasteryXp(next, dungeon.tags, dungeon.xp);
+  next = mastery.state;
+  events.push(...mastery.events);
+
+  const reputation = grantReputation(next, dungeon.tags, 'dungeon', 1, ctx.pack);
+  next = reputation.state;
+  events.push(...reputation.events);
 
   const day = qualifyDay(next, ctx.at);
   next = { ...next, streak: day.streak, combo: day.combo };

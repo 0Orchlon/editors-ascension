@@ -82,6 +82,48 @@ export function renderCamp(game: GameService, rerender: () => void): HTMLElement
   }
   root.append(projectCard);
 
+  // ── AC MST-6 · VIS-6 — 7 track нэг дэлгэцэнд, түвшин нь ТЕКСТЭЭР (VIS-4).
+  const masteryCard = el('div', { class: 'card', 'data-testid': 'camp-mastery' }, [
+    el('h2', { id: 'mastery-h', text: 'Mastery tracks' }),
+    el('p', { class: 'muted', text: 'Tracks grow from the tags on the work you finish. They unlock deeper skill nodes and cosmetics — never XP, stamina or quests.' }),
+  ]);
+  const masteryList = el('ul', { class: 'mastery-mini', 'aria-labelledby': 'mastery-h' });
+  for (const track of view.masteryTracks()) {
+    const span = (track.xpToNext ?? track.xp) - track.xpFloor;
+    const done = track.xp - track.xpFloor;
+    const readout = track.xpToNext === null
+      ? `${track.xp} XP · max`
+      : `${track.xp} / ${track.xpToNext} XP`;
+    const row = el('li', { class: 'mastery-row', 'data-track': track.tag }, [
+      el('span', { class: 'mastery-tag', text: track.label }),
+      el('span', { class: 'mastery-lv', text: `Lv ${track.level}` }),
+    ]);
+    // Prestige нь 0 үед тэмдэг ГАРГАХГҮЙ — хоосон од нь шуугиан.
+    if (track.prestigeCount > 0)
+      row.append(el('span', { class: 'mastery-prestige', text: `★${track.prestigeCount}` }));
+    row.append(
+      statBar(`${track.label} mastery`, done, span === 0 ? 1 : span, `Level ${track.level} · ${readout}`),
+    );
+    masteryList.append(row);
+  }
+  masteryCard.append(masteryList);
+  root.append(masteryCard);
+
+  // ── AC RET-5 — guild зэрэглэл; зөвхөн cosmetic гэдгийг ИЛ хэлнэ (RET-6).
+  const guildCard = el('div', { class: 'card', 'data-testid': 'camp-guilds' }, [
+    el('h2', { text: 'Guild standing' }),
+    el('p', { class: 'muted', text: 'Reputation only ever goes up, and it only unlocks titles and banners. Guild names are placeholder content for now.' }),
+  ]);
+  guildCard.append(
+    el('ul', { class: 'guild-list' }, view.guilds().map((guild) =>
+      el('li', { class: 'guild-row', 'data-guild-id': guild.id }, [
+        el('span', { class: 'guild-name', text: guild.title }),
+        el('span', { class: 'guild-rank', text: ` — Rank ${guild.rank} of 4 · ${guild.rep} rep` }),
+      ]),
+    )),
+  );
+  root.append(guildCard);
+
   const loot = view.inventory();
   root.append(
     el('div', { class: 'card', 'data-testid': 'camp-loot' }, [
@@ -89,6 +131,8 @@ export function renderCamp(game: GameService, rerender: () => void): HTMLElement
       loot.length === 0
         ? el('p', { class: 'muted', text: 'No loot yet. Finish a quest and see what turns up.' })
         : el('ul', { class: 'chips' }, loot.map((i) => el('li', {}, [badge(`${i.title} (${i.rarity})`)]))),
+      // AC COS-3 — Trophy Room нь Camp-ийн дэд дэлгэц; урсгалаас гарахгүй.
+      el('a', { href: '#/trophies', class: 'link-button', text: 'Open the Trophy Room →' }),
     ]),
   );
 

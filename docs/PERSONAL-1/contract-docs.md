@@ -1,15 +1,20 @@
 <!-- PERSONAL-1 · contract-docs · Гэрээ нийтлэх · 2026-09-15 -->
-<!-- ҮҮСГЭСЭН ФАЙЛ — гараар бүү засварла. Эх: contracts/openapi.yaml -->
-<!-- Дахин үүсгэх: cd contracts && npm run docs -->
+<!-- ҮҮСГЭСЭН ФАЙЛ — гараар бүү засварла. Эх: docs/PERSONAL-1/contracts.yaml -->
+<!-- ⚠ v1.1.0-ийн НИЙТЛЭГДСЭН хэлбэр — ТҮҮХЭН баримт, дахин үүсгэхгүй. -->
+<!-- Идэвхтэй гэрээ нь v1.2.0: docs/PERSONAL-2/contract-docs.md -->
+<!-- ЗАЛРУУЛГА (PERSONAL-2 · Гэрээ нийтлэх · 2026-09-16): өмнөх толгой нь -->
+<!-- `contracts/openapi.yaml` ба `cd contracts && npm run docs|mock` гэсэн БАЙХГҮЙ -->
+<!-- зам, командыг заасан байв — тэр хавтас репод хэзээ ч commit хийгдээгүй. -->
+<!-- Одоо үүсгэгч ба дуурайлт нь `server/tools/` дотор БОДИТООР ажиллана. -->
 
 # Editor's Ascension API — гэрээний баримт v1.1.0
 
 Ганц тоглогчийн судалгаа-RPG-ийн backend. Хамрах хүрээ: контент пакет тараах, нэргүй тоглогчийн save хадгалах, ба (v1.1.0-оос) тоглоомын үйлдлийг эрх бүхий талаар `shared/core` домэйнээр хэрэгжүүлэх. Домэйн дүрэм нь НЭГ хувилбартай (`shared/core/**`) бөгөөд клиент, сервер хоёул ижил кодыг ажиллуулна (plan.md → BE-10). Сервер унтарсан үед клиент локал домэйнээр бүрэн ажиллана (AC BE-7).
 
-- **OpenAPI:** 3.1.0 · эх файл: [`contracts/openapi.yaml`](../../contracts/openapi.yaml)
+- **OpenAPI:** 3.1.0 · эх файл: [`contracts.yaml`](contracts.yaml)
 - **Server:** `/api`
 - **Үндсэн хамгаалалт:** `playerToken` (Bearer). `security: []` тэмдэгтэй үйлдэл нээлттэй.
-- **Дуурайлт (mock):** `cd contracts && npm run mock` → `http://127.0.0.1:4010`
+- **Дуурайлт (mock):** `cd server && npm run contract:mock -- --contract ../docs/PERSONAL-1/contracts.yaml` → `http://127.0.0.1:4010`
 
 ## Эндпойнтын жагсаалт
 

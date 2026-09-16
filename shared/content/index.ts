@@ -8,14 +8,18 @@ import type { ContentPack, DungeonDefinition, QuestDefinition } from '../types/i
 import { fnv1a } from '../hash.ts';
 
 import achievements from './achievements.json' with { type: 'json' };
+import chains from './chains.json' with { type: 'json' };
+import cosmetics from './cosmetics.json' with { type: 'json' };
 import dungeons from './dungeons.json' with { type: 'json' };
+import guilds from './guilds.json' with { type: 'json' };
 import encounters from './encounters.json' with { type: 'json' };
 import loot from './loot.json' with { type: 'json' };
 import mainQuests from './mainQuests.json' with { type: 'json' };
 import sideQuests from './sideQuests.json' with { type: 'json' };
 import skills from './skills.json' with { type: 'json' };
 
-export const CONTENT_VERSION = '1.0.0';
+/** ⚠ PERSONAL-2-ийн контент нэмэгдсэн тул minor хувилбар өсөв (гэрээ v1.2.0). */
+export const CONTENT_VERSION = '1.1.0';
 
 /**
  * Study Dungeon бүр өдрийн даалгаварт нэр дэвшихийн тулд `track:'dungeon'` quest
@@ -65,6 +69,9 @@ export function buildPack(): ContentPack {
     achievements: achievements as unknown as ContentPack['achievements'],
     encounters: encounters as unknown as ContentPack['encounters'],
     loot: loot as unknown as ContentPack['loot'],
+    guilds: guilds as unknown as ContentPack['guilds'],
+    chains: chains as unknown as ContentPack['chains'],
+    cosmetics: cosmetics as unknown as ContentPack['cosmetics'],
   };
 }
 

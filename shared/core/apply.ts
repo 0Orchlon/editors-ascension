@@ -4,9 +4,21 @@
  * ⚠ Клиент, сервер ХОЁУЛАА энэ функцийг дуудна — дүрмийн ганц хувилбар (AC BE-10).
  * Шинэ `ActionType` нэмэхэд доорх `switch` нь `never` шалгалтаар typecheck-ийг УНАГААНА.
  */
-import type { Action, ActionType, DomainEvent, GameState, MilestoneKey } from '../types/index.ts';
+import type {
+  Action,
+  ActionType,
+  CosmeticSlot,
+  DifficultyTier,
+  DomainEvent,
+  GameState,
+  MilestoneKey,
+  SkillTag,
+} from '../types/index.ts';
 import { validateActionPayload } from '../validate/index.ts';
 import { attemptBoss } from './boss.ts';
+import { setCampLayout } from './cosmetics.ts';
+import { prestigeMastery } from './mastery.ts';
+import { respecTree } from './skillTree.ts';
 import { pickDailyMission } from './dailyMission.ts';
 import { attemptDungeon } from './dungeons.ts';
 import { resolveEncounter } from './encounters.ts';
@@ -28,6 +40,9 @@ const KNOWN_TYPES: readonly ActionType[] = [
   'rollDailyMission',
   'resolveEncounter',
   'updateSettings',
+  'prestigeMastery',
+  'respecTree',
+  'setCampLayout',
 ];
 
 export function applyAction(state: GameState, action: Action, ctx: Ctx): DomainResult {
@@ -79,7 +94,14 @@ export function applyAction(state: GameState, action: Action, ctx: Ctx): DomainR
     case 'bossAttempt':
       return attemptBoss(
         state,
-        { bossId: String(payload.bossId), scores: payload.scores as never },
+        {
+          bossId: String(payload.bossId),
+          scores: payload.scores as never,
+          // Байхгүй бол `standard` — домэйн өөрөө анхдагчийг тавина.
+          ...(payload.difficulty === undefined
+            ? {}
+            : { difficulty: payload.difficulty as DifficultyTier }),
+        },
         actionCtx,
       );
 
@@ -95,15 +117,32 @@ export function applyAction(state: GameState, action: Action, ctx: Ctx): DomainR
       return resolveEncounter(state, String(payload.encounterId), actionCtx);
 
     case 'updateSettings': {
-      // Зөвхөн ирсэн талбарыг солино — бусад тохиргоо хэвээр.
+      // Зөвхөн ирсэн талбарыг солино — бусад тохиргоо хэвээр (plan.md P-6).
       const settings = {
         reducedMotion:
           typeof payload.reducedMotion === 'boolean' ? payload.reducedMotion : state.settings.reducedMotion,
         soundEnabled:
           typeof payload.soundEnabled === 'boolean' ? payload.soundEnabled : state.settings.soundEnabled,
+        colorBlindSafe:
+          typeof payload.colorBlindSafe === 'boolean' ? payload.colorBlindSafe : state.settings.colorBlindSafe,
+        soundVolume:
+          typeof payload.soundVolume === 'number' ? payload.soundVolume : state.settings.soundVolume,
       };
       return ok({ ...state, settings }, [{ type: 'SETTINGS_UPDATED', data: settings }]);
     }
+
+    case 'prestigeMastery':
+      return prestigeMastery(state, payload.tag as SkillTag);
+
+    case 'respecTree':
+      return respecTree(state, payload.track as SkillTag, action.at, actionCtx.pack);
+
+    case 'setCampLayout':
+      return setCampLayout(
+        state,
+        payload.slots as Record<CosmeticSlot, string | null>,
+        actionCtx.pack,
+      );
 
     default: {
       // Шинэ `ActionType` нэмэхэд typecheck ЭНД унана — диспетчер дутуу үлдэхгүй.

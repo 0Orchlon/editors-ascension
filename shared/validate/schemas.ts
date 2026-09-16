@@ -22,6 +22,8 @@ export const RejectionReason = enom([
   'NOT_REPEATABLE',
   'INSUFFICIENT_SKILL_POINTS',
   'INVALID_INPUT',
+  /** ⚠ v1.2.0-д нэмэгдсэн ЯГ НЭГ код (spec.md D-5; plan.md §13.3). */
+  'RESPEC_ON_COOLDOWN',
 ] as const);
 
 export const Problem = obj(
@@ -48,6 +50,20 @@ export const HealthDegraded = obj({ status: lit('degraded'), version: str(), rea
 export const PlayerCredentials = obj({ playerId: uuid(), token: str({ min: 43 }) });
 
 // ─────────────────────────────────────────────── домэйн төлөв
+
+/**
+ * Сурах домэйны 7 tag. ⚠ ЭНД тодорхойлогдох шалтгаан: `MasteryTrack` (домэйн төлөв)
+ * нь үүнийг лавлана — контентын хэсэгт тодорхойлвол хэрэглэхээс ХОЙНО гарна.
+ */
+export const SkillTag = enom([
+  'video-editing',
+  'blender',
+  'animation',
+  'cinematography',
+  'audio',
+  'vfx',
+  'storytelling',
+] as const);
 
 export const BossScores = obj({
   story: int({ min: 0, max: 10 }),
@@ -92,12 +108,70 @@ export const ProjectState = obj(
   { optional: ['completedAt', 'evidenceRef', 'selfScore'] },
 );
 
+// ───────────────────────────────────────── v1.2.0 — гүнзгийрүүлэлтийн схемүүд
+
+/** `LootItem`-тэй ИЖИЛ enum — `CosmeticItem` мөн үүнийг ашиглана (plan.md §11.2). */
+export const Rarity = enom(['common', 'rare', 'epic', 'legendary'] as const);
+
+/** Оролдлого тутмын хүндрэл, тоглогчид БИШ (AC BSX-2). */
+export const DifficultyTier = enom(['standard', 'hard'] as const);
+
+export const CosmeticSlot = enom([
+  'avatarFrame',
+  'campBanner',
+  'title',
+  'campDecoration',
+  'uiAccent',
+  'badgeFrame',
+] as const);
+
+export const CosmeticUnlockSource = obj(
+  {
+    kind: enom(['quest', 'boss', 'achievement', 'guildRank', 'mastery'] as const),
+    refId: str(),
+    value: union(int(), str()),
+  },
+  { optional: ['value'] },
+);
+
+/**
+ * ⚠ ЯГ 6 түлхүүр, бүгд ЗААВАЛ (plan.md P-25) — `rec()` БИШ. Хэсэгчилсэн засвар
+ * байхгүй тул `setCampLayout` нь бүтэн объект хүлээж авна.
+ */
+export const CampLayoutSlots = obj({
+  avatarFrame: nullable(str()),
+  campBanner: nullable(str()),
+  title: nullable(str()),
+  campDecoration: nullable(str()),
+  uiAccent: nullable(str()),
+  badgeFrame: nullable(str()),
+});
+
+export const CampLayout = obj({ slots: CampLayoutSlots });
+
+export const MasteryTrack = obj({
+  tag: SkillTag,
+  xp: int({ min: 0 }),
+  level: int({ min: 1, max: 10 }),
+  /** ⚠ AC MST-3 — ХЭЗЭЭ Ч буурахгүй. */
+  prestigeCount: int({ min: 0 }),
+});
+
+/** ⚠ Энэ хувилбарт ЗӨВХӨН `kind: 'boss'` бичигдэнэ (plan.md P-24). */
+export const ReplayLogEntry = obj({
+  at: dateTime(),
+  kind: enom(['quest', 'sideQuest', 'dungeon', 'boss', 'chain'] as const),
+  refId: str(),
+  outcome: enom(['passed', 'failed'] as const),
+});
+
 export const BossAttempt = obj({
   bossId: str(),
   at: dateTime(),
   scores: BossScores,
   total: int({ min: 0, max: 60 }),
   tier: enom(['failed', 'mvp', 'advanced', 'mastery'] as const),
+  difficulty: DifficultyTier,
 });
 
 export const GameState = obj({
@@ -125,7 +199,29 @@ export const GameState = obj({
   bossAttempts: arr(BossAttempt),
   dailyMission: nullable(obj({ questId: str(), date: date() })),
   projects: arr(ProjectState),
-  settings: obj({ reducedMotion: bool(), soundEnabled: bool() }),
+  settings: obj({
+    reducedMotion: bool(),
+    soundEnabled: bool(),
+    colorBlindSafe: bool(),
+    soundVolume: num({ min: 0, max: 1 }),
+  }),
+
+  // ── v2-ийн дельта — ЯГ 10 өөрчлөлт (plan.md §11.1).
+  /** 7 бичлэг, түлхүүр нь `SkillTag`. */
+  mastery: rec(MasteryTrack),
+  /** ⚠ ҮЛДЭГДЭЛ, олдсон нийт БИШ (plan.md P-20). */
+  masteryPoints: int({ min: 0 }),
+  /** 4 бичлэг, түлхүүр нь `GuildDefinition.id`. ⚠ ЗӨВХӨН өснө. */
+  reputation: rec(int({ min: 0 })),
+  /** ⚠ 500 FIFO таслалт — бичигч нь `appendReplay` ГАНЦААРАА (plan.md P-10). */
+  replayLog: arr(ReplayLogEntry, { max: 500 }),
+  /** ⚠ Цэвэр UI төлөв — домэйн дүрэм УНШИХГҮЙ (spec.md D-6). */
+  campLayout: CampLayout,
+  completedChainIds: arr(str(), { unique: true }),
+  /** ⚠ ГАНЦ талбар, мод тутам БИШ (plan.md P-19 · H-6). */
+  respecAt: nullable(dateTime()),
+  /** `lastPassedDate: null` = refresher-т нэр дэвшихгүй (plan.md P-15). */
+  dungeonStats: rec(obj({ lastPassedDate: nullable(date()) })),
 });
 
 // ─────────────────────────────────────────────────────── saves
@@ -162,6 +258,11 @@ export const ActionType = enom([
   'rollDailyMission',
   'resolveEncounter',
   'updateSettings',
+  // ⚠ v1.2.0 — ЯГ ГУРАВ (plan.md P-7). Тоглогчийн ИЛ сонголтууд; mastery XP · rep ·
+  // chain bonus нь ОДОО байгаа action-уудын дотоод үр дагавар тул шинэ action шаардахгүй.
+  'prestigeMastery',
+  'respecTree',
+  'setCampLayout',
 ] as const);
 
 export const Action = obj(
@@ -202,6 +303,11 @@ export const DomainEventType = enom([
   'ENCOUNTER_TRIGGERED',
   'DAILY_MISSION_ROLLED',
   'SETTINGS_UPDATED',
+  // ⚠ v1.2.0 — ЯГ ДӨРӨВ (plan.md P-8).
+  'MASTERY_LEVEL_UP',
+  'MASTERY_PRESTIGED',
+  'REPUTATION_GAINED',
+  'CHAIN_COMPLETED',
 ] as const);
 
 export const DomainEvent = obj(
@@ -232,16 +338,6 @@ export const TransferCode = obj({ code: TransferCodeString, expiresAt: dateTime(
 export const RedeemRequest = obj({ code: TransferCodeString });
 
 // ─────────────────────────────────────────────────────── контент
-
-export const SkillTag = enom([
-  'video-editing',
-  'blender',
-  'animation',
-  'cinematography',
-  'audio',
-  'vfx',
-  'storytelling',
-] as const);
 
 export const TutorialRef = obj({ title: str({ min: 1 }), url: uri(), minutes: int({ min: 1 }) });
 
@@ -305,9 +401,17 @@ export const AchievementDefinition = obj({
       'projectsCompleted',
       'bossTier',
       'streakDays',
+      // ⚠ v1.2.0 — 5 шинэ kind (plan.md P-23).
+      'masteryLevel',
+      'prestigeCount',
+      'guildRank',
+      'bossPersonalBest',
+      'chainsCompleted',
     ] as const),
     value: union(int(), str()),
-  }),
+    /** «Аль guild / аль boss / аль track» — БАЙХГҮЙ бол «дурын нэг» (plan.md P-23). */
+    ref: str(),
+  }, { optional: ['ref'] }),
 });
 
 export const EncounterDefinition = obj(
@@ -325,7 +429,7 @@ export const EncounterDefinition = obj(
 export const LootItem = obj({
   id: str(),
   title: str({ min: 1 }),
-  rarity: enom(['common', 'rare', 'epic', 'legendary'] as const),
+  rarity: Rarity,
   effect: lit('cosmetic'),
 });
 
@@ -333,18 +437,54 @@ export const SkillDefinition = obj({
   id: str(),
   title: str({ min: 1 }),
   description: str({ min: 1 }),
+  /** ⚠ AC SKL-5 — ХЭМЖЭЭ `1` хэвээр; өөрчлөгдсөн нь төлбөрийн ВАЛЮТ (plan.md P-3). */
   cost: lit(1),
   prerequisites: arr(str()),
+  track: SkillTag,
+  /** tier-1 → `skillPoints` · tier-2/3 → тухайн track-ийн mastery point (AC SKL-2). */
+  tier: int({ min: 1, max: 3 }),
+});
+
+export const CosmeticItem = obj({
+  id: str({ pattern: /^[a-z0-9-]+$/ }),
+  title: str({ min: 1 }),
+  slot: CosmeticSlot,
+  rarity: Rarity,
+  /** ⚠ AC EC-1 хэвээр — тоглоомын тоон нөлөө БАЙХГҮЙ (spec.md D-6). */
+  effect: lit('cosmetic'),
+  unlockSource: CosmeticUnlockSource,
+});
+
+/** ⚠ `placeholder: true` = H-2-ийн ТҮР нэр; бүтэц нэрнээс хамаарахгүй (plan.md P-13). */
+export const GuildDefinition = obj({
+  id: str({ pattern: /^[a-z0-9-]+$/ }),
+  title: str({ min: 1 }),
+  tags: arr(SkillTag, { min: 1, unique: true }),
+  placeholder: bool(),
+});
+
+export const SideQuestChain = obj({
+  id: str({ pattern: /^[a-z0-9-]+$/ }),
+  title: str({ min: 1 }),
+  /** `bonusXp`-ийн тааз нь дэлхийгээс хамаарна (AC RET-3) тул ЗААВАЛ. */
+  world: int({ min: 1, max: 5 }),
+  steps: arr(str(), { min: 4, max: 4, unique: true }),
+  bonusXp: int({ min: 1 }),
 });
 
 export const ContentPack = obj({
   version: str(),
   quests: arr(QuestDefinition),
   dungeons: arr(DungeonDefinition),
-  skills: arr(SkillDefinition),
-  achievements: arr(AchievementDefinition, { min: 12 }),
+  /** AC SKL-1 — track тутамд ≥1 tier-1, ≥1 tier-2, ЯГ 1 tier-3. */
+  skills: arr(SkillDefinition, { min: 28 }),
+  achievements: arr(AchievementDefinition, { min: 40 }),
   encounters: arr(EncounterDefinition, { min: 5 }),
   loot: arr(LootItem),
+  /** AC RET-5 — ЯГ 4. */
+  guilds: arr(GuildDefinition, { min: 4, max: 4 }),
+  chains: arr(SideQuestChain, { min: 3 }),
+  cosmetics: arr(CosmeticItem, { min: 60 }),
 });
 
 export const ProgressionConstants = obj({
@@ -359,4 +499,15 @@ export const ProgressionConstants = obj({
   sideQuestXpFloorRatio: lit(0.1),
   encounterChance: lit(0.25),
   lootChance: lit(0.35),
+  // ⚠ `hardBossTiers` ЭНД БАЙХГҮЙ — `ceil(bossTiers[t] × hardModeMultiplier)`-ээр
+  // ТООЦОГДОНО (AC BSX-2). Гараар бичих нь хоёр дахь эх сурвалж болно.
+  hardModeMultiplier: lit(1.15),
+  masteryMaxLevel: lit(10),
+  masteryPrestigeLevel: lit(10),
+  respecCooldownDays: lit(7),
+  refresherMinDays: lit(14),
+  replayLogCap: lit(500),
+  repThresholds: arr(int(), { min: 4, max: 4 }),
+  repBase: obj({ main: lit(3), boss: lit(3), dungeon: lit(2), side: lit(2) }),
+  guildCount: lit(4),
 });

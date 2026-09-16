@@ -99,32 +99,60 @@ function renderBossSection(game: GameService, rerender: () => void): HTMLElement
       'These scores are a coaching aid, not an objective certification. They exist to point at your weakest area, not to grade you.' }),
   );
 
+  const attempts = game.view.bossAttempts();
+
   for (const boss of game.view.bosses()) {
     const row = el('div', { class: 'boss-row', 'data-boss-id': boss.id }, [
       el('h3', { text: boss.title }),
       el('p', { text: boss.summary }),
     ]);
     if (boss.completed) row.append(badge('Passed', 'ok'));
+
+    // AC BSX-3 — дээд амжилт нь хүндрэл тутамд ТУСДАА; хоёулаа үргэлж харагдана.
+    const board = game.view.bossBoard(boss.id);
+    const bests = el('ul', { class: 'boss-bests' });
+    for (const difficulty of DIFFICULTIES) {
+      const best = board[difficulty].best;
+      bests.append(
+        el('li', {
+          'data-testid': `boss-best-${difficulty}`,
+          text: `${DIFFICULTY_LABELS[difficulty]} ${DIFFICULTY_MARKS[difficulty]} — personal best ${best} / 60`,
+        }),
+      );
+    }
+    row.append(bests);
+
+    const tried = attempts.filter((a) => a.bossId === boss.id).length;
     if (boss.locked && boss.lockReason !== null) {
       row.append(el('p', { class: 'lock-reason' }, [badge(boss.lockReason, 'warn')]));
     } else {
-      row.append(button('Score this attempt', () => openBossModal(game, boss.id, boss.title, rerender)));
+      // AC BSX-4 — rematch нь cooldown-гүй; товч нь дахин оролдох гэдгийг ИЛ хэлнэ.
+      row.append(
+        button(tried === 0 ? 'Score this attempt' : 'Rematch — score another attempt', () =>
+          openBossModal(game, boss.id, boss.title, rerender),
+        ),
+      );
     }
     section.append(row);
   }
 
-  const attempts = game.view.bossAttempts();
   if (attempts.length > 0) {
     section.append(el('h3', { text: 'Attempt history' }));
     section.append(
       el('ul', {}, attempts.map((a) =>
-        el('li', { text: `${a.at.slice(0, 10)} · ${a.bossId} · ${a.total}/60 · ${a.tier}` }),
+        el('li', { text:
+          `${a.at.slice(0, 10)} · ${a.bossId} · ${DIFFICULTY_LABELS[a.difficulty]} ${DIFFICULTY_MARKS[a.difficulty]} · ${a.total}/60 · ${a.tier}` }),
       )),
     );
   }
 
   return section;
 }
+
+/** ⚠ Хүндрэл нь ӨНГӨӨР биш — нэр + дүрсээр ялгарна (AC VIS-4). */
+const DIFFICULTIES = ['standard', 'hard'] as const;
+const DIFFICULTY_LABELS = { standard: 'Standard', hard: 'Hard' } as const;
+const DIFFICULTY_MARKS = { standard: '◇', hard: '◆◆' } as const;
 
 function openBossModal(game: GameService, bossId: string, title: string, rerender: () => void): void {
   openModal(`Boss: ${title}`, (close) => {
@@ -133,12 +161,40 @@ function openBossModal(game: GameService, bossId: string, title: string, rerende
     ]);
 
     const scores = new Map<string, number>();
-    const total = el('p', { class: 'muted', role: 'status', text: 'Total: 0 / 60' });
+    const total = el('p', { class: 'muted', role: 'status', 'data-testid': 'boss-total', text: 'Total: 0 / 60' });
+    const thresholds = el('p', { class: 'muted', 'data-testid': 'boss-thresholds' });
 
-    const refreshTotal = (): void => {
+    // AC BSX-2 — хүндрэл нь ОРОЛДЛОГО тутамд сонгогдоно, тоглогчид биш.
+    let difficulty: (typeof DIFFICULTIES)[number] = 'standard';
+    const select = el('select', { id: 'boss-difficulty', 'data-testid': 'boss-difficulty' });
+    for (const option of DIFFICULTIES)
+      select.append(el('option', {
+        value: option,
+        text: `${DIFFICULTY_LABELS[option]} ${DIFFICULTY_MARKS[option]}`,
+      }));
+
+    const refresh = (): void => {
       const sum = [...scores.values()].reduce((a, b) => a + b, 0);
-      total.textContent = `Total: ${sum} / 60 · tier ${game.view.bossTier(sum)}`;
+      total.textContent = `Total: ${sum} / 60 · tier ${game.view.bossTier(sum, difficulty)}`;
+      const cut = game.view.bossBoard(bossId).thresholds[difficulty];
+      thresholds.textContent =
+        `${DIFFICULTY_LABELS[difficulty]} thresholds — mvp ${cut.mvp}, advanced ${cut.advanced}, mastery ${cut.mastery} (out of 60).`;
     };
+
+    select.addEventListener('change', () => {
+      difficulty = select.value === 'hard' ? 'hard' : 'standard';
+      refresh();
+    });
+
+    body.append(
+      el('div', { class: 'option' }, [
+        el('label', { for: 'boss-difficulty', text: 'Difficulty for this attempt' }),
+        select,
+      ]),
+      thresholds,
+      el('p', { class: 'muted', text:
+        'Hard mode only raises the bar. The XP, the loot and the coaching are the same — the reward is the score itself.' }),
+    );
 
     for (const category of game.view.bossCategories()) {
       const id = `boss-${category.key}`;
@@ -148,17 +204,18 @@ function openBossModal(game: GameService, bossId: string, title: string, rerende
       slider.addEventListener('input', () => {
         scores.set(category.key, Number(slider.value));
         readout.textContent = slider.value;
-        refreshTotal();
+        refresh();
       });
       body.append(el('div', { class: 'slider-row' }, [
         el('label', { for: id, text: category.label }), slider, readout,
       ]));
     }
     body.append(total);
+    refresh();
 
     body.append(button('Log attempt', () => {
       const payload = Object.fromEntries(scores);
-      const result = game.dispatch('bossAttempt', { bossId, scores: payload });
+      const result = game.dispatch('bossAttempt', { bossId, scores: payload, difficulty });
       if (result.rejected) {
         toast(`Attempt refused: ${result.rejected}`, 'warn');
         return;
@@ -174,7 +231,7 @@ function openBossModal(game: GameService, bossId: string, title: string, rerende
       }
       for (const event of result.events)
         if (event.type === 'LEVEL_UP') showLevelBanner(String(event.data?.level), String(event.data?.rank));
-      toast(`${title} passed.`, 'win');
+      toast(`${title} passed on ${DIFFICULTY_LABELS[difficulty].toLowerCase()}.`, 'win');
       close();
       rerender();
     }));

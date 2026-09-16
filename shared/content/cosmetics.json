@@ -1,0 +1,749 @@
+[
+  {
+    "id": "cos-frame-mastery-video-editing",
+    "title": "Editing Adept Frame",
+    "slot": "avatarFrame",
+    "rarity": "rare",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "mastery",
+      "refId": "video-editing",
+      "value": 5
+    }
+  },
+  {
+    "id": "cos-frame-mastery-blender",
+    "title": "Blender Adept Frame",
+    "slot": "avatarFrame",
+    "rarity": "rare",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "mastery",
+      "refId": "blender",
+      "value": 5
+    }
+  },
+  {
+    "id": "cos-frame-mastery-animation",
+    "title": "Animation Adept Frame",
+    "slot": "avatarFrame",
+    "rarity": "rare",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "mastery",
+      "refId": "animation",
+      "value": 5
+    }
+  },
+  {
+    "id": "cos-frame-mastery-cinematography",
+    "title": "Camera Adept Frame",
+    "slot": "avatarFrame",
+    "rarity": "rare",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "mastery",
+      "refId": "cinematography",
+      "value": 5
+    }
+  },
+  {
+    "id": "cos-frame-mastery-audio",
+    "title": "Audio Adept Frame",
+    "slot": "avatarFrame",
+    "rarity": "rare",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "mastery",
+      "refId": "audio",
+      "value": 5
+    }
+  },
+  {
+    "id": "cos-frame-mastery-vfx",
+    "title": "VFX Adept Frame",
+    "slot": "avatarFrame",
+    "rarity": "rare",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "mastery",
+      "refId": "vfx",
+      "value": 5
+    }
+  },
+  {
+    "id": "cos-frame-mastery-storytelling",
+    "title": "Story Adept Frame",
+    "slot": "avatarFrame",
+    "rarity": "rare",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "mastery",
+      "refId": "storytelling",
+      "value": 5
+    }
+  },
+  {
+    "id": "cos-frame-rep-colorists-circle",
+    "title": "Colorists' Circle Frame",
+    "slot": "avatarFrame",
+    "rarity": "epic",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "guildRank",
+      "refId": "guild-cut",
+      "value": 2
+    }
+  },
+  {
+    "id": "cos-frame-rep-animation",
+    "title": "Animation Guild Frame",
+    "slot": "avatarFrame",
+    "rarity": "epic",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "guildRank",
+      "refId": "guild-form",
+      "value": 2
+    }
+  },
+  {
+    "id": "cos-frame-rep-story-collective",
+    "title": "Story Collective Frame",
+    "slot": "avatarFrame",
+    "rarity": "epic",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "guildRank",
+      "refId": "guild-frame",
+      "value": 2
+    }
+  },
+  {
+    "id": "cos-frame-rep-signal-chain",
+    "title": "Signal Chain Frame",
+    "slot": "avatarFrame",
+    "rarity": "epic",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "guildRank",
+      "refId": "guild-signal",
+      "value": 2
+    }
+  },
+  {
+    "id": "cos-banner-rep-colorists-circle",
+    "title": "Colorists' Circle Banner",
+    "slot": "campBanner",
+    "rarity": "epic",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "guildRank",
+      "refId": "guild-cut",
+      "value": 3
+    }
+  },
+  {
+    "id": "cos-banner-rep-animation",
+    "title": "Animation Guild Banner",
+    "slot": "campBanner",
+    "rarity": "epic",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "guildRank",
+      "refId": "guild-form",
+      "value": 3
+    }
+  },
+  {
+    "id": "cos-banner-rep-story-collective",
+    "title": "Story Collective Banner",
+    "slot": "campBanner",
+    "rarity": "epic",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "guildRank",
+      "refId": "guild-frame",
+      "value": 3
+    }
+  },
+  {
+    "id": "cos-banner-rep-signal-chain",
+    "title": "Signal Chain Banner",
+    "slot": "campBanner",
+    "rarity": "epic",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "guildRank",
+      "refId": "guild-signal",
+      "value": 3
+    }
+  },
+  {
+    "id": "cos-banner-boss-strange-room",
+    "title": "The Strange Room Banner",
+    "slot": "campBanner",
+    "rarity": "rare",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "boss",
+      "refId": "boss-strange-room",
+      "value": "mvp"
+    }
+  },
+  {
+    "id": "cos-banner-boss-rough-cut-trial",
+    "title": "The Rough Cut Trial Banner",
+    "slot": "campBanner",
+    "rarity": "rare",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "boss",
+      "refId": "boss-rough-cut-trial",
+      "value": "mvp"
+    }
+  },
+  {
+    "id": "cos-banner-boss-ten-second-verdict",
+    "title": "The Ten-Second Verdict Banner",
+    "slot": "campBanner",
+    "rarity": "rare",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "boss",
+      "refId": "boss-ten-second-verdict",
+      "value": "mvp"
+    }
+  },
+  {
+    "id": "cos-banner-boss-machine-room",
+    "title": "The Machine Room Banner",
+    "slot": "campBanner",
+    "rarity": "rare",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "boss",
+      "refId": "boss-machine-room",
+      "value": "mvp"
+    }
+  },
+  {
+    "id": "cos-banner-boss-final-showcase",
+    "title": "The Final Showcase Banner",
+    "slot": "campBanner",
+    "rarity": "rare",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "boss",
+      "refId": "boss-final-showcase",
+      "value": "mvp"
+    }
+  },
+  {
+    "id": "cos-banner-ascension",
+    "title": "Ascension Banner",
+    "slot": "campBanner",
+    "rarity": "legendary",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "achievement",
+      "refId": "ach-ascended"
+    }
+  },
+  {
+    "id": "cos-banner-final-cut",
+    "title": "Final Cut Banner",
+    "slot": "campBanner",
+    "rarity": "legendary",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "achievement",
+      "refId": "ach-campaign-complete"
+    }
+  },
+  {
+    "id": "cos-title-around-again",
+    "title": "Reborn",
+    "slot": "title",
+    "rarity": "epic",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "achievement",
+      "refId": "ach-prestige-first"
+    }
+  },
+  {
+    "id": "cos-title-third-lap",
+    "title": "Thrice Forged",
+    "slot": "title",
+    "rarity": "legendary",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "achievement",
+      "refId": "ach-prestige-three"
+    }
+  },
+  {
+    "id": "cos-title-streak-3",
+    "title": "Consistent",
+    "slot": "title",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "achievement",
+      "refId": "ach-streak-3"
+    }
+  },
+  {
+    "id": "cos-title-streak-7",
+    "title": "Weeklong",
+    "slot": "title",
+    "rarity": "rare",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "achievement",
+      "refId": "ach-streak-7"
+    }
+  },
+  {
+    "id": "cos-title-streak-14",
+    "title": "Fortnight",
+    "slot": "title",
+    "rarity": "rare",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "achievement",
+      "refId": "ach-streak-14"
+    }
+  },
+  {
+    "id": "cos-title-streak-30",
+    "title": "Unbroken",
+    "slot": "title",
+    "rarity": "legendary",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "achievement",
+      "refId": "ach-streak-30"
+    }
+  },
+  {
+    "id": "cos-title-first-light",
+    "title": "First Light",
+    "slot": "title",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "achievement",
+      "refId": "ach-first-light"
+    }
+  },
+  {
+    "id": "cos-title-journeyman",
+    "title": "Journeyman",
+    "slot": "title",
+    "rarity": "rare",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "achievement",
+      "refId": "ach-journeyman"
+    }
+  },
+  {
+    "id": "cos-title-ascended",
+    "title": "Ascended",
+    "slot": "title",
+    "rarity": "legendary",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "achievement",
+      "refId": "ach-ascended"
+    }
+  },
+  {
+    "id": "cos-title-chain-first",
+    "title": "Chainbreaker",
+    "slot": "title",
+    "rarity": "rare",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "achievement",
+      "refId": "ach-chain-first"
+    }
+  },
+  {
+    "id": "cos-title-honoured",
+    "title": "Honoured",
+    "slot": "title",
+    "rarity": "epic",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "achievement",
+      "refId": "ach-rep-honoured"
+    }
+  },
+  {
+    "id": "cos-decor-first-cut",
+    "title": "Splice Reel",
+    "slot": "campDecoration",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "quest",
+      "refId": "mq-first-cut"
+    }
+  },
+  {
+    "id": "cos-decor-blender-toybox",
+    "title": "Toybox Shelf",
+    "slot": "campDecoration",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "quest",
+      "refId": "mq-blender-toybox"
+    }
+  },
+  {
+    "id": "cos-decor-movement-lab",
+    "title": "Motion Rig",
+    "slot": "campDecoration",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "quest",
+      "refId": "mq-movement-lab"
+    }
+  },
+  {
+    "id": "cos-decor-ten-second-cinematic",
+    "title": "Ten-Second Loop Screen",
+    "slot": "campDecoration",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "quest",
+      "refId": "mq-ten-second-cinematic"
+    }
+  },
+  {
+    "id": "cos-decor-soundscape",
+    "title": "Field Recorder",
+    "slot": "campDecoration",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "quest",
+      "refId": "mq-soundscape"
+    }
+  },
+  {
+    "id": "cos-decor-color-alchemist",
+    "title": "Grading Panel",
+    "slot": "campDecoration",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "quest",
+      "refId": "mq-color-alchemist"
+    }
+  },
+  {
+    "id": "cos-decor-camera-academy",
+    "title": "Lens Case",
+    "slot": "campDecoration",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "quest",
+      "refId": "mq-camera-academy"
+    }
+  },
+  {
+    "id": "cos-decor-the-mechanist",
+    "title": "Gear Bench",
+    "slot": "campDecoration",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "quest",
+      "refId": "mq-the-mechanist"
+    }
+  },
+  {
+    "id": "cos-decor-world-builder",
+    "title": "Terrain Model",
+    "slot": "campDecoration",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "quest",
+      "refId": "mq-world-builder"
+    }
+  },
+  {
+    "id": "cos-decor-one-minute-story",
+    "title": "Storyboard Wall",
+    "slot": "campDecoration",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "quest",
+      "refId": "mq-one-minute-story"
+    }
+  },
+  {
+    "id": "cos-decor-cinematic-master",
+    "title": "Master Monitor",
+    "slot": "campDecoration",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "quest",
+      "refId": "mq-cinematic-master"
+    }
+  },
+  {
+    "id": "cos-accent-timeline-basics",
+    "title": "Timeline Basics Accent",
+    "slot": "uiAccent",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "quest",
+      "refId": "dg-timeline-basics"
+    }
+  },
+  {
+    "id": "cos-accent-cuts-and-transitions",
+    "title": "Cuts and Transitions Accent",
+    "slot": "uiAccent",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "quest",
+      "refId": "dg-cuts-and-transitions"
+    }
+  },
+  {
+    "id": "cos-accent-blender-navigation",
+    "title": "Blender Navigation Accent",
+    "slot": "uiAccent",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "quest",
+      "refId": "dg-blender-navigation"
+    }
+  },
+  {
+    "id": "cos-accent-shot-sizes",
+    "title": "Shot Sizes and Framing Accent",
+    "slot": "uiAccent",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "quest",
+      "refId": "dg-shot-sizes"
+    }
+  },
+  {
+    "id": "cos-accent-audio-levels",
+    "title": "Audio Levels and Loudness Accent",
+    "slot": "uiAccent",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "quest",
+      "refId": "dg-audio-levels"
+    }
+  },
+  {
+    "id": "cos-accent-sound-design-layers",
+    "title": "Sound Design Layers Accent",
+    "slot": "uiAccent",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "quest",
+      "refId": "dg-sound-design-layers"
+    }
+  },
+  {
+    "id": "cos-accent-color-fundamentals",
+    "title": "Color Correction Fundamentals Accent",
+    "slot": "uiAccent",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "quest",
+      "refId": "dg-color-fundamentals"
+    }
+  },
+  {
+    "id": "cos-accent-modeling-sprint",
+    "title": "30-Minute Modeling Sprint Accent",
+    "slot": "uiAccent",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "quest",
+      "refId": "sq-modeling-sprint"
+    }
+  },
+  {
+    "id": "cos-accent-hotkey-hunter",
+    "title": "Hotkey Hunter Accent",
+    "slot": "uiAccent",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "quest",
+      "refId": "sq-hotkey-hunter"
+    }
+  },
+  {
+    "id": "cos-accent-three-cut-story",
+    "title": "Three-Cut Story Accent",
+    "slot": "uiAccent",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "quest",
+      "refId": "sq-three-cut-story"
+    }
+  },
+  {
+    "id": "cos-accent-camera-copycat",
+    "title": "Camera Copycat Accent",
+    "slot": "uiAccent",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "quest",
+      "refId": "sq-camera-copycat"
+    }
+  },
+  {
+    "id": "cos-badge-xp-apprentice",
+    "title": "Five Hundred Badge",
+    "slot": "badgeFrame",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "achievement",
+      "refId": "ach-xp-apprentice"
+    }
+  },
+  {
+    "id": "cos-badge-xp-veteran",
+    "title": "Render Veteran Badge",
+    "slot": "badgeFrame",
+    "rarity": "rare",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "achievement",
+      "refId": "ach-xp-veteran"
+    }
+  },
+  {
+    "id": "cos-badge-xp-legend",
+    "title": "Seven-and-a-Half Badge",
+    "slot": "badgeFrame",
+    "rarity": "epic",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "achievement",
+      "refId": "ach-xp-legend"
+    }
+  },
+  {
+    "id": "cos-badge-gym-regular",
+    "title": "Gym Regular Badge",
+    "slot": "badgeFrame",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "achievement",
+      "refId": "ach-gym-regular"
+    }
+  },
+  {
+    "id": "cos-badge-gym-devotee",
+    "title": "Reps Badge",
+    "slot": "badgeFrame",
+    "rarity": "rare",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "achievement",
+      "refId": "ach-gym-devotee"
+    }
+  },
+  {
+    "id": "cos-badge-dungeon-delver",
+    "title": "Delver Badge",
+    "slot": "badgeFrame",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "achievement",
+      "refId": "ach-dungeon-delver"
+    }
+  },
+  {
+    "id": "cos-badge-dungeon-scholar",
+    "title": "Scholar Badge",
+    "slot": "badgeFrame",
+    "rarity": "rare",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "achievement",
+      "refId": "ach-dungeon-scholar"
+    }
+  },
+  {
+    "id": "cos-badge-shipped",
+    "title": "Shipped It Badge",
+    "slot": "badgeFrame",
+    "rarity": "common",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "achievement",
+      "refId": "ach-first-project"
+    }
+  },
+  {
+    "id": "cos-badge-portfolio",
+    "title": "Portfolio Badge",
+    "slot": "badgeFrame",
+    "rarity": "epic",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "achievement",
+      "refId": "ach-portfolio"
+    }
+  },
+  {
+    "id": "cos-badge-boss-mastery",
+    "title": "Mastery Tier Badge",
+    "slot": "badgeFrame",
+    "rarity": "legendary",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "boss",
+      "refId": "boss-strange-room",
+      "value": "mastery"
+    }
+  },
+  {
+    "id": "cos-badge-track-maxed",
+    "title": "Track Maxed Badge",
+    "slot": "badgeFrame",
+    "rarity": "legendary",
+    "effect": "cosmetic",
+    "unlockSource": {
+      "kind": "achievement",
+      "refId": "ach-mastery-maxed"
+    }
+  }
+]

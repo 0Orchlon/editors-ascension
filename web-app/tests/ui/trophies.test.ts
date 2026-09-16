@@ -1,0 +1,139 @@
+/**
+ * Trophy Room (T-30; AC COS-3, COS-4).
+ *
+ * ⚠ COS-3 — БҮХ cosmetic харагдана, нээгдээгүй нь ч. Нуух нь тоглогчид «юу
+ * хийвэл юу нээгдэх»-ийг далдалж, зорилго тавих боломжийг устгана.
+ * ⚠ Нээгдээгүй элемент бүр эх сурвалжаа ТЕКСТЭЭР хэлнэ — өнгө, дүрс дангаараа биш.
+ */
+import { beforeEach, describe, expect, it } from 'vitest';
+import { newGame } from '@shared/save/serialize.ts';
+import { buildPack } from '@shared/content/index.ts';
+import type { GameState } from '@shared/types/index.ts';
+import { createGameService } from '../../src/services/gameService.ts';
+import { renderTrophies } from '../../src/ui/screens/trophies.ts';
+import { buildShell, ROUTES } from '../../src/ui/shell.ts';
+import { $, $$, go, mount } from './helpers.ts';
+
+const pack = buildPack();
+
+function mountTrophies(patch: Partial<GameState> = {}) {
+  document.body.innerHTML = '<div id="app"></div>';
+  buildShell(document.getElementById('app')!);
+  const game = createGameService({ pack, initial: { ...newGame(), ...patch } });
+  const rerender = (): void => {
+    document.getElementById('main')!.replaceChildren(renderTrophies(game, rerender));
+  };
+  rerender();
+  return { game, rerender };
+}
+
+describe('COS-3 — every cosmetic is listed, locked or not (T-30)', () => {
+  beforeEach(() => mountTrophies());
+
+  it('lists the whole catalogue, not only what is unlocked', () => {
+    expect($$('[data-testid="trophy-item"]').length).toBe(pack.cosmetics.length);
+    expect(pack.cosmetics.length).toBeGreaterThanOrEqual(60);
+  });
+
+  it('tells a locked item what unlocks it, in words', () => {
+    const locked = $$('[data-testid="trophy-item"][data-unlocked="no"]');
+    expect(locked.length).toBeGreaterThan(0);
+    for (const item of locked) {
+      const source = item.querySelector('.trophy-source');
+      expect(source, `${item.getAttribute('data-cosmetic-id')} has no unlock text`).not.toBeNull();
+      expect(source!.textContent!.length).toBeGreaterThan(10);
+    }
+  });
+
+  /**
+   * ⚠ lld.md §9.4.2 — явцтай зорилт нь одоогийн байрлалаа МӨН хэлнэ. «rank 3 хүр»
+   * гэдэг нь тоглогч 0-т байгаа юу, 2-т байгаа юу гэдгээс хамаарч огт өөр зай:
+   * явцгүй текст нь COS-3-ын «зорилго тавих боломж»-ийг хагасхан л биелүүлнэ.
+   */
+  it('shows the current progress next to a graded goal', () => {
+    const graded = ['guildRank', 'mastery'];
+    const withProgress = pack.cosmetics.filter((c) => graded.includes(c.unlockSource.kind));
+    expect(withProgress.length).toBeGreaterThan(0);
+
+    for (const cosmetic of withProgress) {
+      const node = $(`[data-cosmetic-id="${cosmetic.id}"] .trophy-source`);
+      expect(node, `${cosmetic.id} is missing from the room`).not.toBeNull();
+      expect(node!.textContent, cosmetic.id).toMatch(/\(currently \d+\)/);
+    }
+  });
+
+  it('states locked and unlocked with words, never colour alone (VIS-4)', () => {
+    for (const item of $$('[data-testid="trophy-item"]'))
+      expect(item.textContent).toMatch(/Unlocked|Locked/);
+  });
+
+  it('groups the catalogue by slot so a player can find a frame', () => {
+    expect($$('.trophy-slot-group').length).toBe(6);
+  });
+});
+
+describe('COS-4 — camp layout is arranged here (T-30)', () => {
+  /**
+   * `lld.md §9.4.2` — товч нь НЭЭГДЭЭГҮЙ элементэд ОГТ БАЙХГҮЙ (`disabled` биш).
+   * ⚠ Шинэ тоглоомд нээгдсэн cosmetic ганц ч байхгүй тул товч ч байхгүй байх ЁСТОЙ:
+   * `disabled` товч нь «энэ хүрч болох зүйл» гэж уншигдаж, тоглогчийг дарж үзүүлээд
+   * `PREREQ_NOT_MET` гэсэн хариу авахуулна.
+   */
+  it('never offers a locked cosmetic for equipping', () => {
+    mountTrophies();
+    expect($$('[data-equip-action]')).toEqual([]);
+  });
+
+  /** Нээгдсэн cosmetic бүр ЯГ нэг товчтой, шошго нь текстээр (VIS-4). */
+  const unlockedFrame = pack.cosmetics.find(
+    (c) => c.unlockSource.kind === 'mastery' && c.slot === 'avatarFrame',
+  )!;
+  const withFrame = (): Partial<GameState> => {
+    const tag = unlockedFrame.unlockSource.refId as 'video-editing';
+    const base = newGame();
+    return { mastery: { ...base.mastery, [tag]: { tag, xp: 1750, level: 6, prestigeCount: 0 } } };
+  };
+
+  it('offers exactly one labelled Equip button on an unlocked cosmetic', () => {
+    mountTrophies(withFrame());
+    const actions = $$<HTMLButtonElement>('[data-equip-action]');
+    expect(actions.length).toBeGreaterThan(0);
+    for (const action of actions) {
+      expect(action.tagName).toBe('BUTTON');
+      expect(action.textContent).toBe('Equip');
+    }
+  });
+
+  it('equips an unlocked cosmetic and keeps it in the save state', () => {
+    const { game } = mountTrophies(withFrame());
+    const action = $<HTMLButtonElement>(`[data-equip-action="equip"][data-cosmetic-id="${unlockedFrame.id}"]`)!;
+    action.click();
+    expect(game.state$.getState().campLayout.slots[unlockedFrame.slot]).toBe(unlockedFrame.id);
+  });
+
+  /** COS-4 — эмхлэн байрлуулалт нь БУЦААГДАХ ёстой, эс бөгөөс сонголт нь урхи болно. */
+  it('turns the button into Unequip once worn and clears the slot when pressed', () => {
+    const { game, rerender } = mountTrophies(withFrame());
+    $<HTMLButtonElement>(`[data-equip-action="equip"][data-cosmetic-id="${unlockedFrame.id}"]`)!.click();
+    rerender();
+    const off = $<HTMLButtonElement>(`[data-equip-action="unequip"][data-cosmetic-id="${unlockedFrame.id}"]`)!;
+    expect(off.textContent).toBe('Unequip');
+    off.click();
+    expect(game.state$.getState().campLayout.slots[unlockedFrame.slot]).toBeNull();
+  });
+});
+
+describe('the trophy room is a real route (T-30)', () => {
+  it('is the ninth screen in the shell navigation', () => {
+    expect(ROUTES).toHaveLength(9);
+    expect(ROUTES.some((r) => r.hash === '#/trophies')).toBe(true);
+  });
+
+  it('is reachable from the keyboard through the nav', () => {
+    mount();
+    const link = $$<HTMLAnchorElement>('#nav a').find((a) => a.getAttribute('href') === '#/trophies');
+    expect(link).toBeDefined();
+    go('#/trophies');
+    expect($('#screen-title')!.textContent).toMatch(/Trophy Room/i);
+  });
+});

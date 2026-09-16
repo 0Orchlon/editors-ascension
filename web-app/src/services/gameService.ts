@@ -7,15 +7,33 @@
 import { applyAction } from '@shared/core/apply.ts';
 import { levelFor, rankName, xpToNextLevel } from '@shared/core/progression.ts';
 import { sideQuestXp } from '@shared/core/sideQuests.ts';
-import { tierFor } from '@shared/core/boss.ts';
+import { personalBest, tierFor } from '@shared/core/boss.ts';
 import { createRng, fnv1a } from '@shared/core/rng.ts';
-import { BOSS_CATEGORIES, BOSS_CATEGORY_LABELS, MILESTONE_KEYS, XP_THRESHOLDS } from '@shared/core/constants.ts';
+import {
+  BOSS_CATEGORIES,
+  BOSS_CATEGORY_LABELS,
+  BOSS_TIERS,
+  HARD_BOSS_TIERS,
+  MILESTONE_KEYS,
+  SKILL_TAGS,
+  XP_THRESHOLDS,
+} from '@shared/core/constants.ts';
+import { rankOf } from '@shared/core/reputation.ts';
+import { trackOf } from '@shared/core/mastery.ts';
+import { isUnlocked } from '@shared/core/cosmetics.ts';
+import { costCurrency, unlockGaps, type Currency } from '@shared/core/skillTree.ts';
+import { COSMETIC_SLOTS, MASTERY_PRESTIGE_LEVEL, RESPEC_COOLDOWN_DAYS } from '@shared/core/constants.ts';
+import { dayOf, daysBetween } from '@shared/core/result.ts';
 import { exportSave, importSave } from '@shared/core/saves.ts';
 import type {
   Action,
   ActionType,
+  SkillTag,
   AchievementDefinition,
   ContentPack,
+  CosmeticItem,
+  CosmeticSlot,
+  DifficultyTier,
   DomainEvent,
   DungeonDefinition,
   GameState,
@@ -76,11 +94,59 @@ export type SkillNodeView = SkillDefinition & {
   unlocked: boolean;
   affordable: boolean;
   lockReason: string | null;
+  /** tier-1 = `skillPoints`, tier-2/3 = mastery point (plan.md P-3) — UI үнийг ТААХГҮЙ. */
+  currency: Currency;
+  /**
+   * Дутсан нөхцөлүүд, capstone-ийнх ч (AC SKL-2). ⚠ `shared/core`-оос ГАРНА:
+   * UI ижил дүрмийг хоёр дахь удаа бичих нь татгалзал ба тайлбарыг салгана.
+   */
+  gaps: readonly string[];
+};
+
+/** `lld.md §9.5` — `bossBoard(bossId)`: хүндрэл тутмын дээд амжилт ба босго. */
+export type BossTierCuts = { mvp: number; advanced: number; mastery: number };
+export type BossBoardView = {
+  standard: { best: number; tier: string };
+  hard: { best: number; tier: string };
+  thresholds: { standard: BossTierCuts; hard: BossTierCuts };
 };
 
 export type AchievementView = AchievementDefinition & { earned: boolean; requirement: string };
 
 export type ProjectView = ProjectState & { doneCount: number; nextMilestone: string | null };
+
+/** Camp ба Skills хоёулаа ЭНЭ хэлбэрийг уншина — хоёр тооцоолол үлдэхгүй. */
+export type MasteryTrackView = {
+  tag: SkillTag;
+  label: string;
+  level: number;
+  xp: number;
+  /** Дараагийн түвшний нийт XP; дээд түвшинд `null`. */
+  xpToNext: number | null;
+  /** Одоогийн түвшний эхлэл — мини bar-ын хувь энэ хоёрын хооронд тооцогдоно. */
+  xpFloor: number;
+  prestigeCount: number;
+};
+
+export type GuildView = {
+  id: string;
+  title: string;
+  rep: number;
+  /** `0..4` — ЗӨВХӨН cosmetic (AC RET-6). */
+  rank: number;
+  placeholder: boolean;
+};
+
+/** Trophy Room-ийн мөр (AC COS-3) — нээгдээгүй бүр ЭХ СУРВАЛЖАА текстээр хэлнэ. */
+export type TrophyView = {
+  id: string;
+  title: string;
+  slot: CosmeticSlot;
+  rarity: CosmeticItem['rarity'];
+  unlocked: boolean;
+  /** «Юу хийвэл нээгдэх» — нээгдсэн бол «юугаар нээгдсэн». */
+  unlockText: string;
+};
 
 export type DispatchResult = { events: DomainEvent[]; rejected?: RejectionReason; detail?: string };
 
@@ -152,6 +218,22 @@ export function createGameService(deps: GameServiceDeps) {
     };
   }
 
+  /** `video-editing` → `Video Editing`. ⚠ UI-ийн текст — домэйн тогтмол БИШ. */
+  const TAG_LABELS: Record<string, string> = {
+    'video-editing': 'Video Editing',
+    blender: 'Blender',
+    animation: 'Animation',
+    cinematography: 'Cinematography',
+    audio: 'Audio',
+    vfx: 'VFX',
+    storytelling: 'Storytelling',
+  };
+
+  const CURRENCY_LABELS: Record<Currency, string> = {
+    skillPoints: 'skill point',
+    masteryPoints: 'mastery point',
+  };
+
   function requirementText(def: AchievementDefinition): string {
     const { kind, value } = def.predicate;
     const labels: Record<string, string> = {
@@ -165,6 +247,34 @@ export function createGameService(deps: GameServiceDeps) {
       streakDays: `Keep a ${value} day streak`,
     };
     return labels[kind] ?? `${kind}: ${value}`;
+  }
+
+  /**
+   * AC COS-3 — нээлтийн эх сурвалжийг ӨГҮҮЛБЭР болгоно. ⚠ Домэйн дүрэм ЭНД БИШ:
+   * «нээгдсэн эсэх»-ийг `isUnlocked` шийднэ, энэ нь зөвхөн тэр дүрмийг УНШИНА.
+   */
+  function unlockText(item: CosmeticItem, state: GameState): string {
+    const { kind, refId, value } = item.unlockSource;
+    const titleOf = (id: string): string =>
+      questById.get(id)?.title ?? pack.dungeons.find((d) => d.id === id)?.title ?? id;
+
+    switch (kind) {
+      case 'quest':
+        return `Finish ${titleOf(refId)}.`;
+      case 'boss':
+        return `Log a ${String(value)} tier attempt on ${titleOf(refId)}.`;
+      case 'achievement':
+        return `Earn the achievement “${pack.achievements.find((a) => a.id === refId)?.title ?? refId}”.`;
+      // ⚠ lld.md §9.4.2 — «юу хийвэл нээгдэх»-ийн хажууд ОДООГИЙН явцыг МӨН
+      // харуулна (COS-3): «rank 3» гэдэг нь тоглогч 1-т байгаа эсэх, 2-т байгаа
+      // эсэхээс хамаарч огт өөр зай. Явцтай зорилт л мөрдөгдөнө.
+      case 'guildRank':
+        return `Reach rank ${String(value)} of 4 with ${pack.guilds.find((g) => g.id === refId)?.title ?? refId} (currently ${String(rankOf(state.reputation[refId] ?? 0))}).`;
+      case 'mastery':
+        return `Reach ${TAG_LABELS[refId] ?? refId} mastery level ${String(value)} (currently ${String(trackOf(state, refId as SkillTag).level)}).`;
+      default:
+        return 'This one is unlocked by play — the source is not recorded.';
+    }
   }
 
   const service = {
@@ -297,14 +407,46 @@ export function createGameService(deps: GameServiceDeps) {
         return pack.skills.map((skill) => {
           const unlocked = state.unlockedSkillIds.includes(skill.id);
           const missing = skill.prerequisites.filter((p) => !state.unlockedSkillIds.includes(p));
-          const affordable = state.skillPoints >= skill.cost;
+          const currency = costCurrency(skill);
+          const affordable = state[currency] >= skill.cost;
+          const gaps = unlocked ? [] : unlockGaps(state, skill, pack);
           let lockReason: string | null = null;
           if (!unlocked && missing.length > 0)
             lockReason = `Unlock first: ${missing.map((id) => pack.skills.find((s) => s.id === id)?.title ?? id).join(', ')}.`;
+          else if (!unlocked && gaps.length > 0)
+            // ⚠ Эхний дутуу нөхцөл нь товч шалтгаан; БҮГД нь `gaps`-д бүтнээрээ.
+            lockReason = `${gaps[0]!}.`;
           else if (!unlocked && !affordable)
-            lockReason = `Needs ${skill.cost} skill point — you have ${state.skillPoints}.`;
-          return { ...skill, unlocked, affordable, lockReason };
+            lockReason = `Needs ${skill.cost} ${CURRENCY_LABELS[currency]} — you have ${state[currency]}.`;
+          return { ...skill, unlocked, affordable, lockReason, currency, gaps };
         });
+      },
+
+      masteryPoints: (): number => store.getState().masteryPoints,
+
+      /** Prestige-ийн босго нь домэйнээс — UI 10-ыг дахин бичихгүй (AC BE-10). */
+      prestigeLevel: (): number => MASTERY_PRESTIGE_LEVEL,
+
+      /**
+       * AC SKL-3 — cooldown нь ГЛОБАЛ: нэг мод respec хийхэд бүгд хүлээнэ.
+       * ⚠ Үлдсэн хоног нь домэйнтэй ИЖИЛ тоололтоор (`daysBetween`) — хоёр өөр
+       * тоолол нь «товч идэвхтэй ч сервер татгалзлаа» гэсэн байдал үүсгэнэ.
+       */
+      respecAvailableIn(): number {
+        const { respecAt } = store.getState();
+        if (respecAt === null) return 0;
+        const waited = daysBetween(dayOf(respecAt), dayOf(now()));
+        return Math.max(0, RESPEC_COOLDOWN_DAYS - waited);
+      },
+
+      /**
+       * `lld.md §9.5` — track-ийн capstone (tier-3) node ба дутсан нөхцөлүүд.
+       * ⚠ Дүрэм ЭНД БИШ: `gaps` нь `skillTree()`-ийн (улмаар `capstoneGaps`-ийн)
+       * утгыг ДАМЖУУЛНА. Track-д capstone байхгүй бол `null` — UI таамаглахгүй.
+       */
+      capstone(track: SkillTag): { skill: SkillNodeView; gaps: readonly string[] } | null {
+        const skill = service.view.skillTree().find((s) => s.track === track && s.tier === 3);
+        return skill === undefined ? null : { skill, gaps: skill.gaps };
       },
 
       projects(): ProjectView[] {
@@ -321,7 +463,30 @@ export function createGameService(deps: GameServiceDeps) {
         BOSS_CATEGORIES.map((key) => ({ key, label: BOSS_CATEGORY_LABELS[key] })),
 
       /** Домэйны tier функцийг дамжуулна — UI босгыг ДАХИН бичихгүй (AC BE-10). */
-      bossTier: (total: number): string => tierFor(total),
+      bossTier: (total: number, difficulty: DifficultyTier = 'standard'): string =>
+        tierFor(total, difficulty),
+
+      /**
+       * `lld.md §9.5` — нэг боссын самбар: хүндрэл тутмын дээд амжилт ба босго.
+       *
+       * ⚠ AC BSX-3 — дээд оноо нь `bossAttempts`-аас ГАРГАГДАНА, хадгалагдахгүй.
+       * ⚠ AC BSX-2 — hard босго нь ТООЦОГДСОН (`ceil(×1.15)`): UI нь 41/52/60-ыг
+       * бичихгүй, коэффициент өөрчлөгдвөл дэлгэц өөрөө дагана.
+       * ⚠ Хоёр хүндрэл ҮРГЭЛЖ хоёулаа буцна — «одоогийн» сонголтыг view шийдэхгүй,
+       * тэр нь дэлгэцийн төлөв (`forge.ts`-ийн select).
+       */
+      bossBoard(bossId: string): BossBoardView {
+        const state = store.getState();
+        const side = (difficulty: DifficultyTier): { best: number; tier: string } => {
+          const best = personalBest(state, bossId, difficulty);
+          return { best, tier: tierFor(best, difficulty) };
+        };
+        return {
+          standard: side('standard'),
+          hard: side('hard'),
+          thresholds: { standard: { ...BOSS_TIERS }, hard: { ...HARD_BOSS_TIERS } },
+        };
+      },
 
       bossAttempts: () => store.getState().bossAttempts,
 
@@ -342,6 +507,80 @@ export function createGameService(deps: GameServiceDeps) {
       encounter: (id: string) => pack.encounters.find((e) => e.id === id) ?? null,
 
       levelOf: (xp: number): number => levelFor(xp),
+
+      /** AC MST-6 — 7 track, контентын дарааллаас ҮЛ ХАМААРАН `SKILL_TAGS`-ийн эрэмбээр. */
+      masteryTracks(): MasteryTrackView[] {
+        const state = store.getState();
+        return SKILL_TAGS.map((tag) => {
+          // lld.md §4.2 (A-LLD2-1) — анхдагчийн ГАНЦ эх нь `trackOf`, гараар давтахгүй.
+          const track = trackOf(state, tag);
+          const remaining = xpToNextLevel(track.xp);
+          return {
+            tag,
+            label: TAG_LABELS[tag] ?? tag,
+            level: track.level,
+            xp: track.xp,
+            xpToNext: remaining === null ? null : track.xp + remaining,
+            xpFloor: XP_THRESHOLDS.filter((t) => t <= track.xp).at(-1) ?? 0,
+            prestigeCount: track.prestigeCount,
+          };
+        });
+      },
+
+      /** AC RET-5 — guild бүрийн rep ба зэрэглэл; нэр нь контентоос. */
+      guilds(): GuildView[] {
+        const state = store.getState();
+        return pack.guilds.map((guild) => {
+          const rep = state.reputation[guild.id] ?? 0;
+          return {
+            id: guild.id,
+            title: guild.title,
+            rep,
+            rank: rankOf(rep),
+            placeholder: guild.placeholder === true,
+          };
+        });
+      },
+
+      /**
+       * AC COS-3 — БҮХ cosmetic, нээгдээгүй нь ч; эрэмбэ нь `COSMETIC_SLOTS`-ийнх.
+       * ⚠ Нэр нь `lld.md §9.5`-ийн гэрээнийх (`cosmetics()`) — дэлгэцийн нэрээр
+       * (`trophies`) дуудвал гэрээний хүснэгт ба код хоёр тусдаа үнэн болно.
+       */
+      cosmetics(): TrophyView[] {
+        const state = store.getState();
+        return [...pack.cosmetics]
+          .sort(
+            (a, b) =>
+              COSMETIC_SLOTS.indexOf(a.slot) - COSMETIC_SLOTS.indexOf(b.slot) ||
+              (a.id < b.id ? -1 : 1),
+          )
+          .map((item) => ({
+            id: item.id,
+            title: item.title,
+            slot: item.slot,
+            rarity: item.rarity,
+            unlocked: isUnlocked(state, item, pack),
+            unlockText: unlockText(item, state),
+          }));
+      },
+
+      cosmeticSlots: (): readonly CosmeticSlot[] => COSMETIC_SLOTS,
+
+      /** ⚠ Цэвэр UI төлөв (spec.md D-6) — домэйн дүрэм үүнийг УНШИХГҮЙ. */
+      campLayout: () => store.getState().campLayout.slots,
+
+      /**
+       * Дэлгэцийн палитрыг сонгоно (lld.md §9.2). ⚠ Домэйн БИШ — цэвэр дүрслэл,
+       * `D-6`-ийн хүчний хоригт хамаарахгүй: энэ утга ямар ч нээлт, XP-д нөлөөлөхгүй.
+       */
+      activeWorld(): 1 | 2 | 3 | 4 | 5 {
+        const state = store.getState();
+        const pending = pack.quests
+          .filter((q) => q.track === 'main' && !state.completedMainQuestIds.includes(q.id))
+          .map((q) => q.world);
+        return (pending.length === 0 ? 5 : Math.min(...pending)) as 1 | 2 | 3 | 4 | 5;
+      },
     },
   };
 

@@ -1,0 +1,1605 @@
+# PERSONAL-2 · contracts · Гэрээ нийтлэх · 2026-09-16
+# (Анх Дэлгэрэнгүй загвар (Design) шатанд гаргасан; НИЙТЛЭХ шатанд шалгагдаж эцэслэв.)
+#
+# НИЙТЛЭГДСЭН. Хаалга: `cd server && npm run contract:lint` (G-1…G-14) —
+#   `server/tests/contract/publish.test.ts`-ээр `npm test`-д мөн ажиллана.
+# Дуурайлт: `cd server && npm run contract:mock` → http://127.0.0.1:4010/api
+# Уншигдах баримт: docs/PERSONAL-2/contract-docs.md (ЭНЭ файлаас ҮҮСГЭГДДЭГ).
+#
+# Нийтлэх шатанд оруулсан ГУРВАН засвар (схемийн зан төлөв ӨӨРЧЛӨГДӨӨГҮЙ тул 1.2.0 хэвээр):
+#   1. `/health → 503` нь `x-problem-exempt`-ээр ИЛ чөлөөлөгдөв. Өмнө нь энэ хариу
+#      `server/CLAUDE.md`-ийн «бүх 4xx/5xx нь problem+json» дүрмийг ЧИМЭЭГҮЙ зөрчиж
+#      байсан — одоо чөлөөлөлт нь шалтгаантай, хамрах хүрээтэй бичигдсэн (G-6).
+#   2. `Action.payload`-ийн тайлбар нь 5 `ActionPayload*` схемийг НЭРЛЭВ. Өмнө нь тэдгээр
+#      нь `$ref`-гүй, нэрээр нь дурдагдаагүй тул ӨНЧИН схем байсан (G-4).
+#   3. `SavePayload.schemaVersion`-д `example: 2` нэмэгдэв — `minimum: 1` нь v1-ийг
+#      хүлээн авах ЗОРИЛГОТОЙ боловч дуурайлт ба баримт нь ОДООГИЙН хувилбарыг харуулна.
+# Editor's Ascension — backend API ба домэйн схемийн контракт, v1.2.0.
+#
+# Эрх бүхий эх сурвалж (машин уншигдах). Тайлбар:
+#   docs/PERSONAL-2/spec.md   — 62 хүлээн авах шалгуур
+#   docs/PERSONAL-2/plan.md   — §11 схемийн дельта · §12 томьёо · §13 action/event
+#   docs/PERSONAL-2/lld.md    — энэ контрактын хэрэгжүүлэлтийн загвар
+#   docs/PERSONAL-1/contracts.yaml — v1.1.0 (суурь; энд заагаагүй бүхэн ТЭНД хэвээр)
+#
+# ⚠ ХЭРЭГЖҮҮЛЭХ ДАРААЛАЛ: энэ файл ЭХЛЭЭД, `shared/validate/schemas.ts` ДАРАА нь.
+#   Хоёрын зөрүүг `web-app/tests/unit/contract-parity.test.ts` барина (AC QX-2).
+#
+# ӨӨРЧЛӨЛТ v1.1.0 → v1.2.0 (PERSONAL-2 · tasks.md → T-01):
+#   + SkillTag · Rarity           нэрлэсэн схем болж гарав (өмнө нь inline enum; зан төлөв ИЖИЛ)
+#   + MasteryTrack                         (spec.md §3, MST-1)
+#   + DifficultyTier                       (BSX-2)
+#   + ReplayLogEntry                       (SVX-2, BSX-6)
+#   + CosmeticSlot · CosmeticUnlockSource · CosmeticItem   (COS-1, COS-2)
+#   + GuildDefinition                      (RET-5)
+#   + SideQuestChain                       (RET-1)
+#   + CampLayout                           (COS-4)
+#   + ActionPayload* (5 ширхэг, БАРИМТЖУУЛАХ зорилгоор — `Action.payload` нээлттэй ХЭВЭЭР)
+#   ~ GameState  += mastery · masteryPoints · reputation · replayLog · campLayout ·
+#                   completedChainIds · respecAt · dungeonStats      (SVX-1; ЯГ 8 шинэ талбар)
+#   ~ GameState.settings      += colorBlindSafe · soundVolume        (VIS-3, FX-3; plan.md P-6)
+#   ~ GameState.bossAttempts[] += difficulty                          (BSX-2; plan.md P-2)
+#   ~ SkillDefinition         += track · tier                         (SKL-1)
+#   ~ AchievementDefinition.predicate += ref?; kind-д 5 шинэ утга      (RET-7; plan.md P-23)
+#   ~ ContentPack             += guilds · chains · cosmetics; minItems чангарав
+#   ~ ActionType              += prestigeMastery · respecTree · setCampLayout (ЯГ 3; P-7)
+#   ~ DomainEvent.type        += MASTERY_LEVEL_UP · MASTERY_PRESTIGED ·
+#                                REPUTATION_GAINED · CHAIN_COMPLETED  (ЯГ 4; P-8)
+#   ~ RejectionReason         += RESPEC_ON_COOLDOWN                   (ЯГ 1; spec.md D-5)
+#   ~ ProgressionConstants    += 9 тогтмол (доор, §ProgressionConstants)
+#   = Endpoint НЭМЭГДЭЭГҮЙ · УСТААГҮЙ · зам, статус код, header БҮГД хэвээр.
+#
+# ⚠ ЮУ НЭМЭГДЭЭГҮЙ ба ЯАГААД (plan.md P-1 · P-2 · P-21 — «хоёр дахь эх сурвалж үүсгэхгүй»):
+#   − GameState.unlockedCosmeticIds — нээлт нь `unlockSource`-оос ГАРГАГДАНА
+#   − GameState.personalBests       — дээд амжилт нь `bossAttempts`-ээс max-аар гарна
+#   − GameState.chainProgress       — явц нь `sideQuestStats`-аас гарна
+#   − ProgressionConstants.hardBossTiers — `ceil(bossTiers[t] × hardModeMultiplier)`-ээр
+#     ТООЦОГДОНО (41 · 52 · 60). Гараар бичих нь `bossTiers`-тэй чимээгүй салах эрсдэл.
+
+openapi: 3.1.0
+info:
+  title: Editor's Ascension API
+  version: 1.2.0
+  description: >-
+    Ганц тоглогчийн судалгаа-RPG-ийн backend. Хамрах хүрээ: контент пакет тараах,
+    нэргүй тоглогчийн save хадгалах, ба тоглоомын үйлдлийг эрх бүхий талаар
+    `shared/core` домэйнээр хэрэгжүүлэх.
+
+    v1.2.0 нь PERSONAL-2-ийн гүнзгийрүүлэлтийн схемийг нэмнэ: mastery track,
+    guild reputation, side quest chain, boss hard mode, cosmetic каталог.
+    Домэйн дүрэм нь НЭГ хувилбартай (`shared/core/**`) бөгөөд клиент, сервер хоёул
+    ижил кодыг ажиллуулна (AC OFF-7 · BE-10). Сервер унтарсан үед клиент локал
+    домэйнээр БҮРЭН ажиллана — шинэ системүүд ч мөн адил (AC OFF-1).
+
+    ⚠ Гадаад origin БАЙХГҮЙ (AC OFF-2…OFF-5): энэ API нь тоглогчийн ӨӨРИЙН
+    ажиллуулдаг сервер бөгөөд заавал БИШ. Гуравдагч талын analytics, telemetry,
+    CDN, font, аудио эх сурвалж энэ гэрээнд БАЙХГҮЙ бөгөөд нэмэгдэхгүй.
+  license:
+    name: UNLICENSED
+    identifier: LicenseRef-PROPRIETARY
+  contact:
+    name: PERSONAL-2 · Editor's Ascension
+
+servers:
+  - url: /api
+
+tags:
+  - name: players
+    description: Нэргүй тоглогчийн бүртгэл ба токен.
+  - name: saves
+    description: Save унших/бичих, snapshot түүх ба сэргээлт.
+  - name: actions
+    description: Эрх бүхий домэйн үйлдэл (shared/core-оор хэрэгжинэ).
+  - name: transfer
+    description: Төхөөрөмж хооронд прогресс шилжүүлэх нэг удаагийн код.
+  - name: content
+    description: Контент пакет тараалт ба кэш.
+  - name: ops
+    description: Эрүүл мэнд ба ажиллагааны эндпойнт.
+
+security:
+  - playerToken: []
+
+paths:
+  # ──────────────────────────────────────────────────────────── ops
+  /health:
+    get:
+      tags: [ops]
+      operationId: getHealth
+      summary: Сервисийн эрүүл мэнд (AC BE-9, BE-15)
+      description: >-
+        Контент пакет асах үедээ `shared/validate`-ээр шалгагдана. Хүчингүй бол
+        сервис degraded — `/content/pack` мөн 503 буцаана (AC BE-15).
+        v1.2.0: шалгалт нь шинэ `guilds` · `chains` · `cosmetics` хэсгийг МӨН хамарна;
+        `unlockSource` нь өнчин лавлагаатай бол пакет хүчингүй (AC COS-2).
+      security: []
+      responses:
+        "200":
+          description: Эрүүл
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HealthOk" }
+        "503":
+          description: Контент хүчингүй — degraded (AC BE-15)
+          # ⚠ ИЛ ЧӨЛӨӨЛӨЛТ (RFC 9457-оос). Бусад БҮХ 4xx/5xx нь `application/problem+json`
+          #   (AC BE-16). Энэ ГАНЦ хариу нь эрүүл мэндийн БАРИМТ буцаана: хэрэглэгч
+          #   (uptime шалгагч · клиентийн health poll) нь `status` · `version` · `reason`-ыг
+          #   200-тай ИЖИЛ хэлбэрээр уншдаг. Problem болговол health-ийн хоёр хэлбэр үүсч,
+          #   шалгагч бүр хоёр замыг барих шаардлагатай болно.
+          #   Эзэн: PERSONAL-1 AC BE-15 · хамрах хүрээ: зөвхөн `getHealth`.
+          x-problem-exempt: >-
+            Health нь 200 ба 503-д ИЖИЛ баримтын хэлбэр буцаана (AC BE-15). Problem руу
+            шилжүүлбэл health-ийн хоёр дахь хэлбэр үүснэ.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HealthDegraded" }
+
+  # ──────────────────────────────────────────────────────── players
+  /players:
+    post:
+      tags: [players]
+      operationId: createPlayer
+      summary: Нэргүй тоглогч үүсгэх (AC BE-2, OFF-5)
+      description: >-
+        PII хадгалахгүй. Token нь дахин олгогдохгүй — клиент localStorage-д хадгална.
+        Сервер талд token нь зөвхөн hash хэлбэрээр хадгалагдана.
+        Rate limit: глобал 30/мин (AC BE-17; IP хадгалахгүй тул IP-д тулгуурлахгүй).
+        v1.2.0-д ӨӨРЧЛӨГДӨӨГҮЙ — шинэ систем ямар ч хувийн мэдээлэл шаардахгүй (AC OFF-5).
+      security: []
+      responses:
+        "201":
+          description: Үүссэн
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PlayerCredentials" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+
+  /players/{playerId}/save:
+    parameters:
+      - $ref: "#/components/parameters/PlayerId"
+    get:
+      tags: [saves]
+      operationId: getSave
+      summary: Save унших (AC BE-3, BE-4)
+      responses:
+        "200":
+          description: Save олдов
+          headers:
+            ETag: { $ref: "#/components/headers/ETag" }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SavePayload" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+    put:
+      tags: [saves]
+      operationId: putSave
+      summary: Save бүтнээр бичих (AC BE-3, BE-4, BE-5)
+      description: >-
+        Хэрэглээ нь ил хязгаарлагдсан (PERSONAL-1 plan.md P-9): зөвхөн (а) офлайн үйлдлийн
+        дараалал алдагдсаны дараах бүтэн эвлэрүүлэг, (б) import хийсэн төлвийг серверт тавих.
+        Ердийн тоглолтын бичилт нь `POST /players/{playerId}/actions`.
+        Амжилттай бичилт бүр өмнөх төлвийг snapshot болгоно (AC BE-13).
+
+        ⚠ v1.2.0: `schemaVersion` нь 2. Сервер v1 биетэй хүсэлтийг ХҮЛЭЭН АВНА —
+        `shared/save`-ийн `MIGRATIONS[2]`-оор дээшлүүлж хадгална (AC SVX-1, SVX-3).
+        Ирээдүйн (`> CURRENT_SCHEMA_VERSION`) хувилбар нь 400 `INVALID_INPUT`.
+      parameters:
+        - $ref: "#/components/parameters/IfMatch"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SavePayload" }
+      responses:
+        "200":
+          description: Хадгалагдав
+          headers:
+            ETag: { $ref: "#/components/headers/ETag" }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SaveAck" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+
+  /players/{playerId}/save/history:
+    parameters:
+      - $ref: "#/components/parameters/PlayerId"
+    get:
+      tags: [saves]
+      operationId: getSaveHistory
+      summary: Snapshot түүх (AC BE-13)
+      description: Хамгийн сүүлийн 10 snapshot, шинэ нь эхэнд. Агуулга буцаахгүй — зөвхөн лавлагаа.
+      responses:
+        "200":
+          description: Түүх
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SaveHistory" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+
+  /players/{playerId}/save/restore:
+    parameters:
+      - $ref: "#/components/parameters/PlayerId"
+    post:
+      tags: [saves]
+      operationId: restoreSave
+      summary: Snapshot-оос сэргээх (AC BE-13)
+      description: >-
+        Сэргээлт өөрөө шинэ snapshot үүсгэнэ (`reason: restore`) — сэргээсэн үйлдэл
+        эргүүлэн буцаагдах боломжтой байх ёстой.
+        ⚠ v1 snapshot сэргээхэд `MIGRATIONS[2]` ажиллаж v2 болж буцна (AC SVX-1).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RestoreRequest" }
+      responses:
+        "200":
+          description: Сэргээгдэв
+          headers:
+            ETag: { $ref: "#/components/headers/ETag" }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SavePayload" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+
+  # ──────────────────────────────────────────────────────── actions
+  /players/{playerId}/actions:
+    parameters:
+      - $ref: "#/components/parameters/PlayerId"
+    post:
+      tags: [actions]
+      operationId: applyActions
+      summary: Эрх бүхий домэйн үйлдэл (AC BE-11, BE-12, OFF-7)
+      description: >-
+        Үйлдлийн массивыг `shared/core`-оор ДАРААЛАН хэрэгжүүлнэ. **Атом**: нэг үйлдэл
+        домэйнээр татгалзвал бүх багц буцаагдаж 422 гарна, хадгалагдсан төлөв ӨӨРЧЛӨГДӨХГҮЙ.
+        Idempotency: `actionId` тус бүрээр бүртгэгдэнэ; өмнө хэрэгжсэн `actionId` дахин
+        ирвэл домэйн ДАХИН ажиллахгүй (`status: replayed`), анхны event-үүд буцна.
+        `If-Match` нь сонголттой — өгвөл хуучирсан ETag → 409 (клиент эхлээд GET хийнэ).
+
+        v1.2.0-д гурван шинэ `type` дэмжигдэнэ (`prestigeMastery` · `respecTree` ·
+        `setCampLayout`) ба `bossAttempt` · `updateSettings` хоёрын payload өргөжив.
+        ⚠ Хуучин клиентийн дараалалд хадгалагдсан `bossAttempt` (`difficulty`-гүй) нь
+        хожим ирэхэд ЭВДЭРЭХГҮЙ — байхгүй бол `standard` (AC BE-13-ийн replay зарчим).
+      parameters:
+        - $ref: "#/components/parameters/IfMatchOptional"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ActionBatchRequest" }
+      responses:
+        "200":
+          description: Багц хэрэгжив (эсвэл бүхэлдээ replayed)
+          headers:
+            ETag: { $ref: "#/components/headers/ETag" }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ActionBatchResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "422": { $ref: "#/components/responses/DomainRejected" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { $ref: "#/components/responses/Degraded" }
+
+  # ─────────────────────────────────────────────────────── transfer
+  /players/{playerId}/transfer-code:
+    parameters:
+      - $ref: "#/components/parameters/PlayerId"
+    post:
+      tags: [transfer]
+      operationId: createTransferCode
+      summary: Төхөөрөмж хооронд шилжүүлэх код үүсгэх (AC BE-14)
+      description: >-
+        TTL 15 минут, криптографийн санамсаргүй. Код нь сервер талд зөвхөн hash хэлбэрээр
+        хадгалагдана. Хариунд save-ийн агуулга ОРОХГҮЙ. Шинэ код үүсгэвэл өмнөх идэвхтэй
+        код хүчингүй болно (нэг тоглогчид нэг идэвхтэй код).
+      responses:
+        "201":
+          description: Код үүсэв
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TransferCode" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+
+  /transfer/redeem:
+    post:
+      tags: [transfer]
+      operationId: redeemTransferCode
+      summary: Шилжүүлэх код ашиглах (AC BE-14)
+      description: >-
+        Код **нэг удаа**. Амжилттай бол ШИНЭ `{playerId, token}` олгож, эх тоглогчийн
+        save-ийн хуулбарыг шинэ тоглогчид үүсгэнэ. Эх тоглогчийн save хэвээр үлдэнэ.
+        Ашигласан · хугацаа дууссан · олдоогүй — бүгд **410** (кодын оршин тогтнолыг
+        задруулахгүйн тулд ялгаагүй хариу).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RedeemRequest" }
+      responses:
+        "201":
+          description: Шинэ тоглогч үүсэж save хуулагдав
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PlayerCredentials" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "410": { $ref: "#/components/responses/Gone" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+
+  # ──────────────────────────────────────────────────────── content
+  /content/pack:
+    get:
+      tags: [content]
+      operationId: getContentPack
+      summary: Контент пакет (AC BE-6, BE-15, QX-4)
+      description: >-
+        ⚠ Хариу < 2MB (AC QX-4) — `cosmetics` (≥60), `guilds` (4), `chains` (≥3)
+        нэмэгдсэн ч төсөв хэвээр. Хэмжээг `server/tests` бодит пакет дээр хэмжинэ.
+      security: []
+      parameters:
+        - name: If-None-Match
+          in: header
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: Пакет
+          headers:
+            ETag: { $ref: "#/components/headers/ETag" }
+            Cache-Control:
+              description: "`public, max-age=300, must-revalidate`"
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ContentPack" }
+        "304": { description: Өөрчлөгдөөгүй }
+        "503": { $ref: "#/components/responses/Degraded" }
+
+components:
+  securitySchemes:
+    playerToken:
+      type: http
+      scheme: bearer
+      description: /players-ээс олгогдсон token. playerId-тай таарахгүй бол 403 (AC BE-4).
+
+  parameters:
+    PlayerId:
+      name: playerId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      description: Сүүлд уншсан ETag. Анхны бичилтэд `*`.
+      schema: { type: string }
+    IfMatchOptional:
+      name: If-Match
+      in: header
+      required: false
+      description: Өгвөл хуучирсан ETag → 409.
+      schema: { type: string }
+
+  headers:
+    ETag:
+      description: Save-ийн одоогийн хувилбар. Дараагийн бичилтэд `If-Match`-аар ашиглана.
+      schema: { type: string, example: "W/\"7\"" }
+    RetryAfter:
+      description: Дахин оролдох хүртэлх секунд (AC BE-17).
+      schema: { type: integer, minimum: 1, example: 30 }
+
+  responses:
+    BadRequest:
+      description: Схемийн алдаа (AC BE-5)
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    Unauthorized:
+      description: Token байхгүй/буруу (AC BE-4)
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    Forbidden:
+      description: Token өөр тоглогчийнх (AC BE-4)
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    NotFound:
+      description: Олдсонгүй
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    Conflict:
+      description: ETag хуучирсан — өөр бичилт түрүүлсэн (AC BE-3)
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    Gone:
+      description: Код ашиглагдсан · хугацаа дууссан · олдсонгүй (AC BE-14)
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    PayloadTooLarge:
+      description: Бие 1MB-аас том (AC BE-5)
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    DomainRejected:
+      description: >-
+        Домэйн үйлдлийг татгалзав (AC BE-11). `code` нь `RejectionReason`,
+        `actionId` нь татгалзсан үйлдлийг заана. Багц бүхэлдээ буцаагдсан.
+        v1.2.0: `RESPEC_ON_COOLDOWN` мөн энэ замаар гарна (AC SKL-3).
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    TooManyRequests:
+      description: Хурдны хязгаар (AC BE-17)
+      headers:
+        Retry-After: { $ref: "#/components/headers/RetryAfter" }
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    Degraded:
+      description: Контент хүчингүй — сервис degraded (AC BE-15)
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+
+  schemas:
+    # ──────────────────────────────────────────── алдаа (RFC 9457)
+    Problem:
+      description: RFC 9457 problem details. Бүх 4xx/5xx хариу ЭНЭ хэлбэртэй (AC BE-16).
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string, default: "about:blank" }
+        title: { type: string }
+        status: { type: integer, minimum: 400, maximum: 599 }
+        detail: { type: string }
+        instance: { type: string }
+        code:
+          description: Машин уншигдах код. Домэйн татгалзалд `RejectionReason`-ы утга.
+          type: string
+        actionId:
+          description: 422 үед — татгалзсан үйлдлийн id (AC BE-11)
+          type: string
+          format: uuid
+        errors:
+          description: 400 үед — талбарын түвшний алдаа (AC BE-5)
+          type: array
+          items:
+            type: object
+            required: [field, message]
+            properties:
+              field: { type: string, description: "JSON Pointer, ж: `/state/xp`" }
+              message: { type: string }
+
+    RejectionReason:
+      description: >-
+        Домэйн үйлдэл татгалзах шалтгаан (PERSONAL-1 spec.md D-4 + PERSONAL-2 spec.md D-5).
+        ⚠ v1.2.0-д ЯГ НЭГ утга нэмэгдэв. Бусад бүх шинэ татгалзал одоогийн 7 кодод багтана —
+        шинэ код нэмэх нь СПЕКИЙН өөрчлөлт (plan.md §13.3).
+      type: string
+      enum:
+        - INSUFFICIENT_STAMINA
+        - PREREQ_NOT_MET
+        - LEVEL_TOO_LOW
+        - ALREADY_COMPLETED
+        - NOT_REPEATABLE
+        - INSUFFICIENT_SKILL_POINTS
+        - INVALID_INPUT
+        - RESPEC_ON_COOLDOWN
+
+    # ──────────────────────────────────────────────────────── ops
+    HealthOk:
+      type: object
+      required: [status, version, contentVersion]
+      properties:
+        status: { type: string, const: ok }
+        version: { type: string, description: Серверийн хувилбар }
+        contentVersion:
+          type: string
+          description: Контент пакетын тогтвортой hash — `/content/pack`-ийн ETag-тай ижил утга.
+      example: { status: ok, version: "1.2.0", contentVersion: "c3f1a9" }
+
+    HealthDegraded:
+      type: object
+      required: [status, version, reason]
+      properties:
+        status: { type: string, const: degraded }
+        version: { type: string }
+        reason:
+          type: string
+          description: Хүний уншихад зориулсан шалтгаан. Контентын түүхий агуулга ОРОХГҮЙ.
+
+    # ─────────────────────────────────────────────────── players
+    PlayerCredentials:
+      type: object
+      additionalProperties: false
+      required: [playerId, token]
+      properties:
+        playerId: { type: string, format: uuid }
+        token:
+          description: 32 байт санамсаргүй, base64url. Сервер талд зөвхөн hash хадгална.
+          type: string
+          minLength: 43
+      example:
+        playerId: 6f2a1c94-3d8e-4b7a-9f10-2c5de7b8a041
+        token: 9Qe1xM7bK2pR4tY6uI8oA0sD3fG5hJ7kL9zX1cV3bN5m
+
+    # ───────────────────────────────────────────────────── saves
+    SavePayload:
+      type: object
+      additionalProperties: false
+      required: [schemaVersion, state, updatedAt]
+      properties:
+        # ⚠ `minimum: 1` нь ЗОРИУД — сервер v1 биеийг ХҮЛЭЭН АВЧ `MIGRATIONS[2]`-оор
+        #   дээшлүүлнэ (AC SVX-3). `example: 2` нь ОДООГИЙН хувилбарыг заана:
+        #   дуурайлт ба баримт хоёулаа v2 харуулна, гэхдээ v1 хүлээн авагдсан хэвээр.
+        schemaVersion: { type: integer, minimum: 1, example: 2 }
+        updatedAt: { type: string, format: date-time }
+        state: { $ref: "#/components/schemas/GameState" }
+
+    SaveAck:
+      type: object
+      additionalProperties: false
+      required: [updatedAt, etag]
+      properties:
+        updatedAt: { type: string, format: date-time }
+        etag: { type: string }
+
+    RestoreRequest:
+      type: object
+      additionalProperties: false
+      required: [snapshotId]
+      properties:
+        snapshotId: { type: string, format: uuid }
+
+    SnapshotRef:
+      description: Snapshot-ийн лавлагаа. Төлвийн агуулга ОРОХГҮЙ (AC BE-13).
+      type: object
+      additionalProperties: false
+      required: [snapshotId, createdAt, schemaVersion, reason]
+      properties:
+        snapshotId: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+        schemaVersion: { type: integer, minimum: 1 }
+        reason:
+          type: string
+          enum: [put, actions, restore]
+          description: Snapshot үүсгэсэн шалтгаан.
+
+    SaveHistory:
+      type: object
+      additionalProperties: false
+      required: [snapshots]
+      properties:
+        snapshots:
+          type: array
+          maxItems: 10
+          items: { $ref: "#/components/schemas/SnapshotRef" }
+
+    # ─────────────────────────────────────────────────── actions
+    ActionType:
+      description: >-
+        Домэйн үйлдлийн төрөл. `shared/core`-ийн нэг функцтэй нэг-нэгээр харгалзана
+        (lld.md §5.4). Энэ жагсаалт нь `GameState`-ийн БҮХ бичигдэх талбарыг хамарна —
+        хамаарахгүй талбар үлдвэл тэр талбар серверээр эрх бүхий болж чадахгүй.
+
+        ⚠ v1.2.0-д ЯГ ГУРАВ нэмэгдэв (plan.md P-7). Mastery XP · reputation ·
+        chain bonus нь ШИНЭ action БИШ — `claimQuest` · `dungeonAttempt` ·
+        `bossAttempt`-ийн ДОТООД үр дагавар (lld.md §5.5).
+      type: string
+      enum:
+        - claimQuest
+        - rest
+        - unlockSkill
+        - dungeonAttempt
+        - projectCreate
+        - projectMilestone
+        - projectUpdate
+        - bossAttempt
+        - rollDailyMission
+        - resolveEncounter
+        - updateSettings
+        - prestigeMastery
+        - respecTree
+        - setCampLayout
+
+    Action:
+      type: object
+      additionalProperties: false
+      required: [actionId, type, at, payload]
+      properties:
+        actionId:
+          description: Клиент үүсгэсэн UUIDv4. Idempotency түлхүүр (AC BE-12).
+          type: string
+          format: uuid
+        type: { $ref: "#/components/schemas/ActionType" }
+        at:
+          description: >-
+            Клиент дээрх үйлдлийн цаг. Домэйнд `clock`-ийн оронд дамжина (plan.md P-5).
+            Сервер нь ирээдүйд 5 минутаас илүү хазайсан цагийг татгалзана (INVALID_INPUT).
+            ⚠ `respecTree` (7 өдөр) ба refresher (14 өдөр) нь ЭНЭ талбараас
+            `daysBetween` тооцно — `Date.now()` домэйнд хоригтой (AC QX-7 · plan.md P-18).
+          type: string
+          format: date-time
+        seed:
+          description: RNG seed (loot, encounter). Байхгүй бол сервер үүсгэнэ (AC EC-2, ENC-2).
+          type: integer
+          minimum: 0
+        payload:
+          description: >-
+            Төрлөөс хамаарсан бие. Сервер нь `type`-аар нь салгаж `shared/validate`-ийн
+            харгалзах validator-оор шалгана (lld.md §6.5 хүснэгт).
+
+            ⚠ Энэ талбар нь ЗОРИУД нээлттэй объект — `oneOf` дискриминатор нэмэх нь
+            v1.1.0-ийн клиентүүдийг эвдэнэ. v1.2.0-ийн шинэ/өргөтгөсөн 5 payload-ийн
+            БАРИМТЖУУЛСАН хэлбэр нь доорх ТАВАН схем — тэдгээр нь
+            `shared/validate/index.ts → validateActionPayload`-ийн гэрээ:
+            `ActionPayloadPrestigeMastery` (prestigeMastery) ·
+            `ActionPayloadRespecTree` (respecTree) ·
+            `ActionPayloadSetCampLayout` (setCampLayout) ·
+            `ActionPayloadUpdateSettings` (updateSettings) ·
+            `ActionPayloadBossAttempt` (bossAttempt).
+            ⚠ Эдгээрийг `$ref`-ээр ЗААГААГҮЙ нь ЗОРИУД — `payload` нээлттэй хэвээр
+            үлдэх ёстой. Нийтлэлийн хаалга (G-4) тэднийг НЭРЭЭР нь хайж олно.
+          type: object
+
+    ActionPayloadPrestigeMastery:
+      description: >-
+        `type: prestigeMastery` (AC MST-3). Татгалзал: `INVALID_INPUT` (танихгүй tag) ·
+        `PREREQ_NOT_MET` (track level ≠ 10).
+      type: object
+      additionalProperties: false
+      required: [tag]
+      properties:
+        tag: { $ref: "#/components/schemas/SkillTag" }
+
+    ActionPayloadRespecTree:
+      description: >-
+        `type: respecTree` (AC SKL-3). Татгалзал: `INVALID_INPUT` (танихгүй track) ·
+        `RESPEC_ON_COOLDOWN` (сүүлийн respec-ээс < 7 тоглоомын өдөр) ·
+        `PREREQ_NOT_MET` (тухайн модонд нээгдсэн node байхгүй).
+      type: object
+      additionalProperties: false
+      required: [track]
+      properties:
+        track: { $ref: "#/components/schemas/SkillTag" }
+
+    ActionPayloadSetCampLayout:
+      description: >-
+        `type: setCampLayout` (AC COS-4). Татгалзал: `INVALID_INPUT` (танихгүй slot/id) ·
+        `PREREQ_NOT_MET` (нээгдээгүй cosmetic зүүх оролдлого).
+        ⚠ `slots` нь ЯГ 6 түлхүүртэй БҮТЭН объект — хэсэгчилсэн засвар БАЙХГҮЙ (plan.md P-25).
+      type: object
+      additionalProperties: false
+      required: [slots]
+      properties:
+        slots: { $ref: "#/components/schemas/CampLayoutSlots" }
+
+    ActionPayloadUpdateSettings:
+      description: >-
+        `type: updateSettings` (AC VIS-3, FX-3). БҮХ талбар сонголттой — ирсэн
+        талбар л солигдоно (plan.md P-6). Шинэ action нэмэхийн оронд payload өргөжив.
+      type: object
+      additionalProperties: false
+      properties:
+        reducedMotion: { type: boolean }
+        soundEnabled: { type: boolean }
+        colorBlindSafe: { type: boolean }
+        soundVolume: { type: number, minimum: 0, maximum: 1 }
+
+    ActionPayloadBossAttempt:
+      description: >-
+        `type: bossAttempt` (AC BSX-2…BSX-6). `difficulty` нь СОНГОЛТТОЙ — байхгүй бол
+        `standard`. Энэ нь v1.1.0-ийн офлайн дараалалд хадгалагдсан үйлдлийг эвдэхгүй.
+      type: object
+      additionalProperties: false
+      required: [bossId, scores]
+      properties:
+        bossId: { type: string }
+        scores: { $ref: "#/components/schemas/BossScores" }
+        difficulty: { $ref: "#/components/schemas/DifficultyTier" }
+
+    ActionBatchRequest:
+      type: object
+      additionalProperties: false
+      required: [actions]
+      properties:
+        actions:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items: { $ref: "#/components/schemas/Action" }
+
+    DomainEventType:
+      description: >-
+        Домэйн функцийн гаргах event-ийн төрөл. ⚠ v1.2.0-д ЯГ ДӨРӨВ нэмэгдэв (plan.md P-8).
+        `FX-1`-ийн «бүртгэлийн бүрэн байдал» тест нь эдгээрийн 12-ыг (`fx.ts`) хамарна.
+      type: string
+      enum:
+        - XP_GAINED
+        - LEVEL_UP
+        - SKILL_POINT_GAINED
+        - SKILL_UNLOCKED
+        - STAMINA_SPENT
+        - STAMINA_RESTORED
+        - QUEST_COMPLETED
+        - SIDE_QUEST_COMPLETED
+        - DUNGEON_PASSED
+        - DUNGEON_FAILED
+        - COINS_GAINED
+        - LOOT_DROPPED
+        - ACHIEVEMENT_UNLOCKED
+        - STREAK_EXTENDED
+        - STREAK_RESET
+        - COMBO_CHANGED
+        - PROJECT_CREATED
+        - PROJECT_MILESTONE_COMPLETED
+        - PROJECT_COMPLETED
+        - BOSS_ATTEMPT_LOGGED
+        - BOSS_PASSED
+        - ENCOUNTER_TRIGGERED
+        - DAILY_MISSION_ROLLED
+        - SETTINGS_UPDATED
+        - MASTERY_LEVEL_UP
+        - MASTERY_PRESTIGED
+        - REPUTATION_GAINED
+        - CHAIN_COMPLETED
+
+    DomainEvent:
+      description: >-
+        Домэйн функцийн гаргасан event (spec.md D-2). UI нь эдгээрээр feedback үзүүлнэ.
+        ⚠ `data`-гийн хэлбэр нь event тутамд ТОГТМОЛ (lld.md §5.6) — `fx.ts` нь
+        `aria-live` текстээ ЭНДЭЭС бүрдүүлдэг тул талбар хасах нь UI-г ЧИМЭЭГҮЙ хоослоно.
+      type: object
+      required: [type]
+      properties:
+        type: { $ref: "#/components/schemas/DomainEventType" }
+        data:
+          type: object
+          description: >-
+            Event-ээс хамаарсан нэмэлт. v1.2.0-ийн 4 шинэ event:
+            `MASTERY_LEVEL_UP {tag, level, masteryPoints}` ·
+            `MASTERY_PRESTIGED {tag, prestigeCount}` ·
+            `REPUTATION_GAINED {guildId, amount, total, rank}` ·
+            `CHAIN_COMPLETED {chainId, bonusXp}`.
+            `BOSS_ATTEMPT_LOGGED`-д `difficulty` нэмэгдэв.
+
+    ActionResult:
+      type: object
+      additionalProperties: false
+      required: [actionId, status, events]
+      properties:
+        actionId: { type: string, format: uuid }
+        status:
+          type: string
+          enum: [applied, replayed]
+          description: >-
+            `replayed` = энэ `actionId` өмнө нь хэрэгжсэн; домэйн ДАХИН ажиллаагүй,
+            анхны event-үүд буцсан (AC BE-12).
+        events:
+          type: array
+          items: { $ref: "#/components/schemas/DomainEvent" }
+
+    ActionBatchResponse:
+      type: object
+      additionalProperties: false
+      required: [state, results, updatedAt, etag]
+      properties:
+        state:
+          description: Хэрэгжүүлсний ДАРААХ эрх бүхий төлөв. Клиент үүгээр локал төлвийг СОЛИНО.
+          $ref: "#/components/schemas/GameState"
+        results:
+          type: array
+          items: { $ref: "#/components/schemas/ActionResult" }
+        updatedAt: { type: string, format: date-time }
+        etag: { type: string }
+
+    # ────────────────────────────────────────────────── transfer
+    TransferCodeString:
+      description: >-
+        Crockford base32, 4-4-4 бүлэг (ж. `K7QM-2X4T-9BRH`). Том/жижиг үсэг ба зураас
+        үл хамаарна; `I·L·O·U` тэмдэгт байхгүй (уншилтын алдаанаас сэргийлнэ).
+      type: string
+      pattern: "^[0-9A-HJKMNP-TV-Za-hjkmnp-tv-z]{4}-?[0-9A-HJKMNP-TV-Za-hjkmnp-tv-z]{4}-?[0-9A-HJKMNP-TV-Za-hjkmnp-tv-z]{4}$"
+
+    TransferCode:
+      type: object
+      additionalProperties: false
+      required: [code, expiresAt]
+      properties:
+        code: { $ref: "#/components/schemas/TransferCodeString" }
+        expiresAt: { type: string, format: date-time }
+
+    RedeemRequest:
+      type: object
+      additionalProperties: false
+      required: [code]
+      properties:
+        code: { $ref: "#/components/schemas/TransferCodeString" }
+
+    # ──────────────────────────────────── нийтлэг enum (v1.2.0 — нэрлэгдэв)
+    SkillTag:
+      description: >-
+        Сурах домэйны шошго. ⚠ v1.1.0-д `QuestDefinition.tags`-д INLINE байсан; утга
+        ӨӨРЧЛӨГДӨӨГҮЙ, зөвхөн нэрлэгдэв. Mastery track нь эдгээртэй 1:1 (spec.md A3).
+      type: string
+      enum: [video-editing, blender, animation, cinematography, audio, vfx, storytelling]
+
+    Rarity:
+      description: >-
+        Ховордолт. ⚠ v1.1.0-д `LootItem.rarity`-д INLINE байсан; утга ӨӨРЧЛӨГДӨӨГҮЙ.
+        `CosmeticItem` МӨН энэ enum-ыг ашиглана — шинэ enum нэмэгдээгүй (plan.md §11.2).
+      type: string
+      enum: [common, rare, epic, legendary]
+
+    DifficultyTier:
+      description: >-
+        Boss оролдлогын хүндрэл (AC BSX-2). **Оролдлого тутамд**, тоглогчид БИШ —
+        нэг тоглогч standard ба hard-ыг сольж оролдож болно.
+        Hard mode-ын босго нь `ceil(bossTiers[t] × hardModeMultiplier)` = 41 · 52 · 60.
+      type: string
+      enum: [standard, hard]
+      default: standard
+
+    CosmeticSlot:
+      description: Cosmetic-ийн байрлах 6 үүр (AC COS-1). `campLayout` нь ЯГ эдгээр түлхүүртэй.
+      type: string
+      enum: [avatarFrame, campBanner, title, campDecoration, uiAccent, badgeFrame]
+
+    # ────────────────────────────────────────────── домэйн төлөв
+    MasteryTrack:
+      description: >-
+        `SkillTag` тутмын бие даасан прогрессийн тэнхлэг (AC MST-1). Түвшин нь
+        `ProgressionConstants.xpThresholds` ИЖИЛ хүснэгтээр тооцогдоно — өөр босго БАЙХГҮЙ.
+        ⚠ AC MST-5 · spec.md D-6: mastery нь XP · stamina · coin · loot ·
+        quest/dungeon-ийн нээлтэд НӨЛӨӨЛӨХГҮЙ. Цорын ганц үл хамаарах зүйл —
+        tier-2/tier-3 skill node-ийн нээлт (AC SKL-2).
+      type: object
+      additionalProperties: false
+      required: [tag, xp, level, prestigeCount]
+      properties:
+        tag: { $ref: "#/components/schemas/SkillTag" }
+        xp:
+          description: Тухайн track-д хуримтлагдсан XP. Prestige хийхэд 0 болно.
+          type: integer
+          minimum: 0
+        level: { type: integer, minimum: 1, maximum: 10 }
+        prestigeCount:
+          description: ⚠ ХЭЗЭЭ Ч БУУРАХГҮЙ (AC MST-3).
+          type: integer
+          minimum: 0
+
+    ReplayLogEntry:
+      description: >-
+        Тоглолтын түүхийн нэг мөр (AC BSX-6, SVX-2). Зөвхөн НЭМЭГДЭНЭ.
+        ⚠ `kind` нь 5 утгатай ч энэ хувилбарт ЗӨВХӨН `boss` бичигдэнэ (plan.md P-24) —
+        үлдсэн утгууд нь схем эвдэлгүйгээр хожим дүүргэгдэх зай (AAA-SPEC §4.16).
+        ⚠ spec.md D-6: replayLog нь ямар ч нээлт, XP, оноонд НӨЛӨӨЛӨХГҮЙ.
+      type: object
+      additionalProperties: false
+      required: [at, kind, refId, outcome]
+      properties:
+        at: { type: string, format: date-time }
+        kind: { type: string, enum: [quest, sideQuest, dungeon, boss, chain] }
+        refId: { type: string, description: Контентын id (boss id, quest id …) }
+        outcome: { type: string, enum: [passed, failed] }
+
+    CampLayoutSlots:
+      description: >-
+        ЯГ 6 түлхүүр — бүгд ЗААВАЛ (plan.md P-25). `null` = үүр хоосон.
+        Утга нь `ContentPack.cosmetics`-д БАЙГАА бөгөөд тоглогчид НЭЭГДСЭН id байх ёстой
+        (эс бөгөөс `setCampLayout` нь `PREREQ_NOT_MET`).
+      type: object
+      additionalProperties: false
+      required: [avatarFrame, campBanner, title, campDecoration, uiAccent, badgeFrame]
+      properties:
+        avatarFrame: { type: [string, "null"] }
+        campBanner: { type: [string, "null"] }
+        title: { type: [string, "null"] }
+        campDecoration: { type: [string, "null"] }
+        uiAccent: { type: [string, "null"] }
+        badgeFrame: { type: [string, "null"] }
+
+    CampLayout:
+      description: >-
+        Цэвэр UI төлөв (AC COS-4). ⚠ Домэйн дүрэм ЭНЭ талбарыг УНШИХГҮЙ (spec.md D-6) —
+        устгаад дахин ачаалахад level · XP · inventory · mastery · rep ӨӨРЧЛӨГДӨХГҮЙ.
+      type: object
+      additionalProperties: false
+      required: [slots]
+      properties:
+        slots: { $ref: "#/components/schemas/CampLayoutSlots" }
+
+    BossAttempt:
+      description: >-
+        AC BS-4 — оролдлогын түүх (тэнцсэн эсэхээс үл хамааран бүгд).
+        ⚠ v1.2.0: `difficulty` ЗААВАЛ. Migration нь одоо байгаа бүх бичлэгт `standard`
+        бичнэ. Хувийн дээд амжилт (AC BSX-3) нь `(bossId, difficulty)` бүлгийн `total`-ийн
+        max — ТУСДАА `personalBests` талбар БАЙХГҮЙ (plan.md P-2).
+      type: object
+      additionalProperties: false
+      required: [bossId, at, scores, total, tier, difficulty]
+      properties:
+        bossId: { type: string }
+        at: { type: string, format: date-time }
+        scores: { $ref: "#/components/schemas/BossScores" }
+        total: { type: integer, minimum: 0, maximum: 60 }
+        tier: { type: string, enum: [failed, mvp, advanced, mastery] }
+        difficulty: { $ref: "#/components/schemas/DifficultyTier" }
+
+    GameState:
+      description: >-
+        Домэйн төлвийн бүрэн хэлбэр. Export/import файлын агуулга ч мөн энэ.
+        ⚠ v1.2.0 = `schemaVersion: 2`. v1 → v2 шилжилт нь `shared/save/migrations.ts`
+        `MIGRATIONS[2]` (AC SVX-1) — **хуучин save-ийн тоглоомын утга ХӨНДӨГДӨХГҮЙ**.
+      type: object
+      additionalProperties: false
+      required:
+        [schemaVersion, xp, level, stamina, maxStamina, coins, skillPoints, combo, streak,
+         completedMainQuestIds, sideQuestStats, completedDungeonIds, unlockedSkillIds,
+         inventory, achievementIds, bossAttempts, dailyMission, projects, settings,
+         mastery, masteryPoints, reputation, replayLog, campLayout, completedChainIds,
+         respecAt, dungeonStats]
+      properties:
+        schemaVersion: { type: integer, minimum: 1 }
+        xp: { type: integer, minimum: 0 }
+        level: { type: integer, minimum: 1, maximum: 10 }
+        stamina: { type: integer, minimum: 0 }
+        maxStamina: { type: integer, const: 10 }
+        coins: { type: integer, minimum: 0 }
+        skillPoints: { type: integer, minimum: 0 }
+        combo:
+          description: >-
+            Дараалсан идэвхтэй өдрийн claim-ийн тоолуур. Cosmetic — XP · stamina ·
+            unlock-д НӨЛӨӨЛӨХГҮЙ (AC EC-1-ийн зарчим).
+          type: integer
+          minimum: 0
+        streak:
+          type: object
+          additionalProperties: false
+          required: [current, best, lastQualifiedDate]
+          properties:
+            current: { type: integer, minimum: 0 }
+            best: { type: integer, minimum: 0 }
+            lastQualifiedDate: { type: [string, "null"], format: date }
+        completedMainQuestIds:
+          type: array
+          items: { type: string }
+          uniqueItems: true
+        sideQuestStats:
+          description: >-
+            ⚠ v1.2.0-д side quest chain-ийн явц ЭНДЭЭС гаргагдана (plan.md P-21) —
+            `chainProgress` талбар НЭМЭГДЭЭГҮЙ. `lastCompletedAt` нь chain-ийн
+            «чанд дараалал» шалгалтын ЦОРЫН ГАНЦ эх.
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties: false
+            required: [completions, lastCompletedAt]
+            properties:
+              completions: { type: integer, minimum: 1 }
+              lastCompletedAt: { type: [string, "null"], format: date-time }
+        completedDungeonIds: { type: array, items: { type: string }, uniqueItems: true }
+        unlockedSkillIds: { type: array, items: { type: string }, uniqueItems: true }
+        inventory: { type: array, items: { type: string }, uniqueItems: true }
+        achievementIds: { type: array, items: { type: string }, uniqueItems: true }
+        bossAttempts:
+          type: array
+          items: { $ref: "#/components/schemas/BossAttempt" }
+        dailyMission:
+          type: [object, "null"]
+          additionalProperties: false
+          required: [questId, date]
+          properties:
+            questId: { type: string }
+            date: { type: string, format: date }
+        projects:
+          type: array
+          items: { $ref: "#/components/schemas/ProjectState" }
+        settings:
+          type: object
+          additionalProperties: false
+          required: [reducedMotion, soundEnabled, colorBlindSafe, soundVolume]
+          properties:
+            reducedMotion: { type: boolean }
+            soundEnabled: { type: boolean }
+            colorBlindSafe:
+              description: >-
+                AC VIS-3 — protanopia/deuteranopia-д тохирсон токен багц. ЗӨВХӨН өнгөний
+                токен солигдоно; layout · зай · текст ӨӨРЧЛӨГДӨХГҮЙ.
+              type: boolean
+            soundVolume:
+              description: >-
+                AC FX-3 — `0` нь `soundEnabled: false`-тай ИЖИЛ үр дүн (дуу гарахгүй).
+                Хоёулаа `fx.ts`-ийн ГАНЦ хамгаалалтаар шалгагдана (plan.md P-5).
+              type: number
+              minimum: 0
+              maximum: 1
+
+        # ─── v1.2.0-д нэмэгдсэн 8 талбар (plan.md §11.1) ───
+        mastery:
+          description: >-
+            AC MST-1 — ЯГ 7 бичлэг, түлхүүр нь `SkillTag`. Migration-ий анхдагч:
+            `xp 0 · level 1 · prestigeCount 0`.
+          type: object
+          additionalProperties: { $ref: "#/components/schemas/MasteryTrack" }
+          propertyNames: { $ref: "#/components/schemas/SkillTag" }
+          minProperties: 7
+          maxProperties: 7
+        masteryPoints:
+          description: >-
+            AC MST-4 — **ҮЛДЭГДЭЛ** (зарцуулаагүй оноо), олдсон НИЙТ БИШ (plan.md P-20).
+            Олдсон нийт нь `Σ_tracks((level − 1) + prestigeCount × 9)`-ээр ГАРГАГДАНА.
+            Инвариант (тест): `masteryPoints + зарцуулсан == олдсон нийт`.
+          type: integer
+          minimum: 0
+        reputation:
+          description: >-
+            AC RET-5 — guild тутмын нэр хүнд. Түлхүүр нь `GuildDefinition.id` (4 ширхэг).
+            ⚠ ЗӨВХӨН ӨСНӨ: бууралт, зарцуулалт БАЙХГҮЙ.
+          type: object
+          additionalProperties: { type: integer, minimum: 0 }
+          minProperties: 4
+          maxProperties: 4
+        replayLog:
+          description: >-
+            AC SVX-2 — 500 бичлэгээр ТАСЛАГДАНА (FIFO: хамгийн хуучин нь хасагдана).
+            Бичих ЦОРЫН ГАНЦ зам нь `shared/core/replayLog.ts → appendReplay` (plan.md P-10).
+          type: array
+          maxItems: 500
+          items: { $ref: "#/components/schemas/ReplayLogEntry" }
+        campLayout: { $ref: "#/components/schemas/CampLayout" }
+        completedChainIds:
+          description: >-
+            AC RET-2 — дууссан chain. ⚠ БАЙНГА үлдэнэ: `bonusXp` дахин олгогдохгүй
+            (давтагдах side quest-ийг дахин дуусгасан ч).
+          type: array
+          items: { type: string }
+          uniqueItems: true
+        respecAt:
+          description: >-
+            AC SKL-3 — сүүлийн respec-ийн цаг. ⚠ **ГАНЦ** талбар, мод тутам БИШ
+            (plan.md P-19 · H-6): нэг модыг respec хийхэд БҮХ модны 7 өдрийн cooldown эхэлнэ.
+            `null` = хэзээ ч respec хийгээгүй → зөвшөөрөгдөнө.
+          type: [string, "null"]
+          format: date-time
+        dungeonStats:
+          description: >-
+            AC RET-4 — refresher-ийн нэр дэвшилтэд шаардлагатай ОГНОО (plan.md P-15).
+            `completedDungeonIds` нь огноогүй тул энэ талбар нэмэгдэв.
+            ⚠ `lastPassedDate: null` = refresher-т нэр дэвшихГҮЙ (migration-ий анхдагч —
+            хуучин save-ийн тэнцсэн огноог ЗОХИОХГҮЙ; дараагийн тэнцэлтээс тоологдоно).
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties: false
+            required: [lastPassedDate]
+            properties:
+              lastPassedDate: { type: [string, "null"], format: date }
+
+      example:
+        schemaVersion: 2
+        xp: 140
+        level: 2
+        stamina: 7
+        maxStamina: 10
+        coins: 60
+        skillPoints: 1
+        combo: 2
+        streak: { current: 3, best: 5, lastQualifiedDate: "2026-09-14" }
+        completedMainQuestIds: [mq-first-cut, mq-blender-toybox]
+        sideQuestStats:
+          sq-hotkey-hunter: { completions: 2, lastCompletedAt: "2026-09-14T19:12:00Z" }
+        completedDungeonIds: [dg-timeline-basics]
+        unlockedSkillIds: [sk-precision-cut]
+        inventory: [loot-golden-razor]
+        achievementIds: [ach-first-blood]
+        bossAttempts: []
+        dailyMission: { questId: sq-three-cut-story, date: "2026-09-15" }
+        projects: []
+        settings: { reducedMotion: false, soundEnabled: true, colorBlindSafe: false, soundVolume: 1 }
+        mastery:
+          video-editing: { tag: video-editing, xp: 140, level: 2, prestigeCount: 0 }
+          blender: { tag: blender, xp: 0, level: 1, prestigeCount: 0 }
+          animation: { tag: animation, xp: 0, level: 1, prestigeCount: 0 }
+          cinematography: { tag: cinematography, xp: 0, level: 1, prestigeCount: 0 }
+          audio: { tag: audio, xp: 0, level: 1, prestigeCount: 0 }
+          vfx: { tag: vfx, xp: 0, level: 1, prestigeCount: 0 }
+          storytelling: { tag: storytelling, xp: 60, level: 1, prestigeCount: 0 }
+        masteryPoints: 1
+        reputation: { guild-cut: 5, guild-form: 0, guild-frame: 0, guild-signal: 2 }
+        replayLog: []
+        campLayout:
+          slots:
+            avatarFrame: null
+            campBanner: null
+            title: cos-title-first-blood
+            campDecoration: null
+            uiAccent: null
+            badgeFrame: null
+        completedChainIds: []
+        respecAt: null
+        dungeonStats:
+          dg-timeline-basics: { lastPassedDate: "2026-09-02" }
+
+    BossScores:
+      description: >-
+        AC BS-1 — 6 ангилал, тус бүр 0..10. Дээд нийлбэр = 60.
+        ⚠ AC BSX-2-ийн үр дагавар: hard mode-ийн `mastery` босго нь 60 тул 6 ангилал
+        БҮРД 10 оноо шаардана (plan.md §12.2 — томьёоноос гарсан, спекээр батлагдсан).
+      type: object
+      additionalProperties: false
+      required: [story, editing, camera, visualCraft, animation, audioPost]
+      properties:
+        story: { type: integer, minimum: 0, maximum: 10 }
+        editing: { type: integer, minimum: 0, maximum: 10 }
+        camera: { type: integer, minimum: 0, maximum: 10 }
+        visualCraft: { type: integer, minimum: 0, maximum: 10 }
+        animation: { type: integer, minimum: 0, maximum: 10 }
+        audioPost: { type: integer, minimum: 0, maximum: 10 }
+
+    ProjectState:
+      type: object
+      additionalProperties: false
+      required: [id, title, milestones, notes, nextAction, createdAt]
+      properties:
+        id: { type: string }
+        title: { type: string, minLength: 1, maxLength: 120 }
+        createdAt: { type: string, format: date-time }
+        completedAt: { type: [string, "null"], format: date-time }
+        notes: { type: string, maxLength: 4000 }
+        nextAction: { type: string, maxLength: 500 }
+        evidenceRef: { type: [string, "null"], maxLength: 500 }
+        selfScore: { type: [integer, "null"], minimum: 0, maximum: 10 }
+        milestones:
+          description: AC PJ-1 — 10 milestone, яг энэ дарааллаар
+          type: array
+          minItems: 10
+          maxItems: 10
+          items:
+            type: object
+            additionalProperties: false
+            required: [key, done]
+            properties:
+              key:
+                type: string
+                enum: [concept, brief, storyboard, assets, animation, render,
+                       editAudioColor, review, finalExport, portfolio]
+              done: { type: boolean }
+              completedAt: { type: [string, "null"], format: date-time }
+
+    # ─────────────────────────────────────────────────── контент
+    QuestDefinition:
+      description: TECH_SPEC §Quest schema + PRD §9-ийн бүх заавал талбар (AC MQ-5)
+      type: object
+      additionalProperties: false
+      required:
+        [id, track, world, levelRequired, type, title, summary, description,
+         estimatedMinutes, staminaCost, xp, tags, prerequisites, tutorialRefs,
+         deliverables, victoryConditions, stretchGoals, reflectionPrompt, repeatable]
+      properties:
+        id: { type: string, pattern: "^[a-z0-9-]+$" }
+        track: { type: string, enum: [main, side, dungeon, boss, raid] }
+        world: { type: integer, minimum: 1, maximum: 5 }
+        levelRequired: { type: integer, minimum: 1, maximum: 10 }
+        type: { type: string, enum: [training, mission, boss, raid, final] }
+        title: { type: string, minLength: 1 }
+        summary: { type: string, minLength: 1 }
+        description: { type: string, minLength: 1 }
+        estimatedMinutes: { type: integer, minimum: 1 }
+        staminaCost: { type: integer, minimum: 1, maximum: 6 }
+        xp: { type: integer, minimum: 1 }
+        tags:
+          description: >-
+            ⚠ AC MST-2 — гүйцэтгэл бүр ЭНД заасан track БҮРД контентын бүтэн XP олгоно
+            (spec.md A4, хуваахгүй). AC RET-5 — guild rep мөн эндээс зураглагдана.
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items: { $ref: "#/components/schemas/SkillTag" }
+        prerequisites: { type: array, items: { type: string } }
+        tutorialRefs:
+          description: >-
+            ⚠ AC OFF-2-ийн ЦОРЫН ГАНЦ зөвшөөрөгдсөн гадаад URL — тоглогч ӨӨРӨӨ дардаг,
+            автоматаар ТАТАГДАХГҮЙ. Сканнердсан тест энэ ялгааг ил шалгана.
+          type: array
+          items: { $ref: "#/components/schemas/TutorialRef" }
+        deliverables: { type: array, minItems: 1, items: { type: string } }
+        victoryConditions: { type: array, minItems: 1, items: { type: string } }
+        stretchGoals: { type: array, minItems: 1, items: { type: string } }
+        reflectionPrompt: { type: string, minLength: 1 }
+        repeatable: { type: boolean }
+        repeatXpMultiplier:
+          description: >-
+            AC SQ-2 — давтан XP коэффициент (default 0.5). ⚠ AC RET-5: guild rep-ийн
+            давталтын бууралт МӨН энэ коэффициентийг ашиглана (plan.md P-16).
+          type: number
+          exclusiveMinimum: 0
+          maximum: 1
+
+    TutorialRef:
+      type: object
+      additionalProperties: false
+      required: [title, url, minutes]
+      properties:
+        title: { type: string, minLength: 1 }
+        url: { type: string, format: uri }
+        minutes: { type: integer, minimum: 1 }
+
+    DungeonDefinition:
+      type: object
+      additionalProperties: false
+      required: [id, title, conceptGoal, estimatedMinutes, xp, tags, tutorialRefs, questions]
+      properties:
+        id: { type: string }
+        title: { type: string, minLength: 1 }
+        conceptGoal: { type: string, minLength: 1 }
+        estimatedMinutes: { type: integer, minimum: 1 }
+        xp: { type: integer, minimum: 1 }
+        tags:
+          type: array
+          minItems: 1
+          items: { $ref: "#/components/schemas/SkillTag" }
+        tutorialRefs:
+          type: array
+          minItems: 1
+          maxItems: 3
+          items: { $ref: "#/components/schemas/TutorialRef" }
+        questions:
+          description: AC DG-1, DG-3 — тэнцэх босго нь зөв хариултын ≥70%
+          type: array
+          minItems: 1
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, prompt, options, correctIndex, explanation]
+            properties:
+              id: { type: string }
+              prompt: { type: string, minLength: 1 }
+              options: { type: array, minItems: 2, items: { type: string } }
+              correctIndex: { type: integer, minimum: 0 }
+              explanation: { type: string, minLength: 1 }
+
+    AchievementDefinition:
+      description: >-
+        AC RET-7 — каталог ≥40. Предикат бүр төлвөөс МАШИНААР шалгагдана; нэг удаа олгогдоно.
+      type: object
+      additionalProperties: false
+      required: [id, title, description, predicate]
+      properties:
+        id: { type: string }
+        title: { type: string, minLength: 1 }
+        description: { type: string, minLength: 1 }
+        predicate:
+          description: >-
+            Машинаар шалгагдах нөхцөл (AC ACH-1, RET-7).
+            ⚠ v1.2.0: `kind`-д 5 утга нэмэгдэж, СОНГОЛТТОЙ `ref` орлоо (plan.md P-23).
+            `ref` нь «аль guild / аль boss / аль track» гэдгийг заана; БАЙХГҮЙ бол
+            «дурын нэг» гэсэн утгатай. `value` нь скаляр ХЭВЭЭР.
+          type: object
+          additionalProperties: false
+          required: [kind, value]
+          properties:
+            kind:
+              type: string
+              enum: [level, totalXp, mainQuestsCompleted, sideQuestCompletions,
+                     dungeonsCompleted, projectsCompleted, bossTier, streakDays,
+                     masteryLevel, prestigeCount, guildRank, bossPersonalBest,
+                     chainsCompleted]
+            value: { type: [integer, string] }
+            ref:
+              description: >-
+                `masteryLevel` → `SkillTag` · `guildRank` → guild id ·
+                `bossPersonalBest` → boss id · `prestigeCount` → `SkillTag` (эсвэл дурын) ·
+                `chainsCompleted` → ашиглагдахгүй.
+                ⚠ AC COS-2-ийн улмаас `prestigeCount` ба `streakDays` предикаттай амжилт
+                каталогт ЗААВАЛ байна — prestige цол ба streak шагналын cosmetic
+                эдгээрт заана (plan.md §12.5).
+              type: string
+
+    EncounterDefinition:
+      type: object
+      additionalProperties: false
+      required: [id, title, body, callToAction, weight]
+      properties:
+        id: { type: string }
+        title: { type: string, minLength: 1 }
+        body: { type: string, minLength: 1 }
+        callToAction: { type: string, minLength: 1 }
+        maxMinutes: { type: integer, minimum: 1, maximum: 2 }
+        weight: { type: number, exclusiveMinimum: 0 }
+
+    LootItem:
+      type: object
+      additionalProperties: false
+      required: [id, title, rarity, effect]
+      properties:
+        id: { type: string }
+        title: { type: string, minLength: 1 }
+        rarity: { $ref: "#/components/schemas/Rarity" }
+        effect:
+          description: AC EC-1 — зөвхөн cosmetic
+          type: string
+          const: cosmetic
+
+    SkillDefinition:
+      description: >-
+        ⚠ v1.2.0: `track` · `tier` ЗААВАЛ нэмэгдэв (AC SKL-1). `cost` нь `1` ХЭВЭЭР
+        (AC SKL-5) — өөрчлөгдсөн нь ТӨЛБӨРИЙН ВАЛЮТ, хэмжээ биш:
+        tier 1 → `skillPoints` 1 · tier 2/3 → тухайн `track`-ийн mastery point 1
+        (plan.md P-3 · хүн шийдэх цэг H-1).
+      type: object
+      additionalProperties: false
+      required: [id, title, description, cost, prerequisites, track, tier]
+      properties:
+        id: { type: string }
+        title: { type: string, minLength: 1 }
+        description: { type: string, minLength: 1 }
+        cost: { type: integer, const: 1 }
+        prerequisites: { type: array, items: { type: string } }
+        track: { $ref: "#/components/schemas/SkillTag" }
+        tier:
+          description: >-
+            AC SKL-1 — мод (track) тутамд ≥1 tier-1, ≥1 tier-2, ЯГ 1 tier-3 (capstone).
+            Урьдчилсан нөхцөл нь DAG бөгөөд tier N нь tier N−1-ийг шаардана (алгасахгүй).
+          type: integer
+          minimum: 1
+          maximum: 3
+
+    GuildDefinition:
+      description: >-
+        AC RET-5 — ЯГ 4 guild. 7 `SkillTag` бүр ЯГ НЭГ guild-д харгалзана (давхцалгүй,
+        дутуугүй) — `[C]` дүрмээр шалгагдана.
+        ⚠ `placeholder: true` нь AAA-SPEC §8.1-ийн ТҮР нэр (хүний баталгаа хүлээж буй —
+        plan.md H-2). Бүтэц нэрнээс ХАМААРАХГҮЙ.
+      type: object
+      additionalProperties: false
+      required: [id, title, tags, placeholder]
+      properties:
+        id: { type: string, pattern: "^[a-z0-9-]+$" }
+        title: { type: string, minLength: 1 }
+        tags:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items: { $ref: "#/components/schemas/SkillTag" }
+        placeholder: { type: boolean }
+
+    SideQuestChain:
+      description: >-
+        AC RET-1 — ЯГ 4 алхам, чанд дараалал (алгасалтгүй). Нэг side quest ХОЁР chain-д
+        орохгүй. ⚠ AC RET-3: `bonusXp ≤` тухайн `world`-ийн main quest-үүдийн ХАМГИЙН БАГА
+        `xp` — тааз нь `world`-оос хамаардаг тул `world` ЗААВАЛ.
+      type: object
+      additionalProperties: false
+      required: [id, title, world, steps, bonusXp]
+      properties:
+        id: { type: string, pattern: "^[a-z0-9-]+$" }
+        title: { type: string, minLength: 1 }
+        world: { type: integer, minimum: 1, maximum: 5 }
+        steps:
+          description: 4 side quest id, ЯГ гүйцэтгэх дарааллаар.
+          type: array
+          minItems: 4
+          maxItems: 4
+          uniqueItems: true
+          items: { type: string }
+        bonusXp: { type: integer, minimum: 1 }
+
+    CosmeticUnlockSource:
+      description: >-
+        AC COS-2 — нээлтийн ЭХ СУРВАЛЖ. ⚠ plan.md P-1: cosmetic-ийн «нээгдсэн эсэх» нь
+        ЭНДЭЭС ГАРГАГДАНА — `GameState`-д `unlockedCosmeticIds` талбар БАЙХГҮЙ.
+        ⚠ `kind` нь ЯГ 5 (plan.md P-22). Prestige цол ба streak шагнал нь
+        `kind: achievement`-ээр харгалзах амжилтад заана — шинэ `kind` нэмэгдээгүй.
+      type: object
+      additionalProperties: false
+      required: [kind, refId]
+      properties:
+        kind: { type: string, enum: [quest, boss, achievement, guildRank, mastery] }
+        refId:
+          description: >-
+            `quest` → quest/dungeon id · `boss` → boss id · `achievement` → achievement id ·
+            `guildRank` → guild id · `mastery` → `SkillTag`.
+            ⚠ Өнчин лавлагаа (контентод байхгүй id) нь пакетыг ХҮЧИНГҮЙ болгоно.
+          type: string
+        value:
+          description: >-
+            `boss` → шаардлагатай tier нэр (`mvp`|`advanced`|`mastery`) ·
+            `guildRank` → 1..4 · `mastery` → 1..10 · бусад → байхгүй.
+          type: [integer, string]
+
+    CosmeticItem:
+      description: >-
+        AC COS-1 — каталог ≥60, slot тутамд ≥5. ⚠ `effect` нь `cosmetic` ЗӨВХӨН
+        (AC EC-1 хэвээр): тоглоомын тоон нөлөө БАЙХГҮЙ (spec.md D-6).
+      type: object
+      additionalProperties: false
+      required: [id, title, slot, rarity, effect, unlockSource]
+      properties:
+        id: { type: string, pattern: "^[a-z0-9-]+$" }
+        title: { type: string, minLength: 1 }
+        slot: { $ref: "#/components/schemas/CosmeticSlot" }
+        rarity: { $ref: "#/components/schemas/Rarity" }
+        effect: { type: string, const: cosmetic }
+        unlockSource: { $ref: "#/components/schemas/CosmeticUnlockSource" }
+
+    ContentPack:
+      description: >-
+        ⚠ `minItems` нь СПЕКИЙН тоо — `npm run validate:content` (AC QX-5) ба
+        `[C]` vitest тестүүд НЭГ модулиас (`shared/validate/content-rules.ts`) шалгана
+        (plan.md P-12). Хоёр validator = хоёр үнэн.
+      type: object
+      additionalProperties: false
+      required: [version, quests, dungeons, skills, achievements, encounters, loot,
+                 guilds, chains, cosmetics]
+      properties:
+        version: { type: string }
+        quests:
+          description: AC MQ-1 (main), AC SQ-1 (≥20 side), AC BSX-1 (дэлхий тутамд ЯГ 1 boss = 5)
+          type: array
+          items: { $ref: "#/components/schemas/QuestDefinition" }
+        dungeons: { type: array, items: { $ref: "#/components/schemas/DungeonDefinition" } }
+        skills:
+          description: AC SKL-1 — ≥28 node; track тутамд ≥1 tier-1, ≥1 tier-2, ЯГ 1 tier-3
+          type: array
+          minItems: 28
+          items: { $ref: "#/components/schemas/SkillDefinition" }
+        achievements:
+          description: AC RET-7 — ≥40 (v1.1.0-д ≥12 байсан)
+          type: array
+          minItems: 40
+          items: { $ref: "#/components/schemas/AchievementDefinition" }
+        encounters:
+          type: array
+          minItems: 5
+          items: { $ref: "#/components/schemas/EncounterDefinition" }
+        loot: { type: array, items: { $ref: "#/components/schemas/LootItem" } }
+        guilds:
+          description: AC RET-5 — ЯГ 4
+          type: array
+          minItems: 4
+          maxItems: 4
+          items: { $ref: "#/components/schemas/GuildDefinition" }
+        chains:
+          description: AC RET-1 — ≥3
+          type: array
+          minItems: 3
+          items: { $ref: "#/components/schemas/SideQuestChain" }
+        cosmetics:
+          description: AC COS-1 — ≥60
+          type: array
+          minItems: 60
+          items: { $ref: "#/components/schemas/CosmeticItem" }
+
+    ProgressionConstants:
+      description: >-
+        Тогтмолууд контрактын хэсэг. `shared/core/constants.ts` нь эдгээрийн ЦОРЫН ГАНЦ
+        TypeScript хувилбар; `web-app/src/**` ба `server/src/**` дотор дахин бичигдвэл
+        `architecture.test.ts` УНАНА (AC BE-10 · QX-7).
+
+        ⚠ ЭНД БАЙХГҮЙ ба ЯАГААД: `hardBossTiers` нь `ceil(bossTiers[t] × hardModeMultiplier)`
+        = `{mvp: 41, advanced: 52, mastery: 60}` болж ТООЦОГДОНО (AC BSX-2). Гараар бичих нь
+        `bossTiers` өөрчлөгдөхөд чимээгүй салах хоёр дахь эх сурвалж үүсгэнэ.
+      type: object
+      additionalProperties: false
+      required: [xpThresholds, rankNames, bossTiers, maxStamina, restAmount,
+                 projectMilestoneXp, defaultRepeatXpMultiplier, dungeonPassRatio,
+                 sideQuestXpFloorRatio, encounterChance, lootChance,
+                 hardModeMultiplier, masteryMaxLevel, masteryPrestigeLevel,
+                 respecCooldownDays, refresherMinDays, replayLogCap,
+                 repThresholds, repBase, guildCount]
+      properties:
+        xpThresholds:
+          description: >-
+            AC PRG-1. ⚠ AC MST-1 — mastery track-ийн түвшин МӨН ЭНЭ хүснэгтээр тооцогдоно;
+            тусдаа босго БАЙХГҮЙ.
+          type: array
+          minItems: 9
+          maxItems: 9
+          items: { type: integer }
+          const: [100, 250, 500, 1000, 1750, 2750, 4000, 5500, 7500]
+        rankNames:
+          type: array
+          minItems: 10
+          maxItems: 10
+          const: [Recruit, Apprentice, Cadet, Editor, Animator, Specialist,
+                  Director, "Cinematic Artist", "Senior Generalist", "Cinematic Master"]
+        bossTiers:
+          type: object
+          additionalProperties: false
+          required: [mvp, advanced, mastery]
+          properties:
+            mvp: { type: integer, const: 35 }
+            advanced: { type: integer, const: 45 }
+            mastery: { type: integer, const: 52 }
+        maxStamina: { description: AC STA-1, type: integer, const: 10 }
+        restAmount: { description: AC STA-3, type: integer, const: 3 }
+        projectMilestoneXp: { description: AC PJ-3, type: integer, const: 25 }
+        defaultRepeatXpMultiplier: { description: AC SQ-2, type: number, const: 0.5 }
+        dungeonPassRatio: { description: AC DG-3, type: number, const: 0.7 }
+        sideQuestXpFloorRatio:
+          description: AC SQ-2 — давтан XP-ийн доод шал `ceil(baseXp * 0.1)`
+          type: number
+          const: 0.1
+        encounterChance:
+          description: >-
+            AC ENC-2. ⚠ Эх шаардлагад БАЙХГҮЙ, PERSONAL-1 загварын шатны сонголт
+            (PERSONAL-1 lld.md → A-LLD-2).
+          type: number
+          const: 0.25
+        lootChance:
+          description: AC EC-2. ⚠ PERSONAL-1 lld.md → A-LLD-2.
+          type: number
+          const: 0.35
+
+        # ─── v1.2.0-д нэмэгдсэн 9 тогтмол ───
+        hardModeMultiplier:
+          description: >-
+            AC BSX-2 — hard mode босго = `ceil(bossTiers[t] × 1.15)` → 41 · 52 · 60.
+          type: number
+          const: 1.15
+        masteryMaxLevel: { description: AC MST-1, type: integer, const: 10 }
+        masteryPrestigeLevel:
+          description: >-
+            AC MST-3 — prestige зөвшөөрөгдөх түвшин. `masteryMaxLevel`-тэй ТЭНЦҮҮ боловч
+            ТУСДАА тогтмол: «дээд түвшин» ба «prestige-ийн босго» нь өөр шийдвэрүүд.
+          type: integer
+          const: 10
+        respecCooldownDays: { description: AC SKL-3, type: integer, const: 7 }
+        refresherMinDays:
+          description: >-
+            AC RET-4 — dungeon refresher-ийн нэр дэвшилтийн доод хугацаа (тоглоомын өдөр).
+            ⚠ plan.md §12.4-д томьёогоор нэрлэгдсэн; энэ гэрээнд тогтмол болж гарав
+            (lld.md A-LLD2-3).
+          type: integer
+          const: 14
+        replayLogCap: { description: AC SVX-2, type: integer, const: 500 }
+        repThresholds:
+          description: AC RET-6 — `rankOf(rep)` = хэтрээгүй босгуудын тоо → 0..4
+          type: array
+          minItems: 4
+          maxItems: 4
+          const: [10, 25, 50, 100]
+        repBase:
+          description: >-
+            AC RET-5 · plan.md P-16 (хүн шийдэх цэг H-5) — `repAward(track, n) =
+            floor(repBase[track] × m^(n−1))`, `m = repeatXpMultiplier ?? 0.5`.
+            Бүх эерэг олголт 1..3-д багтана; grind нь 0-д нийлнэ.
+          type: object
+          additionalProperties: false
+          required: [main, boss, dungeon, side]
+          properties:
+            main: { type: integer, const: 3 }
+            boss: { type: integer, const: 3 }
+            dungeon: { type: integer, const: 2 }
+            side: { type: integer, const: 2 }
+        guildCount: { description: AC RET-5, type: integer, const: 4 }

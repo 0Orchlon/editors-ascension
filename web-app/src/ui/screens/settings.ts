@@ -43,6 +43,40 @@ export function renderSettings(deps: SettingsDeps): HTMLElement {
     sound,
     el('label', { for: 'set-sound', text: 'Sound cues (never required — the game is fully playable silent)' }),
   ]));
+
+  // ── AC FX-3 — 0 нь ЧИМЭЭГҮЙ: `fx.play` тэр утганд oscillator ҮҮСГЭХГҮЙ.
+  const volume = el('input', {
+    type: 'range', id: 'set-sound-volume', min: '0', max: '100', step: '10',
+    value: String(Math.round(settings.soundVolume * 100)),
+  });
+  const volumeOut = el('output', { for: 'set-sound-volume', text: `${Math.round(settings.soundVolume * 100)}%` });
+  volume.addEventListener('input', () => { volumeOut.textContent = `${volume.value}%`; });
+  volume.addEventListener('change', () => {
+    // ⚠ Save-д 0..1, дэлгэцэд 0..100 — гэрээ нь `SettingsPayload.soundVolume` (0..1).
+    const value = Number(volume.value) / 100;
+    game.dispatch('updateSettings', { soundVolume: value });
+    announce(value === 0 ? 'Sound cues muted.' : `Sound volume ${volume.value} percent.`);
+    rerender();
+  });
+  prefs.append(el('div', { class: 'option' }, [
+    el('label', { for: 'set-sound-volume', text: 'Sound volume' }),
+    volume,
+    volumeOut,
+  ]));
+
+  // ── AC VIS-3 — палитрын багц солигдоно; layout, текст, DOM бүтэц ХЭВЭЭР.
+  const colorBlind = el('input', { type: 'checkbox', id: 'set-colorblind' });
+  colorBlind.checked = settings.colorBlindSafe;
+  colorBlind.addEventListener('change', () => {
+    game.dispatch('updateSettings', { colorBlindSafe: colorBlind.checked });
+    announce(colorBlind.checked ? 'Colour-blind safe palette on.' : 'Standard palette on.');
+    rerender();
+  });
+  prefs.append(el('div', { class: 'option' }, [
+    colorBlind,
+    el('label', { for: 'set-colorblind', text:
+      'Colour-blind safe palette (swaps the red/green pairs — nothing moves or changes size)' }),
+  ]));
   root.append(prefs);
 
   // ── Save
@@ -90,6 +124,10 @@ export function renderSettings(deps: SettingsDeps): HTMLElement {
     }
     importStatus.replaceChildren(el('span', { text: 'Save imported.' }));
     announce('Save imported.');
+    // ⚠ `rerender()` нь дэлгэцийг ДАХИН угсардаг тул `importStatus` устана —
+    // баталгаа нь `toast-host`-д гарах ёстой, эс бөгөөс тоглогч «болсон уу?»
+    // гэдгийг мэдэхгүй үлдэнэ (татгалзлын зам аль хэдийн toast ашигладаг).
+    toast('Save imported.', 'win');
     // lld.md §7.7 — импортолсон төлөв нь серверт БҮТНЭЭР тавигдана, эс бөгөөс
     // дараагийн sync нь серверийн хуучин save-ыг буцааж татна.
     void deps.sync?.pushFullSave(game.state$.getState(), new Date().toISOString());

@@ -11,16 +11,22 @@
     "estimatedMinutes": 45,
     "staminaCost": 2,
     "xp": 60,
-    "tags": ["video-editing"],
+    "tags": [
+      "video-editing"
+    ],
     "prerequisites": [],
     "tutorialRefs": [],
-    "deliverables": ["An exported video file of at least 20 seconds built from three trimmed clips."],
+    "deliverables": [
+      "An exported video file of at least 20 seconds built from three trimmed clips."
+    ],
     "victoryConditions": [
       "You imported at least three clips into a single timeline.",
       "You trimmed the dead air from the start and end of every clip.",
       "You exported a playable file and watched it back start to finish."
     ],
-    "stretchGoals": ["Export a second version at a different resolution and compare the file sizes."],
+    "stretchGoals": [
+      "Export a second version at a different resolution and compare the file sizes."
+    ],
     "reflectionPrompt": "Which step of the import-to-export round trip felt slowest, and what would you automate next time?",
     "repeatable": false
   },
@@ -36,16 +42,22 @@
     "estimatedMinutes": 40,
     "staminaCost": 2,
     "xp": 60,
-    "tags": ["blender"],
+    "tags": [
+      "blender"
+    ],
     "prerequisites": [],
     "tutorialRefs": [],
-    "deliverables": ["A screenshot of a still life scene built from at least four primitive objects."],
+    "deliverables": [
+      "A screenshot of a still life scene built from at least four primitive objects."
+    ],
     "victoryConditions": [
       "You orbited, panned, and zoomed the viewport using shortcuts rather than menus.",
       "You placed at least four primitives at deliberate positions in the scene.",
       "You saved the .blend file with a name you will recognise later."
     ],
-    "stretchGoals": ["Add a second camera and switch between the two views."],
+    "stretchGoals": [
+      "Add a second camera and switch between the two views."
+    ],
     "reflectionPrompt": "Which viewport shortcut did you reach for most, and which one do you still forget?",
     "repeatable": false
   },
@@ -61,16 +73,25 @@
     "estimatedMinutes": 45,
     "staminaCost": 2,
     "xp": 70,
-    "tags": ["animation", "blender"],
-    "prerequisites": ["mq-blender-toybox"],
+    "tags": [
+      "animation",
+      "blender"
+    ],
+    "prerequisites": [
+      "mq-blender-toybox"
+    ],
     "tutorialRefs": [],
-    "deliverables": ["A short playblast or screen recording of one object moving, rotating, and scaling."],
+    "deliverables": [
+      "A short playblast or screen recording of one object moving, rotating, and scaling."
+    ],
     "victoryConditions": [
       "You set keyframes on position, rotation, and scale for at least one object.",
       "You scrubbed the timeline and saw the values interpolate between your keys.",
       "You rendered or recorded a playback of the motion."
     ],
-    "stretchGoals": ["Make the object stop and start rather than gliding at a constant speed."],
+    "stretchGoals": [
+      "Make the object stop and start rather than gliding at a constant speed."
+    ],
     "reflectionPrompt": "Did the motion feel mechanical or natural, and what do you think caused that?",
     "repeatable": false
   },
@@ -86,16 +107,25 @@
     "estimatedMinutes": 60,
     "staminaCost": 3,
     "xp": 120,
-    "tags": ["video-editing", "cinematography"],
-    "prerequisites": ["mq-first-cut"],
+    "tags": [
+      "video-editing",
+      "cinematography"
+    ],
+    "prerequisites": [
+      "mq-first-cut"
+    ],
     "tutorialRefs": [],
-    "deliverables": ["A ten-second exported sequence and the one sentence describing what it communicates."],
+    "deliverables": [
+      "A ten-second exported sequence and the one sentence describing what it communicates."
+    ],
     "victoryConditions": [
       "You wrote down the single idea the sequence should communicate before cutting.",
       "You used between three and six shots in the finished sequence.",
       "A viewer could describe what happened without you explaining it."
     ],
-    "stretchGoals": ["Cut a second version that tells the same story in five seconds."],
+    "stretchGoals": [
+      "Cut a second version that tells the same story in five seconds."
+    ],
     "reflectionPrompt": "Which shot carried the most meaning, and which one could you have dropped?",
     "repeatable": false
   },
@@ -111,16 +141,25 @@
     "estimatedMinutes": 50,
     "staminaCost": 3,
     "xp": 110,
-    "tags": ["video-editing", "storytelling"],
-    "prerequisites": ["mq-first-cut"],
+    "tags": [
+      "video-editing",
+      "storytelling"
+    ],
+    "prerequisites": [
+      "mq-first-cut"
+    ],
     "tutorialRefs": [],
-    "deliverables": ["Two exported edits of the same footage with clearly different pacing."],
+    "deliverables": [
+      "Two exported edits of the same footage with clearly different pacing."
+    ],
     "victoryConditions": [
       "You produced two distinct edits from one identical set of source clips.",
       "The average shot length differs by at least a factor of two between them.",
       "You wrote down which version suits the material better and why."
     ],
-    "stretchGoals": ["Cut a third version that changes pace partway through."],
+    "stretchGoals": [
+      "Cut a third version that changes pace partway through."
+    ],
     "reflectionPrompt": "Which version did you prefer, and was that about the footage or about your habit?",
     "repeatable": false
   },
@@ -136,16 +175,24 @@
     "estimatedMinutes": 55,
     "staminaCost": 3,
     "xp": 110,
-    "tags": ["audio"],
-    "prerequisites": ["mq-first-cut"],
+    "tags": [
+      "audio"
+    ],
+    "prerequisites": [
+      "mq-first-cut"
+    ],
     "tutorialRefs": [],
-    "deliverables": ["An edit with at least three audio layers and a balanced mix."],
+    "deliverables": [
+      "An edit with at least three audio layers and a balanced mix."
+    ],
     "victoryConditions": [
       "You laid a continuous ambience track under the whole scene.",
       "You placed at least two spot effects in sync with something on screen.",
       "You balanced levels so no single element clips or drowns the others."
     ],
-    "stretchGoals": ["Add a music bed and duck it under any dialogue or key effect."],
+    "stretchGoals": [
+      "Add a music bed and duck it under any dialogue or key effect."
+    ],
     "reflectionPrompt": "With the picture muted, what did the audio alone tell you about the place?",
     "repeatable": false
   },
@@ -161,16 +208,25 @@
     "estimatedMinutes": 55,
     "staminaCost": 3,
     "xp": 120,
-    "tags": ["video-editing", "cinematography"],
-    "prerequisites": ["mq-ten-second-cinematic"],
+    "tags": [
+      "video-editing",
+      "cinematography"
+    ],
+    "prerequisites": [
+      "mq-ten-second-cinematic"
+    ],
     "tutorialRefs": [],
-    "deliverables": ["A graded sequence plus before and after stills of the same frame."],
+    "deliverables": [
+      "A graded sequence plus before and after stills of the same frame."
+    ],
     "victoryConditions": [
       "You balanced every shot in the sequence so they match each other.",
       "You applied one consistent look across the whole sequence after balancing.",
       "You exported before and after stills of the same frame for comparison."
     ],
-    "stretchGoals": ["Grade a second, opposite look and decide which serves the story."],
+    "stretchGoals": [
+      "Grade a second, opposite look and decide which serves the story."
+    ],
     "reflectionPrompt": "Did you fix the match first, or did you reach for the look too early?",
     "repeatable": false
   },
@@ -186,16 +242,25 @@
     "estimatedMinutes": 70,
     "staminaCost": 4,
     "xp": 160,
-    "tags": ["cinematography"],
-    "prerequisites": ["mq-color-alchemist", "mq-movement-lab"],
+    "tags": [
+      "cinematography"
+    ],
+    "prerequisites": [
+      "mq-color-alchemist",
+      "mq-movement-lab"
+    ],
     "tutorialRefs": [],
-    "deliverables": ["A contact sheet or sequence showing three shot sizes, two focal lengths, and one camera move."],
+    "deliverables": [
+      "A contact sheet or sequence showing three shot sizes, two focal lengths, and one camera move."
+    ],
     "victoryConditions": [
       "You captured the same subject at three distinct shot sizes.",
       "You compared at least two focal lengths on the same subject.",
       "You executed one camera move that is motivated by the action, not decoration."
     ],
-    "stretchGoals": ["Reshoot the weakest of the three sizes now that you know what it is for."],
+    "stretchGoals": [
+      "Reshoot the weakest of the three sizes now that you know what it is for."
+    ],
     "reflectionPrompt": "Which framing changed the meaning most, and was that the one you expected?",
     "repeatable": false
   },
@@ -211,16 +276,26 @@
     "estimatedMinutes": 180,
     "staminaCost": 6,
     "xp": 260,
-    "tags": ["storytelling", "cinematography"],
-    "prerequisites": ["mq-camera-academy", "mq-soundscape"],
+    "tags": [
+      "storytelling",
+      "cinematography"
+    ],
+    "prerequisites": [
+      "mq-camera-academy",
+      "mq-soundscape"
+    ],
     "tutorialRefs": [],
-    "deliverables": ["A finished sequence of 30 to 90 seconds set in one room, with sound and grade."],
+    "deliverables": [
+      "A finished sequence of 30 to 90 seconds set in one room, with sound and grade."
+    ],
     "victoryConditions": [
       "The sequence is set in a single room and runs between 30 and 90 seconds.",
       "You handled shooting or rendering, editing, sound, and grading yourself.",
       "You scored all six craft categories honestly from zero to ten."
     ],
-    "stretchGoals": ["Show it to one person cold and note the first thing they ask about."],
+    "stretchGoals": [
+      "Show it to one person cold and note the first thing they ask about."
+    ],
     "reflectionPrompt": "Which craft category scored lowest, and what is the smallest practice that would raise it?",
     "repeatable": false
   },
@@ -236,16 +311,25 @@
     "estimatedMinutes": 90,
     "staminaCost": 4,
     "xp": 220,
-    "tags": ["blender", "animation"],
-    "prerequisites": ["mq-movement-lab"],
+    "tags": [
+      "blender",
+      "animation"
+    ],
+    "prerequisites": [
+      "mq-movement-lab"
+    ],
     "tutorialRefs": [],
-    "deliverables": ["A rendered loop of a mechanism with at least two interlocking moving parts."],
+    "deliverables": [
+      "A rendered loop of a mechanism with at least two interlocking moving parts."
+    ],
     "victoryConditions": [
       "The mechanism has at least two parts that move in relation to each other.",
       "No part intersects another at any frame of the animation.",
       "You rendered a loop that plays without a visible jump at the seam."
     ],
-    "stretchGoals": ["Add a second mechanism driven by the first."],
+    "stretchGoals": [
+      "Add a second mechanism driven by the first."
+    ],
     "reflectionPrompt": "Where did the motion break the illusion first, and how did you find it?",
     "repeatable": false
   },
@@ -261,16 +345,25 @@
     "estimatedMinutes": 85,
     "staminaCost": 4,
     "xp": 230,
-    "tags": ["blender", "vfx"],
-    "prerequisites": ["mq-blender-toybox"],
+    "tags": [
+      "blender",
+      "vfx"
+    ],
+    "prerequisites": [
+      "mq-blender-toybox"
+    ],
     "tutorialRefs": [],
-    "deliverables": ["A render sheet showing five materials under three lighting setups."],
+    "deliverables": [
+      "A render sheet showing five materials under three lighting setups."
+    ],
     "victoryConditions": [
       "You authored five distinct materials covering different surface families.",
       "You tested every material under at least three lighting conditions.",
       "You saved the materials so they can be reused in another scene."
     ],
-    "stretchGoals": ["Rebuild the weakest material from scratch using reference photos."],
+    "stretchGoals": [
+      "Rebuild the weakest material from scratch using reference photos."
+    ],
     "reflectionPrompt": "Which material fell apart under a new light, and what was wrong in its setup?",
     "repeatable": false
   },
@@ -286,16 +379,26 @@
     "estimatedMinutes": 100,
     "staminaCost": 5,
     "xp": 240,
-    "tags": ["blender", "cinematography"],
-    "prerequisites": ["mq-material-library", "mq-camera-academy"],
+    "tags": [
+      "blender",
+      "cinematography"
+    ],
+    "prerequisites": [
+      "mq-material-library",
+      "mq-camera-academy"
+    ],
     "tutorialRefs": [],
-    "deliverables": ["A rendered environment still with readable foreground, midground, and background."],
+    "deliverables": [
+      "A rendered environment still with readable foreground, midground, and background."
+    ],
     "victoryConditions": [
       "The frame has distinguishable foreground, midground, and background layers.",
       "Every light in the scene has a visible or implied source in the world.",
       "You used atmosphere or depth cues to separate the layers."
     ],
-    "stretchGoals": ["Render the same environment at a different time of day."],
+    "stretchGoals": [
+      "Render the same environment at a different time of day."
+    ],
     "reflectionPrompt": "Does the scene read at a glance, or does the eye get lost hunting for the subject?",
     "repeatable": false
   },
@@ -311,16 +414,24 @@
     "estimatedMinutes": 100,
     "staminaCost": 5,
     "xp": 230,
-    "tags": ["animation"],
-    "prerequisites": ["mq-the-mechanist"],
+    "tags": [
+      "animation"
+    ],
+    "prerequisites": [
+      "mq-the-mechanist"
+    ],
     "tutorialRefs": [],
-    "deliverables": ["A rendered character action of three to six seconds showing clear weight."],
+    "deliverables": [
+      "A rendered character action of three to six seconds showing clear weight."
+    ],
     "victoryConditions": [
       "The character completes one full action with a beginning, middle, and end.",
       "You adjusted spacing in the Graph Editor rather than only adding keyframes.",
       "The action reads as having weight when played at full speed."
     ],
-    "stretchGoals": ["Animate the same action again as if the object were half the weight."],
+    "stretchGoals": [
+      "Animate the same action again as if the object were half the weight."
+    ],
     "reflectionPrompt": "Where did you feel the weight break, and was it timing or spacing?",
     "repeatable": false
   },
@@ -336,16 +447,26 @@
     "estimatedMinutes": 95,
     "staminaCost": 5,
     "xp": 260,
-    "tags": ["vfx", "video-editing"],
-    "prerequisites": ["mq-world-builder", "mq-color-alchemist"],
+    "tags": [
+      "vfx",
+      "video-editing"
+    ],
+    "prerequisites": [
+      "mq-world-builder",
+      "mq-color-alchemist"
+    ],
     "tutorialRefs": [],
-    "deliverables": ["A composited shot with an added effect plus the clean plate for comparison."],
+    "deliverables": [
+      "A composited shot with an added effect plus the clean plate for comparison."
+    ],
     "victoryConditions": [
       "The added element matches the light direction and colour of the plate.",
       "You matched grain and black levels between the element and the plate.",
       "You kept the clean plate so the composite can be compared against it."
     ],
-    "stretchGoals": ["Show both versions to someone and ask which frame the effect is in."],
+    "stretchGoals": [
+      "Show both versions to someone and ask which frame the effect is in."
+    ],
     "reflectionPrompt": "Which mismatch gave the composite away first when you looked at it cold?",
     "repeatable": false
   },
@@ -361,16 +482,26 @@
     "estimatedMinutes": 180,
     "staminaCost": 6,
     "xp": 300,
-    "tags": ["blender", "vfx"],
-    "prerequisites": ["mq-power-core", "mq-puppeteer"],
+    "tags": [
+      "blender",
+      "vfx"
+    ],
+    "prerequisites": [
+      "mq-power-core",
+      "mq-puppeteer"
+    ],
     "tutorialRefs": [],
-    "deliverables": ["A finished shot of 10 to 20 seconds taking one machine through the whole pipeline."],
+    "deliverables": [
+      "A finished shot of 10 to 20 seconds taking one machine through the whole pipeline."
+    ],
     "victoryConditions": [
       "The subject was modelled, materialled, rigged, and animated by you.",
       "The shot was lit, rendered, composited, and graded to a finished state.",
       "No stage of the pipeline was left as a placeholder or a default setting."
     ],
-    "stretchGoals": ["Write down how long each pipeline stage actually took you."],
+    "stretchGoals": [
+      "Write down how long each pipeline stage actually took you."
+    ],
     "reflectionPrompt": "Which pipeline stage ate the most time, and was that the stage that mattered most?",
     "repeatable": false
   },
@@ -386,16 +517,26 @@
     "estimatedMinutes": 150,
     "staminaCost": 5,
     "xp": 350,
-    "tags": ["storytelling", "video-editing"],
-    "prerequisites": ["mq-pacing-duel", "mq-camera-academy"],
+    "tags": [
+      "storytelling",
+      "video-editing"
+    ],
+    "prerequisites": [
+      "mq-pacing-duel",
+      "mq-camera-academy"
+    ],
     "tutorialRefs": [],
-    "deliverables": ["A sixty-second exported film plus the one-sentence premise it came from."],
+    "deliverables": [
+      "A sixty-second exported film plus the one-sentence premise it came from."
+    ],
     "victoryConditions": [
       "You wrote the premise in a single sentence before shooting anything.",
       "The finished piece has a clear beginning, a turn, and an ending.",
       "The story reads without narration explaining what is happening."
     ],
-    "stretchGoals": ["Recut it to forty seconds without losing the turn."],
+    "stretchGoals": [
+      "Recut it to forty seconds without losing the turn."
+    ],
     "reflectionPrompt": "Did the turn land where you planned it, or did the edit move it?",
     "repeatable": false
   },
@@ -411,16 +552,25 @@
     "estimatedMinutes": 150,
     "staminaCost": 6,
     "xp": 400,
-    "tags": ["storytelling", "video-editing"],
-    "prerequisites": ["mq-one-minute-story"],
+    "tags": [
+      "storytelling",
+      "video-editing"
+    ],
+    "prerequisites": [
+      "mq-one-minute-story"
+    ],
     "tutorialRefs": [],
-    "deliverables": ["A revised cut, the feedback notes, and a list of the changes you made."],
+    "deliverables": [
+      "A revised cut, the feedback notes, and a list of the changes you made."
+    ],
     "victoryConditions": [
       "You collected feedback from at least two people who had not seen it before.",
       "You wrote down the specific confusion each person reported.",
       "The revised cut addresses at least three of the reported problems."
     ],
-    "stretchGoals": ["Show the revision to one of the original viewers and note what changed for them."],
+    "stretchGoals": [
+      "Show the revision to one of the original viewers and note what changed for them."
+    ],
     "reflectionPrompt": "Which piece of feedback did you resist most, and was it right?",
     "repeatable": false
   },
@@ -436,16 +586,26 @@
     "estimatedMinutes": 180,
     "staminaCost": 6,
     "xp": 380,
-    "tags": ["video-editing", "storytelling"],
-    "prerequisites": ["mq-raid-machine", "mq-raid-directors-cut"],
+    "tags": [
+      "video-editing",
+      "storytelling"
+    ],
+    "prerequisites": [
+      "mq-raid-machine",
+      "mq-raid-directors-cut"
+    ],
     "tutorialRefs": [],
-    "deliverables": ["A completed production plus the schedule showing planned versus actual dates."],
+    "deliverables": [
+      "A completed production plus the schedule showing planned versus actual dates."
+    ],
     "victoryConditions": [
       "You wrote a schedule with dated milestones before starting production.",
       "You carried the production through every stage to a final export.",
       "You recorded the actual dates so planned and real can be compared."
     ],
-    "stretchGoals": ["Estimate the next project using what this schedule actually taught you."],
+    "stretchGoals": [
+      "Estimate the next project using what this schedule actually taught you."
+    ],
     "reflectionPrompt": "Which stage did you underestimate most, and by how much?",
     "repeatable": false
   },
@@ -461,17 +621,166 @@
     "estimatedMinutes": 180,
     "staminaCost": 6,
     "xp": 450,
-    "tags": ["storytelling", "cinematography", "video-editing"],
-    "prerequisites": ["mq-one-person-studio"],
+    "tags": [
+      "storytelling",
+      "cinematography",
+      "video-editing"
+    ],
+    "prerequisites": [
+      "mq-one-person-studio"
+    ],
     "tutorialRefs": [],
-    "deliverables": ["A packaged portfolio piece with a title, a description, and a shareable export."],
+    "deliverables": [
+      "A packaged portfolio piece with a title, a description, and a shareable export."
+    ],
     "victoryConditions": [
       "The piece was produced end to end by you without an unfinished stage.",
       "You revised it at least once after showing it to someone else.",
       "It is packaged so a stranger can watch it without any explanation from you."
     ],
-    "stretchGoals": ["Write the two-sentence pitch you would send with it."],
+    "stretchGoals": [
+      "Write the two-sentence pitch you would send with it."
+    ],
     "reflectionPrompt": "If you made this again from scratch, what would you do differently first?",
+    "repeatable": false
+  },
+  {
+    "id": "boss-rough-cut-trial",
+    "track": "boss",
+    "world": 1,
+    "levelRequired": 2,
+    "type": "boss",
+    "title": "The Rough Cut Trial",
+    "summary": "A first assessment: cut one short scene from footage you did not shoot for it.",
+    "description": "This is an assessment, not a lesson. Take any three clips you already have and cut them into a scene that reads as intentional. No titles, no music crutch. Then score yourself honestly across the six craft categories — the scores point at your weakest area, they do not grade you.",
+    "estimatedMinutes": 75,
+    "staminaCost": 4,
+    "xp": 90,
+    "tags": [
+      "video-editing",
+      "storytelling"
+    ],
+    "prerequisites": [
+      "mq-first-cut",
+      "mq-movement-lab"
+    ],
+    "tutorialRefs": [],
+    "deliverables": [
+      "A cut of 15 to 40 seconds built from clips that were not shot for this scene."
+    ],
+    "victoryConditions": [
+      "The cut runs between 15 and 40 seconds with no titles and no music.",
+      "Every cut point was chosen for a reason you can say out loud.",
+      "You scored all six craft categories honestly from zero to ten."
+    ],
+    "stretchGoals": [
+      "Recut the same clips in a second, deliberately different order and compare."
+    ],
+    "reflectionPrompt": "Which cut point was the hardest to justify, and what would make it obvious next time?",
+    "repeatable": false
+  },
+  {
+    "id": "boss-ten-second-verdict",
+    "track": "boss",
+    "world": 2,
+    "levelRequired": 3,
+    "type": "boss",
+    "title": "The Ten-Second Verdict",
+    "summary": "An assessment of pacing, sound and colour working together in ten seconds.",
+    "description": "This is an assessment, not a lesson. Deliver exactly ten seconds that survive being watched twice: deliberate pacing, a sound bed that carries weight, and a grade that is a choice rather than a default. Then score all six craft categories honestly.",
+    "estimatedMinutes": 110,
+    "staminaCost": 5,
+    "xp": 170,
+    "tags": [
+      "cinematography",
+      "audio"
+    ],
+    "prerequisites": [
+      "mq-ten-second-cinematic",
+      "mq-soundscape"
+    ],
+    "tutorialRefs": [],
+    "deliverables": [
+      "A ten-second piece with finished sound and a deliberate grade."
+    ],
+    "victoryConditions": [
+      "The piece is ten seconds long, give or take half a second.",
+      "Sound and image were both mixed and graded on purpose, not left at defaults.",
+      "You scored all six craft categories honestly from zero to ten."
+    ],
+    "stretchGoals": [
+      "Mute it and check whether the pacing still reads."
+    ],
+    "reflectionPrompt": "Did the sound or the grade carry more of the weight, and why do you think that is?",
+    "repeatable": false
+  },
+  {
+    "id": "boss-machine-room",
+    "track": "boss",
+    "world": 4,
+    "levelRequired": 5,
+    "type": "boss",
+    "title": "The Machine Room",
+    "summary": "An assessment of a full 3D shot: model, shade, light, render and integrate.",
+    "description": "This is an assessment, not a lesson. Produce one finished shot containing a mechanical object you built, shaded, lit and rendered yourself, then integrated into a real or synthetic plate so the seam does not show. Then score all six craft categories honestly.",
+    "estimatedMinutes": 240,
+    "staminaCost": 6,
+    "xp": 320,
+    "tags": [
+      "blender",
+      "vfx"
+    ],
+    "prerequisites": [
+      "mq-power-core",
+      "mq-world-builder"
+    ],
+    "tutorialRefs": [],
+    "deliverables": [
+      "A finished render of 5 to 15 seconds with the mechanical object integrated into a plate."
+    ],
+    "victoryConditions": [
+      "The object was modelled, shaded, lit and rendered by you in this project.",
+      "The integration holds up when paused on any frame of the shot.",
+      "You scored all six craft categories honestly from zero to ten."
+    ],
+    "stretchGoals": [
+      "Render a second version with one lighting choice reversed and compare the read."
+    ],
+    "reflectionPrompt": "Where did the integration nearly break, and which craft would fix it fastest?",
+    "repeatable": false
+  },
+  {
+    "id": "boss-final-showcase",
+    "track": "boss",
+    "world": 5,
+    "levelRequired": 8,
+    "type": "boss",
+    "title": "The Final Showcase",
+    "summary": "The closing assessment: one piece that stands as the portfolio opener.",
+    "description": "This is an assessment, not a lesson. Deliver one complete piece you would put first in a portfolio: story, image, motion, sound and grade all owned by you. Nothing here is new craft — it is every craft at once. Then score all six categories honestly and read the weakest one as your next season.",
+    "estimatedMinutes": 300,
+    "staminaCost": 6,
+    "xp": 500,
+    "tags": [
+      "storytelling",
+      "animation"
+    ],
+    "prerequisites": [
+      "mq-cinematic-master"
+    ],
+    "tutorialRefs": [],
+    "deliverables": [
+      "One finished piece of 45 to 120 seconds, exported at delivery quality."
+    ],
+    "victoryConditions": [
+      "The piece runs between 45 and 120 seconds and is exported at delivery settings.",
+      "Every stage from idea to grade was handled by you inside this project.",
+      "You scored all six craft categories honestly from zero to ten."
+    ],
+    "stretchGoals": [
+      "Write the one-line pitch you would put under it in a portfolio."
+    ],
+    "reflectionPrompt": "If you had one more week, which single craft category would you spend it all on?",
     "repeatable": false
   }
 ]

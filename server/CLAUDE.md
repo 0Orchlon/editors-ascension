@@ -10,6 +10,16 @@
 - SQLite нь Node-ийн суурин `node:sqlite` — нативе build шаардахгүй (AC Q-5).
 - Схем нь зөвхөн дугаарласан migration-аар үүснэ; гараар `CREATE TABLE` дуудахгүй (AC BE-16).
 
+## `tools/` — гэрээний нийтлэл (`src/`-ээс ТУСДАА)
+
+`tools/contract*.ts` нь **гэрээг** уншиж шалгаж, дуурайлт ба баримт үүсгэнэ. Тэдгээр нь
+`src/**`-ыг импортлохгүй, `shared/core`-ыг хөндөхгүй — сервисийн ажиллагаанд ОРДОГГҮЙ.
+`npm run contract:lint` · `contract:mock` · `contract:docs`; хаалга нь
+`tests/contract/publish.test.ts`-ээр `npm test`-д залгагдсан.
+
+⚠ Гэрээ ӨӨРЧЛӨХ бол `contracts.yaml` ЭХЛЭЭД, дараа нь `npm run contract:docs`.
+Баримтыг гараар засвал `publish.test.ts` УНАНА (зориуд).
+
 ## Хатуу хориг
 
 - Домэйн дүрмийг ЭНД бичихгүй — `../shared/core/**`-ыг дуудна (AC BE-10).

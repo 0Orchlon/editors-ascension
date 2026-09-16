@@ -22,7 +22,10 @@ const pack = testPack({
       questions: [{ id: 'q1', prompt: 'p', options: ['a', 'b'], correctIndex: 0, explanation: 'e' }],
     },
   ] as never,
-  skills: [{ id: 'sk-a', title: 'A', description: 'd', cost: 1, prerequisites: [] }] as never,
+  // ⚠ v1.2.0 — `track` ба `tier` нь гэрээнд ЗААВАЛ (SKL-1); tier-1 тул `skillPoints`.
+  skills: [
+    { id: 'sk-a', title: 'A', description: 'd', cost: 1, prerequisites: [], track: 'video-editing', tier: 1 },
+  ] as never,
 });
 const ctx = quietCtx(pack);
 
@@ -116,8 +119,75 @@ describe('applyAction (T-08…T-16 bridge)', () => {
 
   it('routes updateSettings and only touches the settings it was given', () => {
     const r = applyAction(freshState(), action('updateSettings', { reducedMotion: true }), ctx);
-    expect(r.ok && r.state.settings).toEqual({ reducedMotion: true, soundEnabled: true });
+    // ⚠ v1.2.0 — `settings` нь 4 талбартай (colorBlindSafe · soundVolume нэмэгдэв).
+    // «Зөвхөн ирсэн талбарыг солино» дүрэм ХЭВЭЭР: үлдсэн гурав нь анхдагчаараа.
+    expect(r.ok && r.state.settings).toEqual({
+      reducedMotion: true,
+      soundEnabled: true,
+      colorBlindSafe: false,
+      soundVolume: 1,
+    });
     expect(r.ok && r.events.map((e) => e.type)).toContain('SETTINGS_UPDATED');
+  });
+
+  it('routes the three new actions to their engines (T-18)', () => {
+    const base = freshState();
+
+    // prestigeMastery — level 10 биш тул PREREQ_NOT_MET, «unknown action» БИШ.
+    const prestige = applyAction(base, action('prestigeMastery', { tag: 'audio' }), ctx);
+    expect(prestige).toMatchObject({ ok: false, reason: 'PREREQ_NOT_MET' });
+
+    // respecTree — модонд юу ч нээгдээгүй тул PREREQ_NOT_MET.
+    const respec = applyAction(base, action('respecTree', { track: 'audio' }), ctx);
+    expect(respec).toMatchObject({ ok: false, reason: 'PREREQ_NOT_MET' });
+
+    // setCampLayout — 6 үүр бүгд хоосон бол хүчинтэй.
+    const slots = {
+      avatarFrame: null, campBanner: null, title: null,
+      campDecoration: null, uiAccent: null, badgeFrame: null,
+    };
+    const layout = applyAction(base, action('setCampLayout', { slots }), ctx);
+    expect(layout.ok && layout.state.campLayout.slots).toEqual(slots);
+  });
+
+  it('rejects a malformed payload for each new action with INVALID_INPUT (T-18)', () => {
+    const base = freshState();
+    for (const [type, payload] of [
+      ['prestigeMastery', { tag: 'not-a-tag' }],
+      ['respecTree', { track: 42 }],
+      ['setCampLayout', { slots: { hat: null } }],
+      ['updateSettings', { soundVolume: 5 }],
+      ['bossAttempt', { bossId: 'b-1', scores: {}, difficulty: 'nightmare' }],
+    ] as const)
+      expect(
+        applyAction(base, action(type, payload as Record<string, unknown>), ctx),
+      ).toMatchObject({ ok: false, reason: 'INVALID_INPUT' });
+  });
+
+  it('accepts a bossAttempt without a difficulty — old queued actions still replay (T-18)', () => {
+    const scores = { story: 9, editing: 9, camera: 9, visualCraft: 9, animation: 9, audioPost: 9 };
+    const r = applyAction(freshState(), action('bossAttempt', { bossId: 'b-1', scores }), ctx);
+    expect(r.ok && r.state.bossAttempts[0]!.difficulty).toBe('standard');
+  });
+
+  it('carries a hard difficulty through to the domain (T-18)', () => {
+    const scores = { story: 9, editing: 9, camera: 9, visualCraft: 9, animation: 9, audioPost: 9 };
+    const r = applyAction(
+      freshState(),
+      action('bossAttempt', { bossId: 'b-1', scores, difficulty: 'hard' }),
+      ctx,
+    );
+    expect(r.ok && r.state.bossAttempts[0]!.difficulty).toBe('hard');
+  });
+
+  it('updates the two new settings fields (T-18)', () => {
+    const r = applyAction(
+      freshState(),
+      action('updateSettings', { colorBlindSafe: true, soundVolume: 0 }),
+      ctx,
+    );
+    expect(r.ok && r.state.settings.colorBlindSafe).toBe(true);
+    expect(r.ok && r.state.settings.soundVolume).toBe(0);
   });
 
   it('rejects a malformed payload before touching the state', () => {

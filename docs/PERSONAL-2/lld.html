@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<!-- PERSONAL-2 · lld · Дэлгэрэнгүй загвар (Design) · 2026-09-16 -->
+<html lang="mn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editor's Ascension — LLD харагдац (PERSONAL-2)</title>
+<style>
+  :root{
+    --bg:#0d1017; --panel:#161b24; --panel2:#1e2531; --line:#313a4b;
+    --ink:#e8eaf0; --ink2:#a6b0c2; --ink3:#78829a;
+    --accent:#6ea8fe; --ok:#4ec9a5; --warn:#e8b84b; --bad:#f07a7a; --new:#b98bf0;
+    --radius:10px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:15px/1.55 ui-sans-serif,system-ui,"Segoe UI",Roboto,Arial,sans-serif}
+  a{color:var(--accent)}
+  code,pre{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:12.5px}
+  pre{background:#0b0e14;border:1px solid var(--line);border-radius:8px;padding:11px;overflow:auto}
+  .wrap{max-width:1240px;margin:0 auto;padding:20px 16px 80px}
+  header.top{border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:16px}
+  h1{font-size:22px;margin:0 0 4px}
+  .sub{color:var(--ink2);font-size:13px}
+  .warnbar{margin-top:12px;background:#2a2213;border:1px solid #5c4a1c;border-left:4px solid var(--warn);
+           padding:10px 12px;border-radius:var(--radius);color:#f0dfb4;font-size:13px}
+  .okbar{margin-top:10px;background:#122420;border:1px solid #1f4a3d;border-left:4px solid var(--ok);
+         padding:10px 12px;border-radius:var(--radius);color:#bfe9dc;font-size:13px}
+
+  nav.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px}
+  nav.tabs button{background:var(--panel);color:var(--ink2);border:1px solid var(--line);
+    border-radius:999px;padding:7px 13px;font:inherit;font-size:13px;cursor:pointer}
+  nav.tabs button:hover{color:var(--ink);border-color:#4a5468}
+  nav.tabs button[aria-selected="true"]{background:var(--accent);color:#0d1117;border-color:var(--accent);font-weight:600}
+  nav.tabs button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+  [role="tabpanel"][hidden]{display:none}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+  .panel h2{margin:0 0 6px;font-size:16px}
+  .panel h3{margin:18px 0 6px;font-size:13px;color:var(--ink2);text-transform:uppercase;letter-spacing:.06em}
+  .note{color:var(--ink3);font-size:12.5px;margin-top:8px}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+  .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+
+  table{border-collapse:collapse;width:100%;font-size:13px}
+  th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:var(--ink2);font-weight:600}
+  td code{color:#cfe3ff}
+
+  .tag{display:inline-block;border-radius:999px;padding:1px 8px;font-size:11.5px;border:1px solid}
+  .t-new{color:#e3d0ff;border-color:#5b3f86;background:#231a33}
+  .t-chg{color:#ffe7b8;border-color:#6b5420;background:#2a2213}
+  .t-keep{color:#bfe9dc;border-color:#1f4a3d;background:#122420}
+  .t-bad{color:#ffc9c9;border-color:#6d2f2f;background:#2c1717}
+
+  /* palette lab */
+  .sw{display:flex;align-items:center;gap:8px;font-size:12px;margin:3px 0}
+  .chip{width:26px;height:18px;border-radius:4px;border:1px solid #0006;flex:0 0 auto}
+  .ratio-ok{color:var(--ok)} .ratio-bad{color:var(--bad);font-weight:700}
+  .ctrl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+  .ctrl label{font-size:13px;color:var(--ink2)}
+  select,input[type=checkbox]{font:inherit}
+  select{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:5px 8px}
+
+  /* mock */
+  .mock{border:1px solid var(--line);border-radius:var(--radius);padding:14px;font-size:13px}
+  .mock h4{margin:0 0 8px;font-size:14px}
+  .mock .row{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:4px 0}
+  .mock .bar{height:9px;border-radius:999px;overflow:hidden}
+  .mock .bar > i{display:block;height:100%}
+  .mock button{font:inherit;font-size:12px;border-radius:7px;padding:4px 10px;cursor:default}
+  .mock .badge{display:inline-block;border-radius:999px;padding:1px 8px;font-size:11px}
+  .mock .card{border-radius:8px;padding:9px;margin:6px 0}
+  .pips{display:flex;gap:3px}
+  .pips i{width:9px;height:9px;border-radius:50%;display:block}
+  .mini{display:grid;grid-template-columns:auto auto 1fr;gap:5px 8px;align-items:center;font-size:12px}
+  .seq{font-size:12.5px;line-height:1.7}
+  .seq b{color:var(--new)}
+  ul.tight{margin:6px 0 0;padding-left:20px}
+  ul.tight li{margin:3px 0}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:13px}
+  .kv dt{color:var(--ink2)}
+  .kv dd{margin:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>Editor's Ascension — Дэлгэрэнгүй загвар (LLD · PERSONAL-2)</h1>
+  <div class="sub">
+    Систем <code>EDITORSASC</code> · Салбар <code>issue/personal-2</code> · 2026-09-16 ·
+    Гэрээ <code>contracts.yaml</code> v1.2.0 · Бүтэн текст: <a href="lld.md">lld.md</a>
+  </div>
+  <div class="warnbar">
+    <b>Энэ баримт нь ХАРАГДАЦ.</b> Доорх дэлгэцүүд нь <b>дуурайлт</b> — бодит
+    <code>web-app</code>-ийн DOM БИШ. Мэдээллийн шатлал, <code>aria-*</code>-ийн
+    үүрэг, өнгөний токенийн хэрэглээ нь <a href="lld.md">lld.md §9</a>-ийн гэрээнээс;
+    зай, өнцөг нь ойролцоо. <b>Код бичигдээгүй</b> — эдгээр нь
+    <code>T-27…T-33</code>-д хэрэгжинэ.
+  </div>
+  <div class="okbar">
+    <b>Энэ шатанд ажиллуулж шалгагдсан:</b> палитрын <b>228/228</b> контрастын хос
+    (хамгийн муу 4.78:1 текст · 3.29:1 UI) · <code>contracts.yaml</code> задарна, 50 схем,
+    тасарсан <code>$ref</code> 0 · bundle-ийн суурь <b>46,606 B</b> gzip (тааз 60,587 B).
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="LLD хэсгүүд">
+  <button role="tab" aria-selected="true"  aria-controls="p-over"  id="t-over">Тойм</button>
+  <button role="tab" aria-selected="false" aria-controls="p-pal"   id="t-pal">Палитр (амьд)</button>
+  <button role="tab" aria-selected="false" aria-controls="p-screens" id="t-screens">Дэлгэцүүд</button>
+  <button role="tab" aria-selected="false" aria-controls="p-fx"    id="t-fx">Juice / FX</button>
+  <button role="tab" aria-selected="false" aria-controls="p-domain" id="t-domain">Домэйн</button>
+  <button role="tab" aria-selected="false" aria-controls="p-contract" id="t-contract">Гэрээний дельта</button>
+  <button role="tab" aria-selected="false" aria-controls="p-flow"  id="t-flow">Урсгал</button>
+  <button role="tab" aria-selected="false" aria-controls="p-risk"  id="t-risk">Зөрүү · Эрсдэл · Тест</button>
+</nav>
+
+<!-- ─────────────────────────────── ТОЙМ ─────────────────────────────── -->
+<section role="tabpanel" id="p-over" aria-labelledby="t-over">
+  <div class="panel">
+    <h2>Юу нэмэгдэж байна — нэг харцаар</h2>
+    <p class="sub">Шинэ <b>контент бичихгүйгээр</b> гүн нэмэх систем давхарга.
+    PERSONAL-1-ийн 62 AC хөндөгдөхгүй; PERSONAL-2 нь 62 шинэ AC нэмнэ.</p>
+    <div class="grid3">
+      <div class="panel" style="background:var(--panel2);margin:0">
+        <h3>Прогрессийн тэнхлэг</h3>
+        <ul class="tight">
+          <li><b>7 mastery track</b> — <code>SkillTag</code> тутамд, prestige-тэй</li>
+          <li><b>4 guild reputation</b> — зөвхөн өсөх, cosmetic зэрэглэл</li>
+          <li><b>≥3 side quest chain</b> — 4 алхам, нэг удаагийн bonus</li>
+          <li><b>Skill tree v2</b> — 38 node, 3 tier, 7 capstone, respec</li>
+        </ul>
+      </div>
+      <div class="panel" style="background:var(--panel2);margin:0">
+        <h3>Сорилт ба цуглуулга</h3>
+        <ul class="tight">
+          <li><b>Boss v2</b> — 5 boss, hard mode (41·52·60), rematch, дээд амжилт</li>
+          <li><b>≥60 cosmetic</b> — 6 slot, Trophy Room</li>
+          <li><b>≥40 амжилт</b> — 5 шинэ предикат</li>
+          <li><b>Refresher</b> — 14 хоногийн дараа dungeon дахин нэр дэвшинэ</li>
+        </ul>
+      </div>
+      <div class="panel" style="background:var(--panel2);margin:0">
+        <h3>Харагдах байдал</h3>
+        <ul class="tight">
+          <li><b>6 палитр</b> × 19 токен + colorblind багц</li>
+          <li><b>12 FX мөр</b> — анимац + дуу + <code>aria-live</code></li>
+          <li>Хатуу бичсэн hex <b>0</b> (14 → токен)</li>
+          <li>Шинэ маршрут ЯГ <b>1</b>: <code>#/trophies</code></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Хамаарлын чиглэл — ӨӨРЧЛӨГДӨӨГҮЙ</h2>
+<pre>web-app/src/ui/  →  web-app/src/services/  →  shared/core/  →  shared/{types,validate}
+server/src/      →  shared/core/           →  shared/{types,validate}
+shared/content/  (зөвхөн өгөгдөл)          →  shared/types</pre>
+    <p class="note">Шинэ 6 домэйн модуль бүгд <code>shared/core/**</code>-д (клиент ба сервер
+    ижил кодыг ажиллуулна — <code>OFF-7</code>). <code>ui/**</code> нь <code>core/**</code>-ыг
+    ШУУД импортлохгүй; бүх шинэ дүрэм <code>gameService</code>-ийн 7 шинэ
+    <code>view.*</code>-ээр дамжина.</p>
+  </div>
+
+  <div class="panel">
+    <h2>Шинэ файл — ЯГ 13</h2>
+    <table>
+      <tr><th>Файл</th><th>Зурвас</th><th>Task</th><th>Үүрэг</th></tr>
+      <tr><td><code>shared/core/mastery.ts</code></td><td>domain</td><td>T-08</td><td><code>addMasteryXp</code> · <code>prestigeMastery</code> · <code>earnedMasteryPoints</code></td></tr>
+      <tr><td><code>shared/core/reputation.ts</code></td><td>domain</td><td>T-11</td><td><code>grantReputation</code> · <code>rankOf</code> · <code>guildFor</code></td></tr>
+      <tr><td><code>shared/core/chains.ts</code></td><td>domain</td><td>T-12</td><td><code>evaluateChains</code> · <code>chainComplete</code></td></tr>
+      <tr><td><code>shared/core/cosmetics.ts</code></td><td>domain</td><td>T-16</td><td><code>isUnlocked</code> · <code>setCampLayout</code></td></tr>
+      <tr><td><code>shared/core/skillTree.ts</code></td><td>domain</td><td>T-14</td><td><code>capstoneGaps</code> · <code>respecTree</code> · <code>costCurrency</code></td></tr>
+      <tr><td><code>shared/core/replayLog.ts</code></td><td>domain</td><td>T-06</td><td><code>appendReplay</code> — 500 FIFO, ГАНЦ бичигч</td></tr>
+      <tr><td><code>shared/validate/content-rules.ts</code></td><td>qa</td><td>T-03</td><td><code>[C]</code> дүрмийн ГАНЦ модуль (CLI + vitest)</td></tr>
+      <tr><td><code>shared/content/{guilds,chains,cosmetics}.json</code></td><td>content</td><td>T-21…23</td><td>4 · ≥3 · ≥60</td></tr>
+      <tr><td><code>web-app/src/ui/theme.ts</code></td><td>ui</td><td>T-27</td><td>122 hex + <code>applyTheme()</code></td></tr>
+      <tr><td><code>web-app/src/ui/fx.ts</code></td><td>ui</td><td>T-28</td><td>12 мөрийн бүртгэл + ГАНЦ хамгаалалт</td></tr>
+      <tr><td><code>web-app/src/ui/screens/trophies.ts</code></td><td>ui</td><td>T-30</td><td>9 дэх маршрут</td></tr>
+      <tr><td><code>web-app/scripts/validate-content.mjs</code></td><td>qa</td><td>T-03</td><td><code>npm run validate:content</code></td></tr>
+    </table>
+    <p class="note">⚠ <code>web-app/package.json → dependencies</code> <b>ХООСОН ХЭВЭЭР</b>
+    (<code>OFF-4</code>) · <code>shared/</code> нь <code>package.json</code>-гүй хэвээр.</p>
+  </div>
+
+  <div class="panel">
+    <h2>Хүчний хориг (<code>D-6</code>) — машинаар хаагдана</h2>
+    <div class="grid2">
+      <div>
+        <h3>Сканнер A — унших хориг</h3>
+        <p class="sub"><code>progression · stamina · quests · dungeons · economy ·
+        encounters · sideQuests · streak · projects</code> нь
+        <code>state.mastery</code> · <code>masteryPoints</code> ·
+        <code>state.reputation</code> · <code>state.campLayout</code> ·
+        <code>state.replayLog</code>-ыг УНШИХГҮЙ.</p>
+        <p class="note">Үл хамаарах ЯГ 3: <code>skillTree.ts→mastery</code> ·
+        <code>cosmetics.ts→{mastery,reputation,campLayout}</code> ·
+        <code>achievements.ts→{mastery,reputation,completedChainIds}</code>.</p>
+      </div>
+      <div>
+        <h3>Сканнер B — бичих хориг</h3>
+        <p class="sub"><code>mastery · reputation · chains · cosmetics · replayLog</code> нь
+        <code>xp · level · skillPoints · stamina · coins · inventory ·
+        completedMainQuestIds · completedDungeonIds</code>-д БИЧИХГҮЙ.</p>
+        <p class="note">Үл хамаарах ГАНЦ: <code>chains.ts</code> нь
+        <code>bonusXp</code>-ийг <code>addXp()</code>-ээр олгоно — <code>xp</code>-д ШУУД бичихгүй.</p>
+      </div>
+    </div>
+    <h3>Сканнер C — «сканнер өөрөө хазна»</h3>
+    <p class="sub">A ба B тус бүрд <b>санаатай зөрчил</b> тарьсан хиймэл эх мөрийг
+    өгч, сканнер түүнийг илрүүлэхийг батална. Сканнерын зам буруу бичигдвэл
+    хоосон олдворт <b>чимээгүй ногоон</b> болох эрсдэлийг зөвхөн энэ тест хаана.</p>
+  </div>
+</section>
+
+<!-- ─────────────────────────────── ПАЛИТР ─────────────────────────────── -->
+<section role="tabpanel" id="p-pal" aria-labelledby="t-pal" hidden>
+  <div class="panel">
+    <h2>Палитрын лаборатори — <code>VIS-2</code>-ийн 228 баталгаа</h2>
+    <p class="sub">Доорх харьцаа бүр <b>ЭНЭ хуудсан дээр тооцогдож</b> байна (WCAG 2.x
+    relative luminance). Токенууд нь <a href="lld.md">lld.md §9.1</a>-ийн хүснэгттэй
+    ижил өгөгдөл — <code>theme.ts</code>-д ЯГ эдгээр орно.</p>
+    <div class="ctrl">
+      <label for="palSel">Палитр:</label>
+      <select id="palSel"></select>
+      <label><input type="checkbox" id="cbChk"> <code>colorBlindSafe</code></label>
+      <span id="palVerdict" class="sub"></span>
+    </div>
+    <div class="grid2">
+      <div><h3>19 токен</h3><div id="swatches"></div></div>
+      <div>
+        <h3>Контрастын хос — 14 текст (≥4.5) · 5 UI (≥3.0)</h3>
+        <table id="pairs"><tbody></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Гаргаж авах дүрэм — гараар сонгоогүй</h2>
+    <p class="sub">Токен бүр <b>тооцооноос</b> гарсан: дэлхий тутмын өнгөний өнцөг
+    <code>H</code> сонгож, HSL-ийн гэрэлтэлтийг <b>хоёртын хайлтаар</b> зорилтот
+    харьцаанд (4.8:1 текст · 3.3:1 UI — нөөцтэй) хүрэх хүртэл шилжүүлсэн.
+    Тодруулга (<code>accent · ok · warn</code>) нь «vibrant» шаардлагыг хангахаар
+    гэрэлтэлтийн <b>шал</b>-тай (0.62…0.64) — хамгийн бага хангалттай утга нь бүдэг гардаг.</p>
+    <table>
+      <tr><th>Палитр</th><th>Гадаргуугийн өнцөг</th><th>Тодруулгын өнцөг</th><th>Хамгийн муу текст</th><th>Хамгийн муу UI</th></tr>
+      <tr><td><code>camp</code></td><td>218</td><td>214</td><td>5.98</td><td>3.29</td></tr>
+      <tr><td><code>w1</code> (Cut Room)</td><td>205</td><td>195</td><td>7.03</td><td>3.31</td></tr>
+      <tr><td><code>w2</code> (Form)</td><td>268</td><td>275</td><td><b>4.78</b></td><td>3.29</td></tr>
+      <tr><td><code>w3</code> (Motion)</td><td>158</td><td>165</td><td>6.59</td><td>3.30</td></tr>
+      <tr><td><code>w4</code> (Frame)</td><td>22</td><td>28</td><td>7.03</td><td>3.29</td></tr>
+      <tr><td><code>w5</code> (Signal)</td><td>330</td><td>325</td><td>5.52</td><td>3.29</td></tr>
+    </table>
+    <p class="note">⚠ Хамгийн муу текстийн хос нь <code>w2</code>-ийн
+    <code>accent/surface</code> = 4.78:1 — 4.5-аас 6.2% нөөцтэй. Өнгө тааруулах
+    шаардлагагүй; зөвхөн тодруулгын өнцгийг 268-аас холдуулбал нөөц багасна.</p>
+  </div>
+
+  <div class="panel">
+    <h2>colorBlindSafe — ЯГ 8 токен, бүх дэлхийд ИЖИЛ</h2>
+    <p class="sub">Протанопи/дейтеранопийн бодит эрсдэл нь <b>улаан↔ногооны семантик
+    хос</b> (<code>ok</code>/<code>warn</code>), дэлхийн гадаргуугийн өнгө БИШ —
+    гадаргуу нь утга илэрхийлэхгүй. Тиймээс cb горим нь семантик өнгийг л сольж,
+    дэлхийн өвөрмөц байдлыг <code>bg</code>/<code>surface</code>-д үлдээнэ.</p>
+    <div id="cbSwatches" class="grid3"></div>
+<pre>:root[data-world="2"] { --bg:#100c16; --surface:#1d1625; … }   /* 19 токен */
+:root[data-cb="1"]    { --accent:#eb5ceb; --ok:#5ab0e2; … }    /* 8 токен — каскад дарна */</pre>
+    <p class="note">⚠ <b>Тооцооны илрүүлэлт:</b> эдгээр 8 утга 6 дэлхийд ЯГ ижил гардаг
+    (гадаргуугийн <i>гэрэлтэлт</i> дэлхий бүрд ижил, зөвхөн өнцөг өөр). Тиймээс
+    <code>theme.ts</code> нь <b>228 биш 122</b> утга хадгална — <b>46% бага</b>,
+    <code>QX-3</code>-ийн 14 KB төсөвт шууд хэмнэлт.</p>
+  </div>
+</section>
+
+<!-- ─────────────────────────────── ДЭЛГЭЦҮҮД ─────────────────────────────── -->
+<section role="tabpanel" id="p-screens" aria-labelledby="t-screens" hidden>
+  <div class="panel">
+    <h2>Дэлгэцийн дуурайлт — сонгосон палитраар</h2>
+    <div class="ctrl">
+      <label for="palSel2">Палитр:</label><select id="palSel2"></select>
+      <label><input type="checkbox" id="cbChk2"> <code>colorBlindSafe</code></label>
+      <span class="sub">Маршрут <code>#/camp · #/settings · #/achievements · #/trophies ·
+      #/forge</code> → <code>camp</code>; <code>#/quests · #/side · #/dungeons ·
+      #/skills</code> → идэвхтэй дэлхий (<code>A-LLD2-7</code>).</span>
+    </div>
+    <div class="grid2" id="mocks"></div>
+  </div>
+  <div class="panel">
+    <h2><code>VIS-1</code> — DOM нь палитраас ХАМААРАХГҮЙ</h2>
+    <p class="sub">Дэлхий солигдоход <b>зөвхөн</b> <code>&lt;html data-world&gt;</code>
+    (+ <code>data-cb</code>) атрибут солигдоно. Дэлгэцийн DOM бүтэц,
+    <code>aria-*</code>, текст ӨӨРЧЛӨГДӨХГҮЙ.</p>
+    <p class="note">Тест: ижил дэлгэцийг <code>data-world="1"</code> ба <code>"5"</code>-аар
+    зурж <code>outerHTML</code>-ийг харьцуулна — <b>ялгаагүй</b> байх ёстой.
+    <code>style.setProperty</code> ашиглахгүй (DOM-ийн <code>style</code> шинж чанар
+    snapshot-ийг ялгаатай болгоно).</p>
+  </div>
+  <div class="panel">
+    <h2><code>VIS-4</code> — мэдээлэл ЗӨВХӨН өнгөөр дамжихгүй</h2>
+    <table>
+      <tr><th>Шинэ визуал төлөв</th><th>Өнгөнөөс ГАДНА</th><th>Хаана</th></tr>
+      <tr><td>Mastery түвшин</td><td><code>Lv 4</code> текст + <code>aria-label</code>-д «level 4, 210 of 500 XP»</td><td>Camp · Skills</td></tr>
+      <tr><td>Prestige</td><td><code>★2</code> тэмдэг + текст</td><td>Camp · Skills</td></tr>
+      <tr><td>Cosmetic rarity</td><td><code>Rare</code> · <code>Epic</code> гэсэн үг</td><td>Trophy Room</td></tr>
+      <tr><td>Нээгдсэн / нээгдээгүй</td><td><code>✓ Unlocked</code> / <code>🔒 Locked</code> текст</td><td>Trophy Room</td></tr>
+      <tr><td>Boss difficulty</td><td><code>radio</code>-ийн шошго + босгын тоо ИЛ</td><td>Boss</td></tr>
+      <tr><td>Guild rank</td><td><code>Rank 3 / 4</code> текст</td><td>Camp · Trophy Room</td></tr>
+      <tr><td>Валют (SP / MP)</td><td>Товчны шошгонд <code>Unlock · 1 MP</code></td><td>Skills</td></tr>
+      <tr><td>Stamina pip</td><td><code>.pips-text</code> «7 / 10»</td><td>Topbar (хэвээр)</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ─────────────────────────────── FX ─────────────────────────────── -->
+<section role="tabpanel" id="p-fx" aria-labelledby="t-fx" hidden>
+  <div class="panel">
+    <h2><code>fx.ts</code> — juice-ийн ГАНЦ хаалга</h2>
+<pre>play(events, settings):
+  s ← settings()
+  motionOff ← s.reducedMotion ∨ matchMedia('(prefers-reduced-motion: reduce)').matches
+  soundOff  ← !s.soundEnabled ∨ s.soundVolume &lt;= 0
+  animated ← 0
+  for e of events:
+     row ← FX_REGISTRY[e.type]; if !row: continue
+     announce(row.text(e.data))                       ← ҮРГЭЛЖ (FX-6)
+     if !motionOff ∧ animated &lt; MAX_CONCURRENT_FX:    ← FX-7 (3)
+        addClass(row.cls); animated++
+     if !soundOff: tone(row.hz, s.soundVolume)</pre>
+    <div class="grid2">
+      <div>
+        <p class="sub"><b>Яагаад ганц функц:</b> <code>FX-2</code>/<code>FX-3</code> нь
+        «нэг эх үүсвэр, тусдаа mute зам байхгүй» гэж шаарддаг. Хоёр зам гарвал нэг нь
+        хамгаалалтыг мартана.</p>
+        <p class="note">Сканнердсан тест: <code>src/ui/**</code> дотор
+        <code>classList.add('fx-</code> гэсэн бичилт ЗӨВХӨН <code>fx.ts</code>-д олдоно.</p>
+      </div>
+      <div>
+        <p class="sub"><b><code>sound.ts</code> устгагдахгүй</b> (түүний 5 тест хэвээр —
+        <code>QX-1</code>). <code>CUE_EVENTS</code> нь
+        <code>Object.keys(FX_REGISTRY)</code>-ээс ГАРГАГДАНА: 4 → 12. Хоёр дахь
+        жагсаалт үлдэхгүй.</p>
+        <p class="note">Медиа асуулт ба JS хамгаалалт <b>ХОЁУЛАА</b> хэрэгтэй: медиа
+        асуулт нь класс нэмэгдэхийг зогсоохгүй (үргэлжлэлийг л тэглэнэ), JS нь
+        <code>settings.reducedMotion</code>-ийг хамарна (медиа асуулт үүнийг мэдэхгүй).</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Бүртгэл — 12 мөр (<code>FX-1</code>-ийн бүрэн байдлын ЭХ)</h2>
+    <p class="sub">Дуу тоглуулах товч нь <b>дуурайлт</b>: энэ хуудас WebAudio
+    oscillator-ыг ижил давтамжаар үүсгэж, <code>T-28</code>-ийн дохио ямар байхыг
+    сонсгоно. <code>web-app</code>-ийн хэрэгжилт нь <code>sound.ts</code>-ийн одоогийн
+    120 ms sine дохио (шинэ аудио файл БАЙХГҮЙ — <code>FX-5</code>).</p>
+    <table id="fxTable">
+      <tr><th>Event</th><th>Класс</th><th>Hz</th><th>Анимац</th><th><code>aria-live</code> текстийн эх</th><th></th></tr>
+    </table>
+    <p class="note">⚠ 12-ын 8 нь PERSONAL-1-д АЛЬ ХЭДИЙН байгаа event; 4 нь шинэ
+    (<code>MASTERY_LEVEL_UP</code> · <code>MASTERY_PRESTIGED</code> ·
+    <code>REPUTATION_GAINED</code> · <code>CHAIN_COMPLETED</code>).
+    <code>MASTERY_PRESTIGED</code> нь бүртгэлд БАЙХГҮЙ — <code>FX-1</code> нь ЯГ 12
+    event-ийг нэрлэсэн бөгөөд prestige тэдгээрт ороогүй; UI нь <code>aria-live</code>-аар
+    мэдэгдэнэ.</p>
+  </div>
+
+  <div class="panel">
+    <h2>CSS — <code>FX-4</code> (≤300 ms, зөвхөн <code>transform</code>/<code>opacity</code>)</h2>
+<pre>@keyframes fx-pop   { from { transform: scale(.94); opacity:.4 } to { transform: none; opacity:1 } }
+@keyframes fx-shake { 0%,100%{transform:none} 25%{transform:translateX(-3px)} 75%{transform:translateX(3px)} }
+
+.fx-levelup,.fx-achieve,.fx-mastery,.fx-chain              { animation: fx-pop 280ms ease-out }
+.fx-claim,.fx-side,.fx-pass,.fx-loot,.fx-streak,.fx-rep,.fx-boss { animation: fx-pop 200ms ease-out }
+.fx-fail                                                   { animation: fx-shake 240ms ease-in-out }
+
+@media (prefers-reduced-motion: reduce) { [class*="fx-"] { animation: none !important } }</pre>
+    <p class="note">Сканнердсан тест: <code>@keyframes</code> блок бүрийн шинж чанар нь
+    <code>transform</code> · <code>opacity</code> <b>зөвхөн</b> (layout хөдөлгөх
+    <code>width · height · top · margin</code> хориотой); <code>animation</code>
+    товчлолын хугацаа бүр <code>&lt;= 300ms</code>.</p>
+  </div>
+</section>
+
+<!-- ─────────────────────────────── ДОМЭЙН ─────────────────────────────── -->
+<section role="tabpanel" id="p-domain" aria-labelledby="t-domain" hidden>
+  <div class="panel">
+    <h2>Томьёо — тооцоолуур</h2>
+    <div class="grid2">
+      <div>
+        <h3>Boss tier (<code>BSX-2</code>)</h3>
+        <div class="ctrl">
+          <label for="bossTotal">Нийт оноо (0..60):</label>
+          <input id="bossTotal" type="range" min="0" max="60" value="46">
+          <output id="bossOut" class="sub"></output>
+        </div>
+        <table>
+          <tr><th>Tier</th><th>Standard</th><th>Hard (<code>ceil(×1.15)</code>)</th></tr>
+          <tr><td><code>mvp</code></td><td>35</td><td><b>41</b></td></tr>
+          <tr><td><code>advanced</code></td><td>45</td><td><b>52</b></td></tr>
+          <tr><td><code>mastery</code></td><td>52</td><td><b>60</b></td></tr>
+        </table>
+        <p class="note">⚠ Hard-ын <code>mastery</code> = 60 = дээд тал → 6 ангилал БҮРД
+        10 оноо. Томьёоноос гарсан үр дүн; UI нь босгыг ИЛ харуулна.
+        <b>Урвуулалтгүй:</b> 0..60 бүх 61 утгаар
+        <code>rank(standard) ≥ rank(hard)</code> — хүснэгтэн тест <code>T-13</code>.</p>
+      </div>
+      <div>
+        <h3>Reputation (<code>RET-5</code> · <code>P-16</code>)</h3>
+        <div class="ctrl">
+          <label for="repTrack">Track:</label>
+          <select id="repTrack"><option>main</option><option>boss</option><option>dungeon</option><option selected>side</option></select>
+          <label for="repM"><code>m</code>:</label>
+          <select id="repM"><option>0.5</option><option>0.4</option><option>0.75</option><option>1</option></select>
+        </div>
+        <table id="repTable"><tr><th><code>n</code></th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr><tr id="repRow"><th>rep</th></tr></table>
+        <p class="note"><code>repAward(tr,n) = floor(REP_BASE[tr] × m^(n−1))</code>,
+        <code>REP_BASE = {main:3, boss:3, dungeon:2, side:2}</code>. Бүх эерэг олголт
+        <b>1..3</b>-д багтана, grind нь <b>0</b>-д нийлнэ (<code>SQ-4</code>-ийн сүнс).
+        Rep хэзээ ч БУУРАХГҮЙ. Зэрэглэл: <code>[10,25,50,100]</code> → 0..4.</p>
+      </div>
+    </div>
+    <div class="grid2">
+      <div>
+        <h3>Mastery point-ийн инвариант (<code>P-20</code>)</h3>
+<pre>олдсон  = Σ_tags ( (level − 1) + prestigeCount × 9 )
+инварианти: masteryPoints(үлдэгдэл) + зарцуулсан == олдсон
+зарцуулсан = |{ id ∈ unlockedSkillIds : tier(id) >= 2 }|</pre>
+        <p class="note">Prestige-ийн ӨМНӨ <code>9 + 9p</code>, ДАРАА нь
+        <code>(1−1) + (p+1)×9 = 9 + 9p</code> — <b>ТЭНЦҮҮ</b>. Prestige нь оноо
+        үүсгэхгүй ч буцааж авахгүй. Respec нь буцаасан оноогоор инвариантыг
+        хадгална (зарцуулсан↓, үлдэгдэл↑).</p>
+      </div>
+      <div>
+        <h3>Chain (<code>RET-1…3</code> · <code>P-21</code>)</h3>
+<pre>chainComplete(state, chain):
+  ts ← chain.steps.map(id => sideQuestStats[id]?.lastCompletedAt ?? null)
+  if ts.some(null)            → false      // 4 алхам бүгд
+  for i in 1..3: if ts[i] &lt; ts[i-1] → false // ЧАНД дараалал
+  true</pre>
+        <p class="note"><b>Шинэ талбар ХЭРЭГГҮЙ</b> — явц нь
+        <code>sideQuestStats</code>-аас гарна. ISO-8601 UTC (<code>Z</code>) мөрийн
+        лексикографик эрэмбэ нь цагийн эрэмбэтэй таарна. Офсеттой мөр ирвэл chain
+        <b>дуусгахгүй</b> (буруу дуусгахаас аюулгүй).</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Capstone-ийн 3 нөхцөл (<code>SKL-2</code>) — «legible failure»</h2>
+<pre>capstoneGaps(state, skill, pack) → string[]        // ХООСОН = нээж болно
+  (а) trackOf(state, skill.track).level &lt; 8
+      → `${track} mastery must reach 8`
+  (б) тухайн track-ийн БҮХ tier-1 node нээгдээгүй
+      → `unlock N more tier-1 node(s) in ${track}`
+  (в) boss.tags ∋ track гэсэн boss-д advanced+ оролдлого БАЙХГҮЙ
+      → `log an advanced-or-better attempt on a ${track} boss`</pre>
+    <div class="warnbar">
+      <b>Δ-2 — спекийн зай.</b> «track-д харгалзах boss» нь ХААНА Ч тодорхойлогдоогүй
+      байв. Энэ загвар <code>boss.tags ∋ track</code> гэж тодорхойлж (тусдаа хүснэгт
+      ЗОХИОХГҮЙ — <code>tags</code> аль хэдийн байгаа), үүнээс шинэ <code>[C]</code>
+      дүрэм <b>C-02</b> гарав: <code>∀ tag ∈ SKILL_TAGS: ∃ boss : tag ∈ boss.tags</code>.
+      Одоогийн <code>boss-strange-room</code> нь <code>storytelling</code>,
+      <code>cinematography</code>-г хамарна; <code>T-20</code>-ийн 4 шинэ boss нь үлдсэн
+      5 tag-ийг хамрах ЁСТОЙ. <b>Дүрэмгүй бол зарим capstone хэзээ ч нээгдэхгүй</b> —
+      тоглогчид харагдахгүй мухардал.
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Skill tree v2 — 38 node, 24 нь tier-1</h2>
+    <table>
+      <tr><th>Track</th><th>Одоогийн tier-1 node (24)</th><th>+ tier-2</th><th>+ tier-3 (capstone)</th></tr>
+      <tr><td><code>video-editing</code></td><td><code>edit-fundamentals · pacing · color-correction · color-grading</code></td><td>1</td><td>1</td></tr>
+      <tr><td><code>blender</code></td><td><code>blender-navigation · modeling · uv-texturing · shading · lighting · rendering</code></td><td>1</td><td>1</td></tr>
+      <tr><td><code>animation</code></td><td><code>keyframing · easing · rigging · character-animation</code></td><td>1</td><td>1</td></tr>
+      <tr><td><code>cinematography</code></td><td><code>framing · camera-movement · coverage</code></td><td>1</td><td>1</td></tr>
+      <tr><td><code>audio</code></td><td><code>audio-capture · sound-design · mixing</code></td><td>1</td><td>1</td></tr>
+      <tr><td><code>vfx</code></td><td><code>compositing · vfx-integration</code></td><td>1</td><td>1</td></tr>
+      <tr><td><code>storytelling</code></td><td><code>story-structure · visual-storytelling</code></td><td>1</td><td>1</td></tr>
+    </table>
+    <div class="warnbar">
+      <b>Δ-3 — <code>plan.md §1</code>-ийн «skill node ≥4» БУРУУ.</b>
+      <code>SKL-1</code> нь track тутамд ЯГ 1 capstone + ≥1 tier-2 шаарддаг → шинэ node
+      нь <b>14</b> (7+7), нийт <b>38</b>. <code>T-19</code>-ийн хэмжээ 3.5 дахин өөр.
+      <br><b>A-LLD2-4 — 24 хуучин node БҮГД <code>tier: 1</code>.</b> Өөрөөр бол
+      migration-ий <code>masteryPoints ← 0</code> дээр хуучин save-д
+      <code>зарцуулсан > олдсон</code> болж инвариант зөрчигдөнө — <code>SVX-1</code>-ийг
+      зөрчихгүйгээр засах арга БАЙХГҮЙ.
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Валютын салаа ба <code>MST-4</code>-ийн уншилт</h2>
+<pre>costCurrency(s) = s.tier === 1 ? 'skillPoints' : 'masteryPoints'
+
+unlockSkill-ийн шалгах ДАРААЛАЛ (PRG-5-ийн бүтэц хэвээр, 2 алхам орлоо):
+  1 олдохгүй                                  → INVALID_INPUT
+  2 аль хэдийн нээгдсэн                       → ALREADY_COMPLETED
+  3 prerequisites дутуу                       → PREREQ_NOT_MET
+  4 tier 3 ∧ capstoneGaps ≠ []                → PREREQ_NOT_MET (detail = gaps)
+  5 tier 2 ∧ mastery[track].level &lt; 2         → PREREQ_NOT_MET
+  6 валют хүрэлцэхгүй                          → INSUFFICIENT_SKILL_POINTS
+  7 ok — харгалзах валютаас 1 хасна</pre>
+    <div class="warnbar">
+      <b>H-1′ — хүн шийдэх цэг (A-LLD2-5).</b> <code>MST-4</code> нь «зөвхөн
+      <code>track</code> таарах node-д зарцуулагдана» гэсэн; <code>plan.md §11.1</code> нь
+      <code>masteryPoints</code>-ийг <b>скаляр</b> сан болгосон. Хоёрыг нэгэн зэрэг
+      хангах уншилт нь <b>5-р алхам</b>: оноо фунгибл, харин node-ийн ӨӨРИЙН track
+      ахисан байхыг шаардана.
+      <br><b>Өөр уншилт:</b> <code>masteryPoints: Record&lt;SkillTag, number&gt;</code>.
+      <b>Сэлгэх өртөг:</b> гэрээний 1 талбар, migration-ий 1 мөр,
+      <code>skillTree.ts</code>-ийн 2 мөр, инвариант track тутам. <code>T-14</code> ·
+      <code>T-31</code> хоёр л хөндөгдөнө.
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────── ГЭРЭЭ ─────────────────────────────── -->
+<section role="tabpanel" id="p-contract" aria-labelledby="t-contract" hidden>
+  <div class="panel">
+    <h2><code>contracts.yaml</code> v1.1.0 → v1.2.0</h2>
+    <p class="sub">Endpoint <b>НЭМЭГДЭЭГҮЙ · УСТААГҮЙ</b>. Зам, статус код, header бүгд хэвээр.
+    Шалгагдсан: задарна · 50 схем · тасарсан <code>$ref</code> 0 ·
+    <code>GameState.example</code> нь 27 <code>required</code>-ийг бүрэн хангана.</p>
+    <table>
+      <tr><th></th><th>Зүйл</th><th>v1.1.0</th><th>v1.2.0</th><th>AC</th></tr>
+      <tr><td><span class="tag t-new">enum</span></td><td><code>ActionType</code></td><td>11</td><td><b>14</b> (<code>prestigeMastery · respecTree · setCampLayout</code>)</td><td>P-7</td></tr>
+      <tr><td><span class="tag t-new">enum</span></td><td><code>DomainEventType</code></td><td>24</td><td><b>28</b> (<code>MASTERY_LEVEL_UP · MASTERY_PRESTIGED · REPUTATION_GAINED · CHAIN_COMPLETED</code>)</td><td>P-8</td></tr>
+      <tr><td><span class="tag t-new">enum</span></td><td><code>RejectionReason</code></td><td>7</td><td><b>8</b> (<code>RESPEC_ON_COOLDOWN</code>)</td><td>D-5</td></tr>
+      <tr><td><span class="tag t-new">схем</span></td><td><code>MasteryTrack · DifficultyTier · ReplayLogEntry · CosmeticSlot · CosmeticUnlockSource · CosmeticItem · GuildDefinition · SideQuestChain · CampLayout(+Slots) · BossAttempt</code></td><td>—</td><td>10 шинэ</td><td>MST · BSX · COS · RET</td></tr>
+      <tr><td><span class="tag t-chg">нэрлэв</span></td><td><code>SkillTag · Rarity</code></td><td>inline enum</td><td>нэрлэсэн схем (утга ИЖИЛ)</td><td>—</td></tr>
+      <tr><td><span class="tag t-chg">баримт</span></td><td><code>ActionPayload*</code> × 5</td><td>—</td><td><code>payload</code> нээлттэй ХЭВЭЭР; шинэ 5 хэлбэр БАРИМТЖУУЛАВ</td><td>§4.3</tr>
+      <tr><td><span class="tag t-chg">+8</span></td><td><code>GameState</code></td><td>19 талбар</td><td><b>27</b>: <code>mastery · masteryPoints · reputation · replayLog · campLayout · completedChainIds · respecAt · dungeonStats</code></td><td>SVX-1</td></tr>
+      <tr><td><span class="tag t-chg">+2</span></td><td><code>GameState.settings</code></td><td>2</td><td><b>4</b>: <code>colorBlindSafe · soundVolume</code></td><td>VIS-3 · FX-3</td></tr>
+      <tr><td><span class="tag t-chg">+1</span></td><td><code>BossAttempt</code></td><td>5 талбар</td><td><b>6</b>: <code>difficulty</code></td><td>BSX-2</td></tr>
+      <tr><td><span class="tag t-chg">+2</span></td><td><code>SkillDefinition</code></td><td>5</td><td><b>7</b>: <code>track · tier</code>; <code>cost: 1</code> ХЭВЭЭР</td><td>SKL-1 · SKL-5</td></tr>
+      <tr><td><span class="tag t-chg">+6</span></td><td><code>predicate.kind</code></td><td>8</td><td><b>13</b> + сонголттой <code>ref</code></td><td>RET-7 · P-23</td></tr>
+      <tr><td><span class="tag t-chg">+3</span></td><td><code>ContentPack</code></td><td>7 хэсэг</td><td><b>10</b>: <code>guilds · chains · cosmetics</code>; <code>skills ≥28</code> · <code>achievements ≥40</code></td><td>COS-1 · RET-1/5/7</td></tr>
+      <tr><td><span class="tag t-chg">+9</span></td><td><code>ProgressionConstants</code></td><td>11</td><td><b>20</b> (доор)</td><td>—</td></tr>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h2>Юу НЭМЭГДЭЭГҮЙ — ба яагаад</h2>
+    <table>
+      <tr><th>Нэмээгүй</th><th>Оронд нь</th><th>Яагаад</th></tr>
+      <tr><td><code>GameState.unlockedCosmeticIds</code></td><td><code>unlockSource</code>-оос ГАРГАНА</td><td>Хоёр эх сурвалж (төлөв + жагсаалт) чимээгүй салалт үүсгэнэ (<code>P-1</code>)</td></tr>
+      <tr><td><code>GameState.personalBests</code></td><td><code>bossAttempts</code>-ээс <code>max</code></td><td>«Буурахгүй» шинж нь <code>max</code>-ийн шинж болж ӨӨРӨӨ батлагдана (<code>P-2</code>)</td></tr>
+      <tr><td><code>GameState.chainProgress</code></td><td><code>sideQuestStats</code>-аас</td><td>Ижил баримтын хоёр дахь эх (<code>P-21</code>)</td></tr>
+      <tr><td><code>ProgressionConstants.hardBossTiers</code></td><td><code>ceil(bossTiers[t] × 1.15)</code></td><td><code>bossTiers</code> өөрчлөгдөхөд чимээгүй салах хоёр дахь эх (<code>BSX-2</code>)</td></tr>
+      <tr><td><code>MAX_CONCURRENT_FX</code> (=3)</td><td><code>web-app/src/ui/fx.ts</code></td><td><code>ProgressionConstants</code> нь домэйны гэрээ; UI-ийн тоог тэнд тавих нь серверийг харагдах байдлын шийдэлд холбоно</td></tr>
+      <tr><td>Шинэ endpoint</td><td>—</td><td>3 шинэ action нь <code>POST /players/{id}/actions</code>-оор дамжина; save slot ба telemetry нь хамрах хүрээнээс ГАДУУР (<code>spec.md A8</code>)</td></tr>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h2>Шинэ 9 тогтмол</h2>
+    <table>
+      <tr><th>Тогтмол</th><th>Утга</th><th>AC</th></tr>
+      <tr><td><code>hardModeMultiplier</code></td><td><code>1.15</code></td><td>BSX-2</td></tr>
+      <tr><td><code>masteryMaxLevel</code></td><td><code>10</code></td><td>MST-1</td></tr>
+      <tr><td><code>masteryPrestigeLevel</code></td><td><code>10</code> (ТУСДАА шийдвэр)</td><td>MST-3</td></tr>
+      <tr><td><code>respecCooldownDays</code></td><td><code>7</code></td><td>SKL-3</td></tr>
+      <tr><td><code>refresherMinDays</code></td><td><code>14</code></td><td>RET-4</td></tr>
+      <tr><td><code>replayLogCap</code></td><td><code>500</code></td><td>SVX-2</td></tr>
+      <tr><td><code>repThresholds</code></td><td><code>[10, 25, 50, 100]</code></td><td>RET-6</td></tr>
+      <tr><td><code>repBase</code></td><td><code>{main:3, boss:3, dungeon:2, side:2}</code></td><td>RET-5 · H-5</td></tr>
+      <tr><td><code>guildCount</code></td><td><code>4</code></td><td>RET-5</td></tr>
+    </table>
+    <p class="note">⚠ <code>GUILD_IDS</code> (<code>['guild-cut','guild-form','guild-frame','guild-signal']</code>)
+    нь <code>constants.ts</code>-д — <code>MIGRATIONS[2]</code> нь контентоос
+    хамаарахгүй байхын тулд (<code>A-LLD2-2</code>). Guild-ийн <b>нэр</b> нь контентод
+    хэвээр (H-2).</p>
+  </div>
+
+  <div class="panel">
+    <h2>Save v1 → v2 — ЯГ 9 алхам</h2>
+<pre>1 mastery         ← 7 track: { tag, xp: 0, level: 1, prestigeCount: 0 }
+2 masteryPoints   ← 0
+3 reputation      ← GUILD_IDS → 0  (ЯГ 4)
+4 replayLog       ← []
+5 campLayout      ← 6 slot → null
+6 completedChainIds ← []
+7 respecAt        ← null
+8 dungeonStats    ← completedDungeonIds бүрд { lastPassedDate: null }
+9 bossAttempts    ← бүрд difficulty: 'standard'
+  settings        ← + colorBlindSafe: false, soundVolume: 1</pre>
+    <table>
+      <tr><th>Анхдагч</th><th>Яагаад өөр утга БУРУУ</th></tr>
+      <tr><td><code>mastery[*].xp = 0</code></td><td>Өнгөрсөн XP-ээс буцаан тооцох өгөгдөл БАЙХГҮЙ (<code>sideQuestStats</code> нь давталт тутмын <b>олгогдсон</b> XP-ийг хадгалдаггүй). Ойролцоолол нь буруу level төрүүлж <code>SKL-2</code>-ийн capstone-ийг гэнэт нээнэ</td></tr>
+      <tr><td><code>dungeonStats[*].lastPassedDate = null</code></td><td>Хуучин save-д тэнцсэн ОГНОО БАЙХГҮЙ. Огноо ЗОХИОХ нь 14 хоногийн дараа БҮХ хуучин dungeon-ийг нэг дор нэр дэвшүүлж <code>RET-4</code>-ийг утгагүй болгоно</td></tr>
+      <tr><td><code>bossAttempts[*].difficulty = 'standard'</code></td><td>v1-д hard mode БАЙГААГҮЙ; hard гэж тэмдэглэх нь хуурамч дээд амжилт (<code>BSX-3</code>)</td></tr>
+      <tr><td><code>soundVolume = 1</code></td><td><code>0</code> нь v1 тоглогчийн дууг ЧИМЭЭГҮЙ унтраана</td></tr>
+      <tr><td><code>campLayout.slots = null</code></td><td>Cosmetic нь <code>unlockSource</code>-оос гаргагддаг тул v1 тоглогчид зарим нь АЛЬ ХЭДИЙН нээлттэй — гэвч автоматаар <b>зүүх</b> нь тоглогчийн сонголтыг зохиох явдал</td></tr>
+    </table>
+    <div class="warnbar">
+      <b>Δ-5 — <code>rec()</code> нь түлхүүрийн багцыг шалгадаггүй.</b>
+      <code>contracts.yaml</code> нь <code>mastery</code>-д
+      <code>minProperties: 7 · propertyNames: SkillTag</code> гэж заасан ч
+      <code>shared/validate/dsl.ts</code>-д эквивалент БАЙХГҮЙ. <b>DSL өргөтгөхгүй</b>
+      (<code>sideQuestStats · dungeonStats</code> нь чөлөөт түлхүүртэй — бүх
+      хэрэглэгчийг хөндөнө). Оронд нь: migration бүтнээр үүсгэнэ +
+      <code>trackOf()</code> анхдагч буцаана + <code>[U]</code> тест ЯГ 7 · ЯГ 4-ийг
+      шалгана. <code>contract-parity.test.ts</code> нь энэ ялгааг <b>мэдэгдэж буй
+      зөрүү</b> болгон ил жагсаалтад авна.
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────── УРСГАЛ ─────────────────────────────── -->
+<section role="tabpanel" id="p-flow" aria-labelledby="t-flow" hidden>
+  <div class="panel">
+    <h2><code>claimQuest</code> — 8 → 11 алхам</h2>
+    <div class="warnbar">
+      <b>Δ-4 — дарааллын гэрээ ГУРВУУЛАНД хамаарна.</b> Mastery ба reputation нь
+      <b>амжилтын үнэлгээнээс ӨМНӨ</b> байх ЁСТОЙ. Эс бөгөөс
+      <code>masteryLevel</code> · <code>guildRank</code> предикаттай амжилт
+      <b>нэг үйлдэл ХОЦРОЖ</b> олгогдоно. <code>plan.md §13.2</code> зөвхөн
+      <code>claimQuest</code>-ийг заасан; <code>attemptDungeon</code> ба
+      <code>attemptBoss</code>-д ч ижил дүрэм.
+    </div>
+    <div class="seq">
+      1 &nbsp;stamina зарцуулалт <span class="sub">STAMINA_SPENT</span><br>
+      2 &nbsp;XP: side бол <code>sideQuestXp(...)</code>, эс бол <code>quest.xp</code>
+        <span class="sub">XP_GAINED · LEVEL_UP · SKILL_POINT_GAINED</span><br>
+      3 &nbsp;бүртгэл: main / dungeon(→<code>markDungeonPassed</code>) / side
+        <span class="sub">QUEST_COMPLETED | SIDE_QUEST_COMPLETED</span><br>
+      <b>3a ⬅ ШИНЭ <code>addMasteryXp(next, quest.tags, xpAward)</code></b>
+        <span class="sub">MASTERY_LEVEL_UP × k</span><br>
+      <b>3b ⬅ ШИНЭ <code>grantReputation(next, quest.tags, track, n)</code></b>
+        <span class="sub">REPUTATION_GAINED × g</span><br>
+      <b>3c ⬅ ШИНЭ side бол <code>evaluateChains(next, ctx)</code></b>
+        <span class="sub">XP_GAINED · CHAIN_COMPLETED</span><br>
+      4 &nbsp;streak ба combo · 5 cosmetic шагнал (coins, loot) · 6 тохиолдол ≤1<br>
+      7 &nbsp;амжилт — ЭЦСИЙН төлөв дээр <span class="sub">ACHIEVEMENT_UNLOCKED × m</span>
+    </div>
+    <ul class="tight">
+      <li>⚠ <code>3a</code>-гийн XP нь <b>олгогдсон</b> <code>xpAward</code> —
+        <code>quest.xp</code> БИШ (<code>P-17</code>). Давтагдах side quest-ийн 4 дэх
+        гүйцэтгэл <code>40 → 5</code> бол mastery-д ч <code>5</code>.</li>
+      <li>⚠ <code>3c</code> нь <code>3</code> ба <code>3a</code>-гийн ДАРАА —
+        <code>sideQuestStats</code> шинэчлэгдсэн байх ёстой, эс бөгөөс chain-ийг
+        «дуусаагүй» гэж уншина.</li>
+      <li>⚠ <code>3c</code>-ийн <code>bonusXp</code> нь <code>3a</code>-д ОРОХГҮЙ
+        (<code>A-LLD2-3</code>): chain нь <code>tags</code>-гүй нэгж, 4 алхам аль
+        хэдийн олгосон — давхар тооцоо болно.</li>
+      <li><b>Дарааллын тест:</b> <code>events</code> массивын индексээр
+        <code>MASTERY_LEVEL_UP &lt; ACHIEVEMENT_UNLOCKED</code> ба
+        <code>REPUTATION_GAINED &lt; ACHIEVEMENT_UNLOCKED</code>.</li>
+    </ul>
+  </div>
+
+  <div class="panel">
+    <h2>Chain-ийн 4 дэх алхам — офлайн, сервергүй</h2>
+<pre>UI  claimQuest(sq-chain-4) ──► gameService ──► applyAction ──► claimQuest
+   1 stamina −2 ──► 2 addXp(+30) ──► 3 sideQuestStats[sq-chain-4] = {1, at}
+   3a addMasteryXp([storytelling], 30) ──► storytelling 4→5   → MASTERY_LEVEL_UP
+   3b grantReputation([storytelling],'side',1) ──► guild-signal +2 → REPUTATION_GAINED
+   3c evaluateChains ──► chainComplete(chain-story) = true
+                     ──► addXp(+40) ──► CHAIN_COMPLETED { bonusXp: 40 }
+                     ──► completedChainIds += chain-story
+   4 streak ──► 5 loot ──► 6 encounter
+   7 evaluateAchievements ──► ach-storyteller-5 (masteryLevel 5) ✓
+                          ──► ach-first-chain  (chainsCompleted 1) ✓
+
+   events[] ──► fx.play() ──► 3 анимац (MAX_CONCURRENT_FX), дуу, 12 aria-live мөр
+   төлөв   ──► persistence.save() (debounce 300 ms) ──► localStorage
+   actionQueue ──► сервер БАЙХГҮЙ → дараалалд ҮЛДЭНЭ (OFF-6)</pre>
+    <p class="note">⚠ <code>7</code>-д хоёр амжилт зэрэг олгогдож байгаа нь
+    <code>3a</code>/<code>3b</code> нь <code>7</code>-оос ӨМНӨ байсны шууд үр дүн.</p>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <h2>Hard mode rematch → capstone</h2>
+<pre>attemptBoss(boss-w2, total=52, difficulty='hard')
+  tierFor(52,'hard') = 'advanced'    (HARD.advanced = 52)
+  bossAttempts += { …, difficulty:'hard' }
+  appendReplay({ kind:'boss', outcome:'passed' })
+  BOSS_ATTEMPT_LOGGED { tier, difficulty, personalBest: 52 }
+  (дууссан boss → XP 0, mastery 0, rep 0)
+  evaluateAchievements → ach-hard-advanced ✓
+  ⇣
+unlockSkill('sk-blender-capstone')
+  capstoneGaps() → []   (mastery 8 ✓ · tier-1 ✓ · advanced ✓)
+  masteryPoints 3 → 2   → SKILL_UNLOCKED</pre>
+      <p class="note">⚠ Rematch-д <code>2·3·4·6</code> АЖИЛЛАНА (дээд амжилт ба
+      <code>bossPersonalBest</code> предикат шинэчлэгдэнэ), <code>5…5b</code> алгасагдана
+      (XP 0 — <code>BS-2</code>).</p>
+    </div>
+    <div class="panel">
+      <h2>Сүлжээ бүрэн тасарсан (<code>OFF-6</code>)</h2>
+<pre>main.ts эхлэх
+  ├ persistence.load()  → localStorage      (сүлжээгүй)
+  ├ buildPack()         → bundle дотроос    (сүлжээгүй)
+  ├ apiClient.health()  → fetch REJECT → sync.status = 'offline'
+  ├ shell: «Offline — playing locally» ТЕКСТ (өнгө БИШ — VIS-4)
+  └ 9 дэлгэц бүгд ажиллана; үйлдэл actionQueue-д хуримтлагдана
+uncaught алдаа: 0</pre>
+      <p class="note">Гадаад origin ТЭГ (<code>OFF-2</code>): цорын ганц зөвшөөрөгдсөн
+      гадаад URL нь контент дахь <code>tutorialRefs</code> — тоглогч ӨӨРӨӨ дардаг,
+      автоматаар ТАТАГДАХГҮЙ. Сканнер энэ ялгааг ил шалгана.</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2><code>Δ-1</code> — <code>dungeonStats</code>-д ХОЁР бичигч зам байв</h2>
+    <p class="sub"><code>plan.md §11.1</code> нь бичигчийг <code>dungeons.ts</code> гэж
+    заасан. Гэвч <code>quests.ts:70-73</code> нь <code>track:'dungeon'</code> quest-ийг
+    МӨН дуусгаж <code>completedDungeonIds</code>-д бичдэг
+    (<code>content/index.ts → questForDungeon</code> нь dungeon бүрийг quest хэлбэрээр
+    МӨН гаргадаг). Хоёр зам, нэг талбар.</p>
+<pre>// dungeons.ts — ХОЁУЛАА энэ туслахаар дамжина
+export function markDungeonPassed(state, dungeonId, at): GameState {
+  const done = state.completedDungeonIds.includes(dungeonId)
+    ? state.completedDungeonIds : [...state.completedDungeonIds, dungeonId];
+  return { ...state, completedDungeonIds: done,
+           dungeonStats: { ...state.dungeonStats,
+                           [dungeonId]: { lastPassedDate: dayOf(at) } } };
+}</pre>
+    <p class="note">⚠ <code>lastPassedDate</code> нь <b>дахин тэнцэх бүрд</b>
+    шинэчлэгдэнэ (XP 0 байсан ч) — refresher нь «хамгийн сүүлд хэзээ хүрсэн»-ийг
+    хэмждэг. Шинэ архитектурын дүрэм: <code>dungeonStats:</code> бичилт
+    <code>shared/core/**</code> дотор ЗӨВХӨН <code>dungeons.ts</code> ба
+    <code>saves.ts</code>(<code>newGame</code>)-д олдоно.</p>
+  </div>
+</section>
+
+<!-- ─────────────────────────────── ЭРСДЭЛ ─────────────────────────────── -->
+<section role="tabpanel" id="p-risk" aria-labelledby="t-risk" hidden>
+  <div class="panel">
+    <h2>Загварын шатанд илэрсэн 5 зөрүү (Δ) — <code>plan.md §16</code>-аас ӨӨР</h2>
+    <table>
+      <tr><th>#</th><th>Зөрүү</th><th>Хаана илэрсэн</th><th>Шийдэл</th><th>Task</th></tr>
+      <tr><td>Δ-1</td><td><code>dungeonStats</code>-д ХОЁР бичигч зам</td><td><code>quests.ts:70-73</code> ↔ <code>content/index.ts</code></td><td><code>markDungeonPassed</code> ГАНЦ туслах + сканнер</td><td>T-09 · T-15</td></tr>
+      <tr><td>Δ-2</td><td><code>SKL-2</code>-ийн «track-д харгалзах boss» тодорхойлогдоогүй</td><td><code>spec.md §4.4</code> ↔ <code>mainQuests.json</code></td><td><code>boss.tags ∋ track</code> + <code>[C]</code> дүрэм C-02</td><td>T-14 · T-20 · T-25</td></tr>
+      <tr><td>Δ-3</td><td><code>plan.md §1</code>-ийн «skill node ≥4» нь <code>SKL-1</code>-тэй зөрчилдөнө</td><td><code>plan.md §1</code> ↔ <code>spec.md SKL-1</code></td><td>Шинэ node = <b>14</b>, нийт 38</td><td>T-19</td></tr>
+      <tr><td>Δ-4</td><td>Event дарааллын гэрээ зөвхөн <code>claimQuest</code>-д зурагдсан</td><td><code>dungeons.ts:78-96</code> · <code>boss.ts:88-94</code></td><td>Гурвуулангийн дараалал + индексийн тест</td><td>T-09 · T-13</td></tr>
+      <tr><td>Δ-5</td><td><code>rec()</code> түлхүүрийн багцыг шалгадаггүй</td><td><code>dsl.ts</code> ↔ <code>contracts.yaml</code></td><td>DSL өргөтгөхгүй; migration + <code>trackOf</code> + <code>[U]</code></td><td>T-05 · T-06 · T-07</td></tr>
+    </table>
+    <p class="note">Δ-1…Δ-5 нь <b>блоклогч БИШ</b> — тус бүр нэг л шийдэл боломжтой,
+    эсвэл анхдагч замтай.</p>
+  </div>
+
+  <div class="panel">
+    <h2>Bundle-ийн төсөв — <code>QX-3</code> (суурь ХЭМЖИГДСЭН)</h2>
+<pre>cd web-app && npm ci && npm run build          # 2026-09-16, vite 8.3.0
+dist/assets/index-*.js    147,100 B raw  →  44,897 B gzip
+dist/assets/index-*.css     4,861 B raw  →   1,709 B gzip
+─────────────────────────────────────────────────────────
+СУУРЬ (JS+CSS, gzip level 9)             →  46,606 B
+QX-3-ийн тааз (× 1.30)                   →  60,587 B
+БОЛОМЖИТ НЭМЭГДЭЛ                        →  13,981 B</pre>
+    <table>
+      <tr><th>Зүйл</th><th>raw</th><th>gzip ≈</th></tr>
+      <tr><td>Контент JSON (60 cosmetic · 4 boss · 14 skill · 19 амжилт · guild/chain)</td><td>21.5 KB</td><td>4.7 KB</td></tr>
+      <tr><td><code>theme.ts</code> (122 hex)</td><td>1.9 KB</td><td>0.9 KB</td></tr>
+      <tr><td><code>styles.css</code> (19×6 + cb блок + 12 FX класс)</td><td>3.5 KB</td><td>0.8 KB</td></tr>
+      <tr><td>6 шинэ домэйн модуль</td><td>12 KB</td><td>3.0 KB</td></tr>
+      <tr><td><code>fx.ts</code> · <code>trophies.ts</code> · дэлгэцийн өөрчлөлт</td><td>10 KB</td><td>2.4 KB</td></tr>
+      <tr><th>Нийт</th><th>48.9 KB</th><th>≈11.8 KB</th></tr>
+    </table>
+    <div class="warnbar">
+      <b>Үлдэх нөөц ≈2.2 KB gzip (16%) — БАГА.</b> Хэтрэх магадлал өндөр зүйл:
+      <code>T-23</code>-ийн cosmetic каталог 60-аас хэтрэх, boss-ийн текст урт байх.
+      <b>Сааруулалт (өртөг өсөх дарааллаар):</b>
+      <ol style="margin:6px 0 0">
+        <li>cb хэсгийг 6×8 биш 1×8 болгосон нь <b>аль хэдийн</b> ≈0.5 KB хэмнэв.</li>
+        <li><code>cosmetics.json</code>-д <code>description</code> НЭМЭХГҮЙ — Trophy
+            Room-ийн текст <code>unlockSource</code>-оос генерацлагдана.</li>
+        <li>Хэтэрвэл контент пакетыг тусдаа chunk (<code>import()</code>) болгоно.
+            ⚠ Энэ нь <code>QX-3</code>-ийн <b>хэмжилтийн тодорхойлолтыг</b> өөрчилнө —
+            <b>спекийн шийдвэр</b>, чимээгүй хийхгүй.</li>
+      </ol>
+    </div>
+    <p class="note">⚠ Хэмжих арга ЯГ тогтоов: <code>dist/**</code>-ийн <code>.js</code> ба
+    <code>.css</code> БҮГД · <code>zlib.gzipSync(buf, { level: 9 })</code> ·
+    <code>index.html</code> ОРОХГҮЙ. (Vite-ийн өөрийн тайлан 47,060 B — өөр gzip
+    тохиргоотой тул ТҮҮНИЙГ ашиглахгүй.)</p>
+  </div>
+
+  <div class="panel">
+    <h2>Гүйцэтгэл — <code>QX-6</code>-ийн шугаман байдлын нотолгоо</h2>
+    <table>
+      <tr><th>Алхам</th><th>Зардал</th><th>Тэмдэглэл</th></tr>
+      <tr><td><code>pack.quests.find</code></td><td><code>O(n_quests)</code></td><td>Шугаман</td></tr>
+      <tr><td><code>addXp</code></td><td><code>O(1)</code></td><td>9 босго</td></tr>
+      <tr><td><code>addMasteryXp</code></td><td><code>O(|tags|) ≤ O(7)</code></td><td>Тогтмол</td></tr>
+      <tr><td><code>grantReputation</code></td><td><code>O(|tags| × 4)</code></td><td>Тогтмол</td></tr>
+      <tr><td><code>evaluateChains</code></td><td><code>O(n_chains × 4)</code></td><td>Шугаман</td></tr>
+      <tr><td><code>rollRewards</code> · <code>maybeEncounter</code></td><td><code>O(n_loot + n_enc)</code></td><td>Шугаман</td></tr>
+      <tr><td><code>evaluateAchievements</code></td><td><code>O(n_ach × (1 + |sideQuestStats| + |bossAttempts|))</code></td><td>⚠ хамгийн том</td></tr>
+    </table>
+    <p class="sub">Нийт <code>O(n)</code>. <b>Үржвэр гарах цорын ганц цэг</b> нь
+    <code>evaluateAchievements</code>-ийн доторх <code>bossAttempts</code> гүйлгэлт —
+    тэр нь <b>контентын масштабаас ХАМААРАХГҮЙ</b> (тоглолтын түүх), тиймээс
+    «контентын хэмжээнд шугаман» нөхцөл хангагдана. 10× пакет + 500 оролдлого →
+    <code>40 × 500 = 20,000</code> харьцуулалт ≈ 1 ms, <b>≤50 ms</b>-ийн төсөвт багтана.</p>
+    <p class="note">⚠ Cosmetic-ийн нээлт (<code>O(60 × isUnlocked)</code>) нь домэйны
+    замд БАЙХГҮЙ — зөвхөн <code>gameService.view.cosmetics()</code> (Trophy Room
+    зурахад). Үйлдэл тутам үнэлбэл төсөв 2 дахин өснө.</p>
+  </div>
+
+  <div class="panel">
+    <h2>Хүн шийдэх цэгүүд</h2>
+    <p class="sub"><code>plan.md §7</code>-ийн H-1…H-6 <b>хүчинтэй хэвээр</b>. Энэ шат нэмж:</p>
+    <table>
+      <tr><th>#</th><th>Цэг</th><th>Анхдагч зам</th><th>Сэлгэх өртөг</th></tr>
+      <tr><td>H-1′</td><td><code>masteryPoints</code> скаляр уу, track тутам уу</td><td>Скаляр + tier-2-т <code>mastery.level ≥ 2</code> босго</td><td>Гэрээний 1 талбар + 3 мөр код; <code>T-14</code> · <code>T-31</code></td></tr>
+      <tr><td>H-7</td><td>Guild-ийн <code>id</code> (<code>GUILD_IDS</code>)</td><td><code>guild-cut · guild-form · guild-frame · guild-signal</code></td><td><code>constants.ts</code>-ийн 1 мөр + <code>guilds.json</code></td></tr>
+    </table>
+    <p class="note">⚠ Хоёул <b>блоклохгүй</b>: нэг тогтмол / нэг талбарын хэлбэрт хүрдэг.</p>
+  </div>
+
+  <div class="panel">
+    <h2>Энэ шатанд ЯГ юуг ажиллуулж шалгав</h2>
+    <div class="grid2">
+      <div>
+        <h3 style="color:var(--ok)">Шалгасан</h3>
+        <table>
+          <tr><td><code>contracts.yaml</code> задарна</td><td><span class="tag t-keep">✅ 50 схем</span></td></tr>
+          <tr><td><code>$ref</code> бүрэн байдал</td><td><span class="tag t-keep">✅ тасарсан 0</span></td></tr>
+          <tr><td><code>GameState.example</code></td><td><span class="tag t-keep">✅ 27/27</span></td></tr>
+          <tr><td>Enum-ийн тоо</td><td><span class="tag t-keep">✅ 14 · 28 · 8</span></td></tr>
+          <tr><td>228 контрастын хос</td><td><span class="tag t-keep">✅ 228/228</span></td></tr>
+          <tr><td>Bundle-ийн суурь</td><td><span class="tag t-keep">✅ 46,606 B</span></td></tr>
+          <tr><td>Skill track хамрах хүрээ</td><td><span class="tag t-keep">✅ 7/7</span></td></tr>
+        </table>
+      </div>
+      <div>
+        <h3 style="color:var(--warn)">ШАЛГААГҮЙ (ил мэдэгдэл)</h3>
+        <table>
+          <tr><td><code>npm test</code> (439 тест)</td><td><span class="tag t-chg">код хөндөгдөөгүй</span></td></tr>
+          <tr><td>Bundle-ийн БОДИТ нэмэгдэл</td><td><span class="tag t-chg">§11.2 нь тооцоо; T-37-д</span></td></tr>
+          <tr><td>Контентын бодит текстийн хэмжээ</td><td><span class="tag t-chg">T-19…T-24</span></td></tr>
+          <tr><td>axe critical = 0 (шинэ дэлгэц)</td><td><span class="tag t-chg">T-34</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Тестийн төсөв — AC → файл</h2>
+    <table>
+      <tr><th>AC бүлэг</th><th>Файл</th><th>Шинэ ≈</th></tr>
+      <tr><td>VIS-1…3</td><td><code>tests/ui/theme.test.ts</code> <span class="tag t-new">шинэ</span></td><td>228 баталгаа / ~12</td></tr>
+      <tr><td>VIS-4…8</td><td><code>tests/a11y/a11y.test.ts</code></td><td>~14</td></tr>
+      <tr><td>FX-1…7</td><td><code>tests/ui/fx.test.ts</code> <span class="tag t-new">шинэ</span></td><td>~18</td></tr>
+      <tr><td>MST-1…6</td><td><code>tests/unit/core/mastery.test.ts</code> <span class="tag t-new">шинэ</span></td><td>~22</td></tr>
+      <tr><td>SKL-1…5</td><td><code>tests/unit/core/skillTree.test.ts</code> <span class="tag t-new">шинэ</span></td><td>~20</td></tr>
+      <tr><td>BSX-1…6</td><td><code>tests/unit/core/boss.test.ts</code></td><td>~16 (61 утгын хүснэгт)</td></tr>
+      <tr><td>RET-1…3</td><td><code>tests/unit/core/chains.test.ts</code> <span class="tag t-new">шинэ</span></td><td>~10</td></tr>
+      <tr><td>RET-4</td><td><code>tests/unit/core/dailyMission.test.ts</code></td><td>~6</td></tr>
+      <tr><td>RET-5, 6</td><td><code>tests/unit/core/reputation.test.ts</code> <span class="tag t-new">шинэ</span></td><td>~12</td></tr>
+      <tr><td>RET-7, 8</td><td><code>tests/unit/core/achievements.test.ts</code></td><td>~12</td></tr>
+      <tr><td>COS-1…4</td><td><code>tests/unit/core/cosmetics.test.ts</code> <span class="tag t-new">шинэ</span></td><td>~16</td></tr>
+      <tr><td>OFF-1, 5…7</td><td><code>tests/integration/offline.test.ts</code> <span class="tag t-new">шинэ</span></td><td>~8</td></tr>
+      <tr><td>OFF-2…4</td><td><code>tests/offline/no-external.test.ts</code> <span class="tag t-new">шинэ</span></td><td>~12</td></tr>
+      <tr><td>SVX-1…4</td><td><code>tests/unit/save.test.ts</code> · <code>integration/persistence.test.ts</code></td><td>~18</td></tr>
+      <tr><td>QX-1, 7 · D-6</td><td><code>tests/architecture.test.ts</code></td><td>~19</td></tr>
+      <tr><td>QX-2</td><td><code>server/tests/{api,contract}.test.ts</code></td><td>~12 (server)</td></tr>
+      <tr><td>QX-3 · QX-6</td><td><code>tests/quality/{bundle,perf}.test.ts</code> <span class="tag t-new">шинэ</span></td><td>~4</td></tr>
+      <tr><td>QX-5</td><td><code>tests/unit/content.test.ts</code> (14 «хазна»)</td><td>~16</td></tr>
+      <tr><th>Нийт</th><th>web-app ≈185 · server ≈12</th><th>624 · 88</th></tr>
+    </table>
+    <p class="note"><code>QX-1</code> нь тестийн тоо БУУРАХГҮЙГ л шаарддаг —
+    эдгээр нь <b>төсөв</b>, AC БИШ. Тест устгах, <code>skip</code> хийх, сулруулах ХОРИОТОЙ.</p>
+  </div>
+</section>
+
+</div>
+
+<script>
+/* ───────── өгөгдөл: lld.md §9.1-ийн хүснэгттэй ИЖИЛ ───────── */
+const TOKENS = ['bg','surface','surface-2','border','border-strong','text','muted',
+  'text-on-focus','accent','ok','warn','focus','btn-bg','btn-bg-hover',
+  'badge-ok-bg','badge-ok-text','badge-warn-bg','badge-warn-text','pip-off'];
+
+const PALETTES = {
+  camp: ['0c0f16','161b25','1f2530','5c6d8a','7486a6','e9ecf1','a5afc0','000000','5c9aeb','5ae293','f7bc45','ffdd33','1b2a43','24395e','0c2717','98ebbb','291f0d','f9d894','69758b'],
+  w1:   ['0c1116','161f25','1f2930','587284','6d8ca2','e9eef1','a5b5c0','000000','5cc7eb','5ae293','f7bc45','ffdd33','1b3243','24465e','0c2717','98ebbb','291f0d','f9d894','667987'],
+  w2:   ['100c16','1d1625','271f30','786192','917bab','ede9f1','b2a5c0','000000','b15feb','5ae293','f7bc45','ffdd33','2e1b43','3f245e','0c2717','98ebbb','291f0d','f9d894','7c6c8f'],
+  w3:   ['0c1612','16251f','1f302a','517a6b','639b87','e9f1ee','a5c0b6','000000','5cebc7','5ae293','f7bc45','ffdd33','1b4334','245e49','0c2717','98ebbb','291f0d','f9d894','618075'],
+  w4:   ['160f0c','251b16','30251f','846858','a2816e','f1ece9','c0afa5','000000','eb9e5c','5ae293','f7bc45','ffdd33','432a1b','5e3924','0c2717','98ebbb','291f0d','f9d894','877266'],
+  w5:   ['160c11','25161d','301f28','8d5e75','a8768f','f1e9ed','c0a5b3','000000','eb5caf','5ae293','f7bc45','ffdd33','431b2f','5e2441','0c2717','98ebbb','291f0d','f9d894','8d6a7b'],
+};
+const PAL_LABEL = { camp:'camp (Camp · Settings · Trophy Room)', w1:'w1 — Cut Room',
+  w2:'w2 — Form', w3:'w3 — Motion', w4:'w4 — Frame', w5:'w5 — Signal' };
+
+/* cb нь ЯГ 8 токен, БҮХ дэлхийд ижил (lld.md §9.1.3) */
+const CB_OVERRIDE = { accent:'eb5ceb', ok:'5ab0e2', warn:'f7c845', focus:'ffe433',
+  'badge-ok-bg':'0c1d27','badge-ok-text':'98cdeb','badge-warn-bg':'29210d','badge-warn-text':'f9de94' };
+
+const TEXT_PAIRS = [['text','bg'],['text','surface'],['text','surface-2'],['text','btn-bg'],
+  ['text','btn-bg-hover'],['muted','bg'],['muted','surface'],['muted','surface-2'],
+  ['accent','surface'],['ok','surface'],['warn','surface'],
+  ['badge-ok-text','badge-ok-bg'],['badge-warn-text','badge-warn-bg'],['text-on-focus','focus']];
+const UI_PAIRS = [['focus','bg'],['focus','surface'],['border','surface'],
+  ['border-strong','surface'],['pip-off','surface']];
+
+const FX = [
+  ['LEVEL_UP','fx-levelup',880,'fx-pop 280ms','data.rank · data.level',0],
+  ['QUEST_COMPLETED','fx-claim',660,'fx-pop 200ms','data.title',0],
+  ['SIDE_QUEST_COMPLETED','fx-side',620,'fx-pop 200ms','data.title · data.completions',0],
+  ['DUNGEON_PASSED','fx-pass',740,'fx-pop 200ms','data.correct / data.total',0],
+  ['DUNGEON_FAILED','fx-fail',320,'fx-shake 240ms','data.nextStep',0],
+  ['ACHIEVEMENT_UNLOCKED','fx-achieve',990,'fx-pop 280ms','data.title',0],
+  ['LOOT_DROPPED','fx-loot',1040,'fx-pop 200ms','loot нэр + rarity ТЕКСТЭЭР (VIS-4)',0],
+  ['BOSS_ATTEMPT_LOGGED','fx-boss',700,'fx-pop 200ms','data.tier · data.total · data.difficulty (+ data.message)',0],
+  ['STREAK_EXTENDED','fx-streak',820,'fx-pop 200ms','streak-ийн өдрийн тоо',0],
+  ['MASTERY_LEVEL_UP','fx-mastery',900,'fx-pop 280ms','data.tag · data.level',1],
+  ['REPUTATION_GAINED','fx-rep',580,'fx-pop 200ms','data.guildId · data.rank',1],
+  ['CHAIN_COMPLETED','fx-chain',960,'fx-pop 280ms','data.chainId · data.bonusXp',1],
+];
+
+/* ───────── контраст ───────── */
+const toRgb = h => [0,2,4].map(i => parseInt(h.slice(i,i+2),16));
+const lin = c => (c<=0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055,2.4));
+const lum = h => { const [r,g,b]=toRgb(h); return 0.2126*lin(r/255)+0.7152*lin(g/255)+0.0722*lin(b/255); };
+const ratio = (a,b) => { const x=lum(a), y=lum(b); const [hi,lo]=x>y?[x,y]:[y,x]; return (hi+0.05)/(lo+0.05); };
+
+function paletteOf(key, cb){
+  const out = {};
+  TOKENS.forEach((t,i) => out[t] = PALETTES[key][i]);
+  if (cb) Object.assign(out, CB_OVERRIDE);
+  return out;
+}
+
+/* ───────── табууд ───────── */
+const tabs = [...document.querySelectorAll('nav.tabs button')];
+tabs.forEach(btn => btn.addEventListener('click', () => {
+  tabs.forEach(b => {
+    const on = b === btn;
+    b.setAttribute('aria-selected', String(on));
+    document.getElementById(b.getAttribute('aria-controls')).hidden = !on;
+  });
+}));
+
+/* ───────── палитрын сонголт ───────── */
+function fillSelect(sel){
+  sel.innerHTML = Object.keys(PALETTES).map(k => `<option value="${k}">${PAL_LABEL[k]}</option>`).join('');
+}
+const palSel = document.getElementById('palSel'), cbChk = document.getElementById('cbChk');
+const palSel2 = document.getElementById('palSel2'), cbChk2 = document.getElementById('cbChk2');
+fillSelect(palSel); fillSelect(palSel2); palSel2.value = 'w2';
+
+function renderPalette(){
+  const p = paletteOf(palSel.value, cbChk.checked);
+  document.getElementById('swatches').innerHTML = TOKENS.map(t => {
+    const v = '#' + p[t];
+    const cbMark = (cbChk.checked && t in CB_OVERRIDE) ? ' <span class="tag t-new">cb</span>' : '';
+    return `<div class="sw"><span class="chip" style="background:${v}"></span>
+      <code>--${t}</code> <span class="note" style="margin:0">${v}</span>${cbMark}</div>`;
+  }).join('');
+
+  let fails = 0;
+  const row = ([a,b], min) => {
+    const r = ratio(p[a], p[b]);
+    const ok = r >= min; if (!ok) fails++;
+    return `<tr>
+      <td><span class="chip" style="background:#${p[a]}"></span><code>${a}</code></td>
+      <td><span class="chip" style="background:#${p[b]}"></span><code>${b}</code></td>
+      <td>≥${min}</td>
+      <td class="${ok?'ratio-ok':'ratio-bad'}">${r.toFixed(2)}:1 ${ok?'✓':'✗'}</td></tr>`;
+  };
+  document.querySelector('#pairs tbody').innerHTML =
+    `<tr><th colspan="4">Текст — ≥4.5:1 (14 хос)</th></tr>` +
+    TEXT_PAIRS.map(pr => row(pr, 4.5)).join('') +
+    `<tr><th colspan="4">UI бүрэлдэхүүн · хүрээ · чимэглэл — ≥3.0:1 (5 хос)</th></tr>` +
+    UI_PAIRS.map(pr => row(pr, 3.0)).join('');
+
+  const all = [...TEXT_PAIRS.map(pr=>ratio(p[pr[0]],p[pr[1]])), ...UI_PAIRS.map(pr=>ratio(p[pr[0]],p[pr[1]]))];
+  document.getElementById('palVerdict').innerHTML = fails === 0
+    ? `<span class="tag t-keep">19/19 хос ✓</span> хамгийн муу ${Math.min(...all).toFixed(2)}:1 · хамгийн сайн ${Math.max(...all).toFixed(2)}:1`
+    : `<span class="tag t-bad">${fails} хос УНАВ</span>`;
+}
+palSel.addEventListener('change', renderPalette);
+cbChk.addEventListener('change', renderPalette);
+renderPalette();
+
+/* cb swatch багц */
+document.getElementById('cbSwatches').innerHTML = Object.entries(CB_OVERRIDE).map(([t,v]) => {
+  const base = PALETTES.camp[TOKENS.indexOf(t)];
+  return `<div class="panel" style="background:var(--panel2);margin:0;padding:10px">
+    <code>--${t}</code>
+    <div class="sw"><span class="chip" style="background:#${base}"></span><span class="note" style="margin:0">энгийн #${base}</span></div>
+    <div class="sw"><span class="chip" style="background:#${v}"></span><span class="note" style="margin:0">cb #${v}</span></div>
+  </div>`;
+}).join('');
+
+/* ───────── дэлгэцийн дуурайлт ───────── */
+function mocks(p){
+  const c = t => '#' + p[t];
+  const box = `background:${c('surface')};border:1px solid ${c('border')};color:${c('text')}`;
+  const btn = `background:${c('btn-bg')};border:1px solid ${c('border-strong')};color:${c('text')}`;
+  const bOk = `background:${c('badge-ok-bg')};color:${c('badge-ok-text')}`;
+  const bWarn = `background:${c('badge-warn-bg')};color:${c('badge-warn-text')}`;
+  const bar = pct => `<div class="bar" style="background:${c('surface-2')}"><i style="width:${pct}%;background:${c('accent')}"></i></div>`;
+  const tracks = [['Video Editing',6,72,0],['Blender',8,40,1],['Animation',4,55,0],
+    ['Cinematography',3,20,0],['Audio',2,80,0],['VFX',2,10,0],['Storytelling',5,60,0]];
+
+  return `
+  <div class="mock" style="${box}">
+    <h4>#/camp — Camp v2 <span class="badge" style="${bOk}">VIS-6</span></h4>
+    <div class="row"><span>Cinematic Artist · Lv 8</span><span style="color:${c('muted')}">5,240 / 5,500 XP</span></div>
+    ${bar(88)}
+    <div class="row"><span>Stamina</span>
+      <span class="pips">${[1,1,1,1,1,1,1,0,0,0].map(on=>`<i style="background:${on?c('ok'):c('pip-off')}"></i>`).join('')}
+      </span><span class="pips-text" style="color:${c('muted')}">7 / 10</span></div>
+    <div class="row"><span>Streak</span><span class="badge" style="${bOk}">🔥 12 days</span></div>
+    <div class="row"><span>Daily mission</span><span class="badge" style="${bWarn}">Refresher · dg-uv-basics</span></div>
+    <h3 style="color:${c('muted')};margin:12px 0 6px;font-size:11px">MASTERY TRACKS</h3>
+    <div class="mini">
+      ${tracks.map(([n,lv,pct,pr]) => `
+        <span>${n}</span>
+        <span style="color:${c('muted')}">Lv ${lv}${pr?` <span style="color:${c('warn')}">★${pr}</span>`:''}</span>
+        <div class="bar" style="background:${c('surface-2')}"><i style="width:${pct}%;background:${c('accent')}"></i></div>`).join('')}
+    </div>
+    <div class="row" style="margin-top:10px"><span>Signal Chain</span>
+      <span class="badge" style="${bOk}">Rank 3 / 4 · 58 rep</span></div>
+    <div class="note">⚠ Түвшин ба зэрэглэл ТЕКСТЭЭР — зөвхөн өнгөөр БИШ (<code>VIS-4</code>).
+    <code>role="img"</code> + <code>aria-label</code> нь bar тутамд.</div>
+  </div>
+
+  <div class="mock" style="${box}">
+    <h4>#/trophies — Trophy Room <span class="badge" style="${bOk}">COS-3</span></h4>
+    <div class="row" style="flex-wrap:wrap;gap:4px">
+      ${['All','Avatar Frame','Camp Banner','Title','Decoration','UI Accent','Badge Frame']
+        .map((f,i)=>`<button style="${i===0?`background:${c('accent')};border:1px solid ${c('accent')};color:${c('bg')}`:btn}">${f}</button>`).join('')}
+    </div>
+    <div class="card" style="background:${c('surface-2')};border:1px solid ${c('border')}">
+      <div class="row"><b>✓ Golden Razor Frame</b><span class="badge" style="${bOk}">Unlocked</span></div>
+      <div style="color:${c('muted')}">Rare · Avatar Frame</div>
+      <div style="color:${c('muted')}">From: Achievement “First Blood”</div>
+      <div class="row" style="margin-top:6px"><span></span>
+        <span><button style="${btn}">Equip</button> <button style="${btn}">Unequip</button></span></div>
+    </div>
+    <div class="card" style="background:${c('surface-2')};border:1px solid ${c('border')}">
+      <div class="row"><b>🔒 Signal Chain Banner</b><span class="badge" style="${bWarn}">Locked</span></div>
+      <div style="color:${c('muted')}">Epic · Camp Banner</div>
+      <div>To unlock: reach Signal Chain guild rank 3 <span style="color:${c('muted')}">(currently 1)</span></div>
+    </div>
+    <div class="note">⚠ <code>Equip</code> товч нь нээгдээгүй элементэд <b>огт байхгүй</b>
+    (<code>disabled</code> биш) — <code>PREREQ_NOT_MET</code>-д хүргэх замыг UI-д
+    нээлттэй үлдээх нь мухардал. Домэйн шалгалт тэр ч байсан хэвээр.</div>
+  </div>
+
+  <div class="mock" style="${box}">
+    <h4>#/skills — Skills v2 <span class="badge" style="${bOk}">SKL-2 · MST-3</span></h4>
+    <div class="row" style="flex-wrap:wrap;gap:4px">
+      ${['Video Editing','Blender','Animation','Cinematography','Audio','VFX','Storytelling']
+        .map((t,i)=>`<button style="${i===1?`background:${c('accent')};border:1px solid ${c('accent')};color:${c('bg')}`:btn}">${t}</button>`).join('')}
+    </div>
+    <div class="card" style="background:${c('surface-2')};border:1px solid ${c('border-strong')}">
+      <div class="row"><b>Blender · Mastery Lv 8 <span style="color:${c('warn')}">★1</span></b>
+        <span style="color:${c('muted')}">1,240 XP</span></div>
+      ${bar(80)}
+      <div class="row"><span style="color:${c('muted')}">Skill points: 2 · Mastery points: 3</span>
+        <button style="${btn}">Prestige</button></div>
+      <div class="note" style="color:${c('muted')}">⚠ <code>Prestige</code> товч нь
+        level 10 биш үед <b>байхгүй</b> — <code>PREREQ_NOT_MET</code> руу хүргэхгүй.</div>
+    </div>
+    <div style="color:${c('muted')};font-size:11px;margin-top:8px">TIER 1</div>
+    <div class="row"><span>○ Blender Navigation <span class="badge" style="${bOk}">✓</span></span>
+      <span>○ Modeling <span class="badge" style="${bOk}">✓</span></span>
+      <span>○ UV/Texturing <button style="${btn}">Unlock · 1 SP</button></span></div>
+    <div style="color:${c('muted')};font-size:11px;margin-top:8px">TIER 2</div>
+    <div class="row"><span>○ Procedural Shading</span><button style="${btn}">Unlock · 1 MP</button></div>
+    <div style="color:${c('muted')};font-size:11px;margin-top:8px">TIER 3 — CAPSTONE</div>
+    <div class="card" style="background:${c('surface-2')};border:1px dashed ${c('border-strong')}">
+      <div class="row"><b>◆ Pipeline Architect</b><span class="badge" style="${bWarn}">🔒 Locked</span></div>
+      <ul class="tight" style="color:${c('text')}">
+        <li>Blender mastery 8 <span style="color:${c('ok')}">✓</span></li>
+        <li>all 6 tier-1 nodes <span style="color:${c('warn')}">✗ (2 left)</span></li>
+        <li>advanced attempt on a Blender boss <span style="color:${c('warn')}">✗</span></li>
+      </ul>
+    </div>
+    <div class="row" style="margin-top:8px"><span style="color:${c('muted')}">Reflect (respec Blender)</span>
+      <button style="${btn}">Available in 4 days</button></div>
+  </div>
+
+  <div class="mock" style="${box}">
+    <h4>#/quests → Boss · hard mode <span class="badge" style="${bOk}">BSX-2…5</span></h4>
+    <div class="row"><span>Difficulty</span>
+      <span><label><input type="radio" name="d" checked> Standard</label>
+            <label style="margin-left:10px"><input type="radio" name="d"> Hard</label></span></div>
+    <div class="card" style="background:${c('surface-2')};border:1px solid ${c('border')}">
+      <div>Thresholds — <b>Standard:</b> MVP 35 · Advanced 45 · Mastery 52</div>
+      <div><b>Hard:</b> 41 · 52 · <b style="color:${c('warn')}">60</b>
+        <span style="color:${c('muted')}">(all six categories must be 10)</span></div>
+    </div>
+    <div class="row"><span>Personal best · Standard</span><span class="badge" style="${bOk}">47 · Advanced</span></div>
+    <div class="row"><span>Personal best · Hard</span><span class="badge" style="${bWarn}">38 · Failed</span></div>
+    <div class="row" style="margin-top:6px"><span style="color:${c('muted')}">6 ангилал × 0..10</span>
+      <button style="${btn}">Log attempt</button></div>
+    <div class="note">⚠ Rematch хязгааргүй — cooldown БАЙХГҮЙ (<code>BSX-4</code>).
+    Унасан оролдлогын дасгалжуулах мессеж нь standard/hard хоёуланд ЯГ ижил
+    (<code>BSX-5</code>).</div>
+  </div>
+
+  <div class="mock" style="${box}">
+    <h4>#/settings <span class="badge" style="${bOk}">VIS-3 · FX-3</span></h4>
+    <div class="row"><span><input type="checkbox"> Reduced motion</span><span style="color:${c('muted')}">A11Y-5 хэвээр</span></div>
+    <div class="row"><span><input type="checkbox" checked> Sound enabled</span><span style="color:${c('muted')}">хэвээр</span></div>
+    <div class="row"><span><input type="checkbox"> Color-blind safe palette</span><span class="badge" style="${bWarn}">ШИНЭ</span></div>
+    <div class="row"><span>Sound volume</span><span><input type="range" value="60"> <output>60%</output></span><span class="badge" style="${bWarn}">ШИНЭ</span></div>
+    <div class="note">⚠ <code>soundVolume = 0</code> нь <code>soundEnabled = false</code>-тай
+    ИЖИЛ үр дүн; хоёул <code>fx.ts</code>-ийн ГАНЦ хамгаалалтаар (<code>P-5</code>).</div>
+  </div>
+
+  <div class="mock" style="${box}">
+    <h4>Офлайн төлөв <span class="badge" style="${bOk}">OFF-6 · VIS-4</span></h4>
+    <div class="row"><span class="badge" style="${bWarn}">⚠ Offline — playing locally</span>
+      <span style="color:${c('muted')}">3 actions queued</span></div>
+    <div class="note">Офлайн төлөв нь <b>ТЕКСТЭЭР</b> — зөвхөн өнгөөр БИШ.
+    <code>uncaught</code> алдаа 0; бүх 9 дэлгэц ажиллана; үйлдэл
+    <code>actionQueue</code>-д хуримтлагдана.</div>
+  </div>`;
+}
+function renderMocks(){
+  document.getElementById('mocks').innerHTML = mocks(paletteOf(palSel2.value, cbChk2.checked));
+}
+palSel2.addEventListener('change', renderMocks);
+cbChk2.addEventListener('change', renderMocks);
+renderMocks();
+
+/* ───────── FX хүснэгт + дуурайлт ───────── */
+let ac = null;
+function tone(hz){
+  try {
+    ac = ac ?? new (window.AudioContext || window.webkitAudioContext)();
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(hz, ac.currentTime);
+    g.gain.setValueAtTime(0.06, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 0.12);
+    o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + 0.12);
+  } catch { /* дуу нь нэмэлт — алдаа нь хуудсыг зогсоохгүй */ }
+}
+const fxT = document.getElementById('fxTable');
+FX.forEach(([ev,cls,hz,anim,src,isNew]) => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td><code>${ev}</code> ${isNew?'<span class="tag t-new">шинэ</span>':''}</td>
+    <td><code>.${cls}</code></td><td>${hz}</td><td><code>${anim}</code></td>
+    <td class="note" style="margin:0">${src}</td>
+    <td><button style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:3px 9px;cursor:pointer">▶ дуу</button></td>`;
+  tr.querySelector('button').addEventListener('click', () => tone(hz));
+  fxT.appendChild(tr);
+});
+
+/* ───────── boss tier тооцоолуур ───────── */
+const STD = { mvp:35, advanced:45, mastery:52 };
+const HARD = { mvp:Math.ceil(35*1.15), advanced:Math.ceil(45*1.15), mastery:Math.ceil(52*1.15) };
+const tierFor = (t,T) => t>=T.mastery?'mastery':t>=T.advanced?'advanced':t>=T.mvp?'mvp':'failed';
+const bt = document.getElementById('bossTotal'), bo = document.getElementById('bossOut');
+function renderBoss(){
+  const t = +bt.value;
+  bo.innerHTML = `<b>${t}</b> → standard <span class="tag t-keep">${tierFor(t,STD)}</span>
+    · hard <span class="tag ${tierFor(t,HARD)==='failed'?'t-bad':'t-chg'}">${tierFor(t,HARD)}</span>`;
+}
+bt.addEventListener('input', renderBoss); renderBoss();
+
+/* ───────── rep тооцоолуур ───────── */
+const REP_BASE = { main:3, boss:3, dungeon:2, side:2 };
+const rt = document.getElementById('repTrack'), rm = document.getElementById('repM');
+function renderRep(){
+  const base = REP_BASE[rt.value], m = +rm.value;
+  document.getElementById('repRow').innerHTML = '<th>rep</th>' +
+    [1,2,3,4,5,6].map(n => {
+      const v = Math.floor(base * Math.pow(m, n-1));
+      return `<td class="${v===0?'note':''}" style="margin:0">${v}${v===0?' <span class="note" style="margin:0">(олгохгүй)</span>':''}</td>`;
+    }).join('');
+}
+rt.addEventListener('change', renderRep); rm.addEventListener('change', renderRep); renderRep();
+</script>
+</body>
+</html>

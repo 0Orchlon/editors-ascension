@@ -36,6 +36,11 @@ export const testPack = (over: Partial<ContentPack> = {}): ContentPack =>
     achievements: [],
     encounters: [],
     loot: [],
+    // ⚠ v1.2.0 — гэрээнд ЗААВАЛ болсон гурван цуглуулга. Тестийн ЛОГИК
+    // өөрчлөгдөөгүй: анхдагч нь хоосон, шаардлагатай тест `over`-оор дүүргэнэ.
+    guilds: [],
+    chains: [],
+    cosmetics: [],
     ...over,
   }) as unknown as ContentPack;
 

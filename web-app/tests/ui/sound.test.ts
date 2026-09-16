@@ -43,13 +43,14 @@ beforeEach(() => {
 });
 
 describe('sound cues (A11Y-5)', () => {
-  it('нэрлэсэн 4 event дээр л дуугарна', () => {
+  it('бүртгэлийн 12 event дээр л дуугарна (§9.3.4 — 4 → 12)', () => {
     const cues = createSoundCues(() => true);
-    expect(CUE_EVENTS).toHaveLength(4);
+    // ⚠ Жагсаалт нь `FX_REGISTRY`-ээс ГАРГАГДАНА — энд гараар бичигдэхгүй.
+    expect(CUE_EVENTS).toHaveLength(12);
 
     cues([...CUE_EVENTS.map(event), event('STAMINA_SPENT'), event('COINS_GAINED')]);
 
-    expect(started).toHaveLength(4);
+    expect(started).toHaveLength(12);
   });
 
   it('`soundEnabled:false` үед ЮУ Ч тоглохгүй', () => {

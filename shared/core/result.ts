@@ -25,3 +25,17 @@ export const reject = (reason: RejectionReason, detail?: string): DomainResult =
 
 /** `at` (ISO-8601) → `YYYY-MM-DD` (UTC — A-LLD-6). */
 export const dayOf = (at: string): string => at.slice(0, 10);
+
+/**
+ * Хоёр тоглоомын өдрийн хоорондох БҮХЭЛ өдрийн зөрүү (plan.md P-18).
+ *
+ * ⚠ `dayOf`-ийн хажууд, шинэ модуль үүсгэхгүй: `SKL-3` (7 өдөр) ба `RET-4`
+ * (14 өдөр) хоёулаа ижил тооллыг шаарддаг — хоёр газар өөрөөр тоолвол нэг нь
+ * цагийн бүсэд унана.
+ * ⚠ Цаг УНШИХГҮЙ: оролт нь ХОЁУЛАА `YYYY-MM-DD`. `Date.parse` нь UTC тэмдэгттэй
+ * мөрийг л задалдаг тул детерминизмын хориг зөрчигдөхгүй (`Date.now` дуудагдаагүй).
+ * ⚠ Сөрөг утга нь `b` нь `a`-аас ӨМНӨ гэсэн үг — «хугацаа гүйцсэн эсэх»-ийг
+ * дуудагч шийднэ.
+ */
+export const daysBetween = (a: string, b: string): number =>
+  Math.round((Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / 86_400_000);
