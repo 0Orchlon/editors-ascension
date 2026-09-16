@@ -173,6 +173,48 @@ describe('SVX-1 — the v2 defaults are the ones the plan names (T-06)', () => {
     expect(migrated.bossAttempts[0]!.difficulty).toBe('standard');
   });
 
+  /**
+   * Дээрх алдааны АНГИЛЛЫГ хаана, тохиолдлыг нь биш.
+   *
+   * `toV2` нь `...state`-ыг ЭХЭНД тавьж 9 талбарыг дараа нь онооно. Аль нэгийг нь
+   * spread-ийн ард зөөвөл (эсвэл шинэ алхам буруу бичвэл) гараар зохиосон v1 файл
+   * тэр талбарыг дамжуулж чадна. Энэ тест 9 талбарыг БҮГДИЙГ нь хортой утгаар
+   * дүүргэж, migration бүгдийг нь дарж бичихийг шаардана.
+   */
+  it('overwrites every field it owns, whatever the v1 file claims (§5.1)', () => {
+    const hostile = {
+      ...v1State(),
+      settings: { reducedMotion: true, soundEnabled: false, colorBlindSafe: true, soundVolume: 0.25 },
+      mastery: { audio: { tag: 'audio', xp: 99999, level: 10, prestigeCount: 7 } },
+      masteryPoints: 99,
+      reputation: { 'guild-a': 9999 },
+      replayLog: [{ at: '2020-01-01T00:00:00Z', kind: 'boss', refId: 'x', outcome: 'passed' }],
+      campLayout: { slots: { avatarFrame: 'cos-not-real' } },
+      completedChainIds: ['chain-not-real'],
+      respecAt: '2020-01-01T00:00:00Z',
+      dungeonStats: { 'dg-timeline-basics': { lastPassedDate: '2020-01-01' } },
+    };
+    const migrated = migrate(hostile);
+
+    expect(migrated.masteryPoints).toBe(0);
+    // Зохиосон guild ХАЯГДАНА, бодит 4 нь 0-оос эхэлнэ.
+    expect(migrated.reputation['guild-a']).toBeUndefined();
+    expect(Object.values(migrated.reputation).every((v) => v === 0)).toBe(true);
+    expect(migrated.replayLog).toEqual([]);
+    expect(migrated.completedChainIds).toEqual([]);
+    expect(migrated.respecAt).toBeNull();
+    expect(migrated.campLayout.slots.avatarFrame).toBeNull();
+    // ⚠ `dungeonStats` нь `completedDungeonIds`-ээс ДАХИН баригдана (P-15): зохиосон
+    // огноо амьд үлдвэл refresher шууд гарч ирнэ.
+    expect(migrated.dungeonStats['dg-timeline-basics']).toEqual({ lastPassedDate: null });
+    // ⚠ v1-д БАЙСАН хоёр тохиргоо хадгалагдана, v2-ийн хоёр нь анхдагчаар онооно.
+    expect(migrated.settings).toEqual({
+      reducedMotion: true, soundEnabled: false, colorBlindSafe: false, soundVolume: 1,
+    });
+    for (const tag of SKILL_TAGS)
+      expect(migrated.mastery[tag]).toEqual({ tag, xp: 0, level: 1, prestigeCount: 0 });
+  });
+
   /** Дээрхийн үр дагавар: хуурамч hard дээд амжилт үүсэхгүй. */
   it('keeps the hard-mode personal best at zero after a crafted v1 import (BSX-3)', () => {
     const crafted = v1State();

@@ -86,7 +86,7 @@ npm run contract:docs    # docs/PERSONAL-2/contract-docs.md-ыг ДАХИН үү
 ## Шалгах — гадаргуу тутамд НЭГ команд
 
 ```bash
-cd web-app && npm test      # typecheck + lint + vitest (1328 тест)
+cd web-app && npm test      # typecheck + lint + vitest (1329 тест)
 cd server  && npm test      # typecheck + lint + vitest (106 тест)
 ```
 
