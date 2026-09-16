@@ -137,3 +137,49 @@ describe('SKL-1 — the tree carries tracks, tiers and one capstone each (T-19)'
     expect(problems).toEqual([]);
   });
 });
+
+describe('BSX-1 — exactly one boss per world (T-20)', () => {
+  const bosses = pack.quests.filter((q) => q.track === 'boss');
+
+  it('ships five bosses', () => {
+    expect(bosses).toHaveLength(5);
+  });
+
+  it.each([1, 2, 3, 4, 5])('gives world %i exactly one boss', (world) => {
+    expect(bosses.filter((b) => b.world === world)).toHaveLength(1);
+  });
+
+  /** ⚠ spec.md A6 — PERSONAL-1-ийн boss нь 3-р дэлхийд ХЭВЭЭР. */
+  it('keeps The Strange Room as the world-3 boss', () => {
+    const w3 = bosses.find((b) => b.world === 3)!;
+    expect(w3.id).toBe('boss-strange-room');
+  });
+
+  it('keeps the eighteen main-track quests untouched (MQ-1)', () => {
+    expect(pack.quests.filter((q) => q.track === 'main')).toHaveLength(18);
+  });
+
+  it('invents no tutorial links for the new bosses (README T-22)', () => {
+    const invented = bosses.filter((b) => b.id !== 'boss-strange-room' && b.tutorialRefs.length > 0);
+    expect(invented.map((b) => b.id)).toEqual([]);
+  });
+
+  it('gates each boss behind reachable prerequisites in its own or an earlier world', () => {
+    const byQuestId = new Map(pack.quests.map((q) => [q.id, q]));
+    const bad: string[] = [];
+    for (const b of bosses)
+      for (const p of b.prerequisites) {
+        const prereq = byQuestId.get(p);
+        if (prereq === undefined) bad.push(`${b.id} → ${p} (missing)`);
+        else if (prereq.world > b.world) bad.push(`${b.id} → ${p} (later world)`);
+      }
+    expect(bad).toEqual([]);
+  });
+
+  it('asks every boss to be scored across the six craft categories (BS-5)', () => {
+    const bad = bosses.filter(
+      (b) => !b.victoryConditions.some((v) => /six craft categories/i.test(v)),
+    );
+    expect(bad.map((b) => b.id)).toEqual([]);
+  });
+});
