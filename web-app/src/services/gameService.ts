@@ -7,9 +7,17 @@
 import { applyAction } from '@shared/core/apply.ts';
 import { levelFor, rankName, xpToNextLevel } from '@shared/core/progression.ts';
 import { sideQuestXp } from '@shared/core/sideQuests.ts';
-import { tierFor } from '@shared/core/boss.ts';
+import { personalBest, tierFor } from '@shared/core/boss.ts';
 import { createRng, fnv1a } from '@shared/core/rng.ts';
-import { BOSS_CATEGORIES, BOSS_CATEGORY_LABELS, MILESTONE_KEYS, SKILL_TAGS, XP_THRESHOLDS } from '@shared/core/constants.ts';
+import {
+  BOSS_CATEGORIES,
+  BOSS_CATEGORY_LABELS,
+  BOSS_TIERS,
+  HARD_BOSS_TIERS,
+  MILESTONE_KEYS,
+  SKILL_TAGS,
+  XP_THRESHOLDS,
+} from '@shared/core/constants.ts';
 import { rankOf } from '@shared/core/reputation.ts';
 import { isUnlocked } from '@shared/core/cosmetics.ts';
 import { costCurrency, unlockGaps, type Currency } from '@shared/core/skillTree.ts';
@@ -24,6 +32,7 @@ import type {
   ContentPack,
   CosmeticItem,
   CosmeticSlot,
+  DifficultyTier,
   DomainEvent,
   DungeonDefinition,
   GameState,
@@ -436,7 +445,19 @@ export function createGameService(deps: GameServiceDeps) {
         BOSS_CATEGORIES.map((key) => ({ key, label: BOSS_CATEGORY_LABELS[key] })),
 
       /** Домэйны tier функцийг дамжуулна — UI босгыг ДАХИН бичихгүй (AC BE-10). */
-      bossTier: (total: number): string => tierFor(total),
+      bossTier: (total: number, difficulty: DifficultyTier = 'standard'): string =>
+        tierFor(total, difficulty),
+
+      /**
+       * AC BSX-2 — hard mode-ийн босго нь ТООЦОГДСОН утга (`ceil(×1.15)`).
+       * ⚠ UI нь 41/52/60-ыг бичихгүй: коэффициент өөрчлөгдвөл дэлгэц өөрөө дагана.
+       */
+      bossThresholds: (difficulty: DifficultyTier): { mvp: number; advanced: number; mastery: number } =>
+        difficulty === 'hard' ? { ...HARD_BOSS_TIERS } : { ...BOSS_TIERS },
+
+      /** AC BSX-3 — `(bossId, difficulty)` бүлгийн дээд оноо; ГАРГАГДАНА, хадгалагдахгүй. */
+      bossPersonalBest: (bossId: string, difficulty: DifficultyTier): number =>
+        personalBest(store.getState(), bossId, difficulty),
 
       bossAttempts: () => store.getState().bossAttempts,
 
