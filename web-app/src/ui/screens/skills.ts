@@ -3,7 +3,7 @@
  *
  * ⚠ Татгалзлын ШАЛТГААН нь бүрэн харагдана: capstone-ийн гурван нөхцөлийн аль нь
  * дутсаныг НЭРЛЭНЭ (SKL-2). «Locked» гэж ганцаар бичих нь тоглогчийг таалгана.
- * ⚠ Дүрмийг ЭНД дахин бичихгүй — `gaps`, `currency`, `respecStatus` бүгд
+ * ⚠ Дүрмийг ЭНД дахин бичихгүй — `gaps`, `currency`, `respecAvailableIn` бүгд
  * `gameService`-ээр домэйнээс ирнэ (`QX-7`).
  */
 import type { GameService, SkillNodeView } from '../../services/gameService.ts';
@@ -74,12 +74,12 @@ export function renderSkills(game: GameService, rerender: () => void): HTMLEleme
   root.append(detail);
 
   // ── Respec — cooldown нь ТЕКСТЭЭР, чимээгүй идэвхгүй товч БИШ (SKL-3).
-  const respecStatus = view.respecStatus();
+  const respecDays = view.respecAvailableIn();
   const nodes = view.skillTree().filter((s) => s.track === activeTrack);
   const unlockedHere = nodes.filter((s) => s.unlocked).length;
   const respecCard = el('div', { class: 'card', 'data-testid': 'respec' }, [
     el('h2', { text: 'Respec this tree' }),
-    el('p', { class: 'muted', id: 'respec-note', text: respecReason(respecStatus.daysLeft, unlockedHere) }),
+    el('p', { class: 'muted', id: 'respec-note', text: respecReason(respecDays, unlockedHere) }),
   ]);
   const respec = button(`Respec the ${current.label} tree`, () => {
     const result = game.dispatch('respecTree', { track: current.tag });
@@ -89,14 +89,27 @@ export function renderSkills(game: GameService, rerender: () => void): HTMLEleme
     }
     announce(`${current.label} tree refunded.`);
     rerender();
-  }, { disabled: !respecStatus.available || unlockedHere === 0, describedBy: 'respec-note' });
+  }, { disabled: respecDays > 0 || unlockedHere === 0, describedBy: 'respec-note' });
   respec.setAttribute('data-testid', 'respec-button');
   respecCard.append(respec);
   root.append(respecCard);
 
-  const list = el('ul', { class: 'quest-list' });
-  for (const skill of nodes) list.append(el('li', {}, [skillCard(game, skill, rerender)]));
-  root.append(list);
+  // ── lld.md §9.4.3 — tier тутамд ГАРЧИГ. Загварын зураглал нь «Tier 1 / Tier 2 /
+  // Tier 3 ◆ Capstone: <нэр>» гэсэн гурван бүлэг; хавтгай жагсаалт нь аль node
+  // ямар үнээр (SP ↔ MP) авагдахыг харааны түвшинд далдална.
+  const capstone = view.capstone(current.tag);
+  for (const tier of [1, 2, 3] as const) {
+    const inTier = nodes.filter((s) => s.tier === tier);
+    if (inTier.length === 0) continue;
+    const heading =
+      tier === 3 && capstone !== null
+        ? `Tier 3 ◆ Capstone: ${capstone.skill.title}`
+        : `Tier ${tier}`;
+    root.append(el('h2', { class: 'skill-tier-heading', 'data-tier-heading': String(tier), text: heading }));
+    const list = el('ul', { class: 'quest-list', 'data-tier-list': String(tier) });
+    for (const skill of inTier) list.append(el('li', {}, [skillCard(game, skill, rerender)]));
+    root.append(list);
+  }
 
   return root;
 }

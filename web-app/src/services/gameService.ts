@@ -103,8 +103,13 @@ export type SkillNodeView = SkillDefinition & {
   gaps: readonly string[];
 };
 
-/** AC SKL-3 — respec-ийн ГЛОБАЛ cooldown (plan.md P-19). */
-export type RespecStatus = { available: boolean; daysLeft: number };
+/** `lld.md §9.5` — `bossBoard(bossId)`: хүндрэл тутмын дээд амжилт ба босго. */
+export type BossTierCuts = { mvp: number; advanced: number; mastery: number };
+export type BossBoardView = {
+  standard: { best: number; tier: string };
+  hard: { best: number; tier: string };
+  thresholds: { standard: BossTierCuts; hard: BossTierCuts };
+};
 
 export type AchievementView = AchievementDefinition & { earned: boolean; requirement: string };
 
@@ -427,12 +432,21 @@ export function createGameService(deps: GameServiceDeps) {
        * ⚠ Үлдсэн хоног нь домэйнтэй ИЖИЛ тоололтоор (`daysBetween`) — хоёр өөр
        * тоолол нь «товч идэвхтэй ч сервер татгалзлаа» гэсэн байдал үүсгэнэ.
        */
-      respecStatus(): RespecStatus {
+      respecAvailableIn(): number {
         const { respecAt } = store.getState();
-        if (respecAt === null) return { available: true, daysLeft: 0 };
+        if (respecAt === null) return 0;
         const waited = daysBetween(dayOf(respecAt), dayOf(now()));
-        const daysLeft = Math.max(0, RESPEC_COOLDOWN_DAYS - waited);
-        return { available: daysLeft === 0, daysLeft };
+        return Math.max(0, RESPEC_COOLDOWN_DAYS - waited);
+      },
+
+      /**
+       * `lld.md §9.5` — track-ийн capstone (tier-3) node ба дутсан нөхцөлүүд.
+       * ⚠ Дүрэм ЭНД БИШ: `gaps` нь `skillTree()`-ийн (улмаар `capstoneGaps`-ийн)
+       * утгыг ДАМЖУУЛНА. Track-д capstone байхгүй бол `null` — UI таамаглахгүй.
+       */
+      capstone(track: SkillTag): { skill: SkillNodeView; gaps: readonly string[] } | null {
+        const skill = service.view.skillTree().find((s) => s.track === track && s.tier === 3);
+        return skill === undefined ? null : { skill, gaps: skill.gaps };
       },
 
       projects(): ProjectView[] {
@@ -453,15 +467,26 @@ export function createGameService(deps: GameServiceDeps) {
         tierFor(total, difficulty),
 
       /**
-       * AC BSX-2 — hard mode-ийн босго нь ТООЦОГДСОН утга (`ceil(×1.15)`).
-       * ⚠ UI нь 41/52/60-ыг бичихгүй: коэффициент өөрчлөгдвөл дэлгэц өөрөө дагана.
+       * `lld.md §9.5` — нэг боссын самбар: хүндрэл тутмын дээд амжилт ба босго.
+       *
+       * ⚠ AC BSX-3 — дээд оноо нь `bossAttempts`-аас ГАРГАГДАНА, хадгалагдахгүй.
+       * ⚠ AC BSX-2 — hard босго нь ТООЦОГДСОН (`ceil(×1.15)`): UI нь 41/52/60-ыг
+       * бичихгүй, коэффициент өөрчлөгдвөл дэлгэц өөрөө дагана.
+       * ⚠ Хоёр хүндрэл ҮРГЭЛЖ хоёулаа буцна — «одоогийн» сонголтыг view шийдэхгүй,
+       * тэр нь дэлгэцийн төлөв (`forge.ts`-ийн select).
        */
-      bossThresholds: (difficulty: DifficultyTier): { mvp: number; advanced: number; mastery: number } =>
-        difficulty === 'hard' ? { ...HARD_BOSS_TIERS } : { ...BOSS_TIERS },
-
-      /** AC BSX-3 — `(bossId, difficulty)` бүлгийн дээд оноо; ГАРГАГДАНА, хадгалагдахгүй. */
-      bossPersonalBest: (bossId: string, difficulty: DifficultyTier): number =>
-        personalBest(store.getState(), bossId, difficulty),
+      bossBoard(bossId: string): BossBoardView {
+        const state = store.getState();
+        const side = (difficulty: DifficultyTier): { best: number; tier: string } => {
+          const best = personalBest(state, bossId, difficulty);
+          return { best, tier: tierFor(best, difficulty) };
+        };
+        return {
+          standard: side('standard'),
+          hard: side('hard'),
+          thresholds: { standard: { ...BOSS_TIERS }, hard: { ...HARD_BOSS_TIERS } },
+        };
+      },
 
       bossAttempts: () => store.getState().bossAttempts,
 
@@ -517,8 +542,12 @@ export function createGameService(deps: GameServiceDeps) {
         });
       },
 
-      /** AC COS-3 — БҮХ cosmetic, нээгдээгүй нь ч; эрэмбэ нь `COSMETIC_SLOTS`-ийнх. */
-      trophies(): TrophyView[] {
+      /**
+       * AC COS-3 — БҮХ cosmetic, нээгдээгүй нь ч; эрэмбэ нь `COSMETIC_SLOTS`-ийнх.
+       * ⚠ Нэр нь `lld.md §9.5`-ийн гэрээнийх (`cosmetics()`) — дэлгэцийн нэрээр
+       * (`trophies`) дуудвал гэрээний хүснэгт ба код хоёр тусдаа үнэн болно.
+       */
+      cosmetics(): TrophyView[] {
         const state = store.getState();
         return [...pack.cosmetics]
           .sort(

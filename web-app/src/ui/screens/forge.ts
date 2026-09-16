@@ -109,9 +109,10 @@ function renderBossSection(game: GameService, rerender: () => void): HTMLElement
     if (boss.completed) row.append(badge('Passed', 'ok'));
 
     // AC BSX-3 — дээд амжилт нь хүндрэл тутамд ТУСДАА; хоёулаа үргэлж харагдана.
+    const board = game.view.bossBoard(boss.id);
     const bests = el('ul', { class: 'boss-bests' });
     for (const difficulty of DIFFICULTIES) {
-      const best = game.view.bossPersonalBest(boss.id, difficulty);
+      const best = board[difficulty].best;
       bests.append(
         el('li', {
           'data-testid': `boss-best-${difficulty}`,
@@ -175,7 +176,7 @@ function openBossModal(game: GameService, bossId: string, title: string, rerende
     const refresh = (): void => {
       const sum = [...scores.values()].reduce((a, b) => a + b, 0);
       total.textContent = `Total: ${sum} / 60 · tier ${game.view.bossTier(sum, difficulty)}`;
-      const cut = game.view.bossThresholds(difficulty);
+      const cut = game.view.bossBoard(bossId).thresholds[difficulty];
       thresholds.textContent =
         `${DIFFICULTY_LABELS[difficulty]} thresholds — mvp ${cut.mvp}, advanced ${cut.advanced}, mastery ${cut.mastery} (out of 60).`;
     };

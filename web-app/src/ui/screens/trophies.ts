@@ -20,7 +20,7 @@ const SLOT_LABELS: Record<string, string> = {
 
 export function renderTrophies(game: GameService, rerender: () => void): HTMLElement {
   const view = game.view;
-  const trophies = view.trophies();
+  const trophies = view.cosmetics();
   const unlocked = trophies.filter((t) => t.unlocked);
   const layout = view.campLayout();
 
