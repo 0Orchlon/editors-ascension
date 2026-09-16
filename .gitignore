@@ -4,3 +4,4 @@ server/data/
 *.sqlite
 *.sqlite-*
 coverage/
+web-app/dist-bundle-test/
