@@ -62,14 +62,19 @@ export function pickDailyMission(state: GameState, date: string, pack: ContentPa
  * байхгүй тул зохиовол migration-ий дараа өдөр бүр refresher гарна.
  * ⚠ `daysBetween` нь UTC хуанлийн зөрүү (P-18) — `Date.now()` дуудагдахгүй тул
  * детерминизмын хориг зөрчигдөхгүй.
+ * ⚠ lld.md §6.9 — `levelRequired` шүүлт нь үндсэн pool-ынхтой ИЖИЛ: respec/prestige
+ * нь түвшин буулгадаггүй ч түвшний хаалга контентоор өсөж болно, тэгвэл тоглогч
+ * эхлүүлж ч чадахгүй даалгавар авна. Эрэмбэ нь мөн TIERS-ийнхтэй ижил
+ * (`world → levelRequired → id`) — бүтэн эрэмбэ тул пакетын дараалал нөлөөлөхгүй.
  */
 function refresherCandidates(state: GameState, date: string, pack: ContentPack): QuestDefinition[] {
   return pack.quests
     .filter((q) => q.track === 'dungeon')
+    .filter((q) => q.levelRequired <= state.level)
     .filter((q) => state.completedDungeonIds.includes(q.id))
     .filter((q) => {
       const last = state.dungeonStats[q.id]?.lastPassedDate;
       return last !== undefined && last !== null && daysBetween(last, date) >= REFRESHER_MIN_DAYS;
     })
-    .sort((a, b) => a.world - b.world || (a.id < b.id ? -1 : 1));
+    .sort((a, b) => a.world - b.world || a.levelRequired - b.levelRequired || (a.id < b.id ? -1 : 1));
 }

@@ -115,6 +115,11 @@ describe('COS-4 — campLayout is pure UI state (T-16; plan.md P-25)', () => {
     item({ id: 'c-title', slot: 'title', unlockSource: { kind: 'achievement', refId: 'ach-a' } }),
     item({ id: 'c-frame', slot: 'avatarFrame', unlockSource: { kind: 'achievement', refId: 'ach-a' } }),
     item({ id: 'c-locked', slot: 'title', unlockSource: { kind: 'achievement', refId: 'ach-none' } }),
+    item({
+      id: 'c-frame-locked',
+      slot: 'avatarFrame',
+      unlockSource: { kind: 'achievement', refId: 'ach-none' },
+    }),
   );
   const owner = (): GameState => ({ ...freshState(), achievementIds: ['ach-a'] });
   const emptySlots = () => Object.fromEntries(COSMETIC_SLOTS.map((s) => [s, null]));
@@ -159,6 +164,29 @@ describe('COS-4 — campLayout is pure UI state (T-16; plan.md P-25)', () => {
   });
 
   /** ⚠ Нээгдээгүй зүйлийг зүүх боломж нь Trophy Room-ийн утгыг үгүйсгэнэ (P-25). */
+  /**
+   * ⚠ lld.md §6.4 — шалгах дараалал нь ГЭРЭЭ: бүтцийн саад (1…3) нь нөөцийн
+   * саадаас (4) ӨМНӨ. Үүр тутмаар бүх шалгалтыг хийвэл ЭХНИЙ үүрийн нөөцийн
+   * саад нь СҮҮЛИЙН үүрийн бүтцийн саадыг дарна.
+   */
+  it('reports the structural fault first when a locked slot precedes an unknown id', () => {
+    const slots = {
+      ...emptySlots(),
+      avatarFrame: 'c-frame-locked',
+      badgeFrame: 'no-such-cosmetic-id',
+    };
+    const result = setCampLayout(owner(), slots, pack);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toBe('INVALID_INPUT');
+  });
+
+  it('reports the wrong-slot fault before a locked cosmetic in an earlier slot', () => {
+    const slots = { ...emptySlots(), avatarFrame: 'c-frame-locked', badgeFrame: 'c-title' };
+    const result = setCampLayout(owner(), slots, pack);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toBe('INVALID_INPUT');
+  });
+
   it('rejects PREREQ_NOT_MET for a cosmetic that is not unlocked yet', () => {
     const result = setCampLayout(owner(), { ...emptySlots(), title: 'c-locked' }, pack);
     expect(result.ok).toBe(false);

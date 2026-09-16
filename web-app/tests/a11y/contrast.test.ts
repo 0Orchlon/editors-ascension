@@ -120,6 +120,48 @@ describe('P-26 — styles.css holds no colour outside the palette blocks (T-27)'
   });
 });
 
+/**
+ * `VIS-2`-ийн нотолгоо нь `theme.ts`-ийн хүснэгтээс тооцогддог, харин тоглогчийн
+ * ХАРАХ өнгө нь `styles.css`-ээс гардаг. Хоёрын хооронд ХОЛБОГЧ тест байхгүй бол
+ * хүснэгт нь зөв хэвээр, дэлгэц нь буруу болж САЛЖ чадна — контрастын хаалга
+ * хашгирахгүй. Энэ блок нь 6 палитр × 19 токен + 8 CB override = 122 утгыг тулгана.
+ */
+describe('P-26 — styles.css repeats theme.ts value for value (T-27)', () => {
+  /** `selector { … }` блокын `--token: #hex;` мөрүүдийг зураглал болгоно. */
+  const varsOf = (marker: string): Record<string, string> => {
+    const clean = css().replace(/\/\*[\s\S]*?\*\//g, '');
+    const block = clean.split('}').find((chunk) => chunk.includes(marker));
+    expect(block, 'no CSS block for ' + marker).toBeDefined();
+    const out: Record<string, string> = {};
+    for (const line of (block ?? '').split(';')) {
+      const m = /--([a-z0-9-]+)\s*:\s*#([0-9a-fA-F]{6})/.exec(line);
+      if (m !== null) out[m[1]!] = m[2]!.toLowerCase();
+    }
+    return out;
+  };
+
+  it.each(PALETTE_KEYS)('declares %s with exactly the theme.ts values', (key) => {
+    expect(varsOf(':root[data-world="' + key + '"]')).toEqual(paletteOf(key, false));
+  });
+
+  it('declares the colour-blind override with exactly the CB_OVERRIDE values', () => {
+    expect(varsOf(':root[data-cb="1"]')).toEqual(CB_OVERRIDE);
+  });
+
+  it('compares 122 values in total — a silent scope shrink would pass vacuously', () => {
+    const counted =
+      PALETTE_KEYS.reduce((n, key) => n + Object.keys(varsOf(':root[data-world="' + key + '"]')).length, 0) +
+      Object.keys(varsOf(':root[data-cb="1"]')).length;
+    expect(counted).toBe(PALETTE_KEYS.length * TOKENS.length + Object.keys(CB_OVERRIDE).length);
+    expect(counted).toBe(122);
+  });
+
+  it('bites on a planted drift between the two files', () => {
+    const drifted = { ...paletteOf('camp', false), accent: 'ff0000' };
+    expect(drifted).not.toEqual(paletteOf('camp', false));
+  });
+});
+
 describe('VIS-1 — switching world changes only the html attribute (T-27)', () => {
   beforeEach(() => {
     mount();

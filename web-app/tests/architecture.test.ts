@@ -420,16 +420,32 @@ describe('power bans: the new engines never write progression state (T-10 · §2
  * нь тэр шийдвэрийг хаана: талбарт ШУУД бичих нь зөвхөн эзэн хоёр файлд.
  */
 describe('dungeonStats has exactly one writer (§6.8 Δ-1)', () => {
-  const ALLOWED = ['dungeons.ts', 'saves.ts'];
+  /**
+   * ⚠ Хамрах хүрээ нь `shared/core` БИШ, `shared` БҮХЭЛДЭЭ: `newGame` нь
+   * `shared/save/serialize.ts`-д, migration нь `shared/save/migrations.ts`-д
+   * `dungeonStats`-ыг бүтээдэг. Зөвхөн `core`-ыг сканнердах нь эзэн бус бичигчийг
+   * чимээгүй өнгөрүүлнэ — өмнөх жагсаалтын `saves.ts` нь огт бичдэггүй байсан тул
+   * зөвшөөрөл нь ИДЭВХГҮЙ байв.
+   */
+  const ALLOWED = [
+    'shared/core/dungeons.ts', // домэйн бичигч — `markDungeonPassed`
+    'shared/save/serialize.ts', // `newGame` — хоосон гараа
+    'shared/save/migrations.ts', // v1 → v2 — огноогүй бичлэг
+    'shared/validate/schemas.ts', // схемийн ХЭЛБЭР, төлвийн бичилт БИШ
+  ];
 
-  it('never assigns dungeonStats outside dungeons.ts and saves.ts', () => {
+  it('never assigns dungeonStats outside its declared owners', () => {
     const offenders: string[] = [];
-    for (const file of filesUnder(join(sharedDir, 'core'))) {
-      const name = basename(file);
-      if (ALLOWED.includes(name)) continue;
-      if (/\bdungeonStats\s*:/.test(stripComments(read(file)))) offenders.push(name);
+    for (const file of filesUnder(sharedDir)) {
+      if (ALLOWED.includes(rel(file))) continue;
+      if (/\bdungeonStats\s*:/.test(stripComments(read(file)))) offenders.push(rel(file));
     }
     expect(offenders).toEqual([]);
+  });
+
+  it('names only owners that really do write the field — no dead permission', () => {
+    for (const name of ALLOWED)
+      expect(/\bdungeonStats\s*:/.test(stripComments(read(join(repoRoot, name))))).toBe(true);
   });
 
   it('routes the quest-track dungeon completion through markDungeonPassed', () => {
@@ -465,6 +481,23 @@ describe('mastery is read through trackOf only (§4.2 A-LLD2-1)', () => {
       if (/\.mastery\[[^\]]+\]\s*\?\./.test(stripComments(read(file)))) offenders.push(basename(file));
     }
     expect(offenders).toEqual([]);
+  });
+
+  /**
+   * ⚠ Сканнерын хамрах хүрээ нь `shared/core`-оор ЗОГСОХГҮЙ: `gameService.ts` нь
+   * `state.mastery[tag] ?? { … }` гэж анхдагчаа гараар бичиж чадна — домэйнтэй ижил
+   * хазайлт, зөвхөн уншигдахгүй газар. `?.` ба `?? {` хоёр хэлбэрийг хоёуланг барина.
+   */
+  it('leaves no hand-written mastery default in web-app/src either', () => {
+    const offenders: string[] = [];
+    for (const file of filesUnder(webSrc)) {
+      if (/\.mastery\[[^\]]+\]\s*\?\??[.{\s]/.test(stripComments(read(file)))) offenders.push(rel(file));
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('flags a planted default of the `?? { … }` shape', () => {
+    expect(/\.mastery\[[^\]]+\]\s*\?\??[.{\s]/.test('state.mastery[tag] ?? { xp: 0 }')).toBe(true);
   });
 
   it('flags a planted hand-written default', () => {

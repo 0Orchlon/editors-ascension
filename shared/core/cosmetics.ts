@@ -79,20 +79,25 @@ export function setCampLayout(
       `campLayout needs exactly these slots: ${COSMETIC_SLOTS.join(', ')}`,
     );
 
+  // ⚠ lld.md §6.4 — БҮТЦИЙН саад (үл мэдэгдэх id, буруу үүр) нь НӨӨЦИЙН саадаас
+  // (нээгдээгүй) ӨМНӨ бүх үүрийн хувьд шалгагдана. Үүр тутмаар нэг дор шалгавал
+  // эхний үүрийн `PREREQ_NOT_MET` нь сүүлийн үүрийн `INVALID_INPUT`-ыг дарна.
   const next: Record<string, string | null> = {};
+  const worn: CosmeticItem[] = [];
   for (const slot of COSMETIC_SLOTS) {
     const id = slots[slot] ?? null;
-    if (id === null) {
-      next[slot] = null;
-      continue;
-    }
+    next[slot] = id;
+    if (id === null) continue;
 
     const item = pack.cosmetics.find((c) => c.id === id);
     if (item === undefined) return reject('INVALID_INPUT', `unknown cosmetic ${id}`);
     if (item.slot !== slot) return reject('INVALID_INPUT', `${id} belongs in the ${item.slot} slot`);
-    if (!isUnlocked(state, item, pack)) return reject('PREREQ_NOT_MET', `${id} is not unlocked yet`);
-    next[slot] = id;
+    worn.push(item);
   }
+
+  for (const item of worn)
+    if (!isUnlocked(state, item, pack))
+      return reject('PREREQ_NOT_MET', `${item.id} is not unlocked yet`);
 
   return ok({ ...state, campLayout: { slots: next as GameState['campLayout']['slots'] } });
 }

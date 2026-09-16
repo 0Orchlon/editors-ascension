@@ -74,8 +74,7 @@ const WORLDS = [1, 2, 3, 4, 5] as const;
  * зөрчинө (`masteryPoints ← 0`, олдсон = 0, зарцуулсан > 0) бөгөөд `respecTree` нь
  * ОЛДООГҮЙ mastery point-ыг гараас гаргаж өгнө. Шинэ tier-2/3 node нь ЗААВАЛ ШИНЭ
  * id-тай байна — хуучныг хөрвүүлж БОЛОХГҮЙ.
- * ⚠ `title`/`description`-ийн үг сонголт нь контентын шийдвэр тул энд царцаагүй;
- * тэдгээрийн дрифтийг `web-app/tests/unit/content-v2.test.ts` хардана.
+ * ⚠ `title`/`description` нь `PERSONAL_1_SKILL_TEXT`-д тусад нь царцсан (C-06).
  */
 export const PERSONAL_1_SKILL_IDS = [
   'sk-edit-fundamentals',
@@ -103,6 +102,41 @@ export const PERSONAL_1_SKILL_IDS = [
   'sk-story-structure',
   'sk-visual-storytelling',
 ] as const;
+
+/**
+ * PERSONAL-1-ийн 24 node-ийн ЦАРЦСАН текст (`lld.md §8.2` C-06 — `id·title·description·cost`).
+ *
+ * ⚠ `title`/`description` нь тоглогчийн ТАНИХ зүйл: v1 save-тай тоглогч мод руу
+ * буцахад ижил нэр, ижил тайлбарыг олох ёстой. Үгийг нь засах нь «шинэ node» гэсэн
+ * сэтгэгдэл төрүүлэх бөгөөд ямар ч тест унахгүй байв — тиймээс ЭНД царцаана.
+ * Утга нь `origin/issue/personal-1:shared/content/skills.json`-оос үг үсгээрээ авсан.
+ */
+export const PERSONAL_1_SKILL_TEXT: Record<string, readonly [string, string]> = {
+  'sk-edit-fundamentals': ['Edit Fundamentals', 'Assemble a timeline with confident in and out points, ripple trims and clean hard cuts.'],
+  'sk-pacing': ['Pacing Control', 'Shape tension with shot duration and cut density instead of cutting on autopilot.'],
+  'sk-color-correction': ['Color Correction', 'Balance exposure and white point across shots using waveform and vectorscope.'],
+  'sk-color-grading': ['Color Grading', 'Build a deliberate look on a corrected baseline and keep it consistent across a sequence.'],
+  'sk-blender-navigation': ['Blender Navigation', 'Move around the viewport, switch modes and apply transforms without fighting the tool.'],
+  'sk-modeling': ['Box Modeling', 'Build clean topology from primitives using extrude, loop cuts and modifiers.'],
+  'sk-uv-texturing': ['UV and Texturing', 'Unwrap a mesh with sensible seams and map textures without stretching.'],
+  'sk-shading': ['PBR Shading', 'Describe surfaces with roughness, metallic and normal inputs that behave physically.'],
+  'sk-lighting': ['Lighting', 'Shape a subject with key, fill and rim, and control shadow softness through source size.'],
+  'sk-rendering': ['Rendering', 'Choose samples, denoising and output settings that trade render time for quality on purpose.'],
+  'sk-keyframing': ['Keyframing', 'Set keys and read F-curves so timing is designed rather than discovered by accident.'],
+  'sk-easing': ['Easing and Weight', 'Use anticipation, overshoot and settle so motion reads as having mass.'],
+  'sk-rigging': ['Rigging', 'Build armatures, weights and controls that let a mesh be posed without tearing.'],
+  'sk-character-animation': ['Character Animation', 'Animate a rig in poses with clear silhouettes, arcs and readable timing.'],
+  'sk-framing': ['Framing and Composition', 'Choose shot size, headroom and lens length that place the audience where the story needs them.'],
+  'sk-camera-movement': ['Camera Movement', 'Move the camera with intent, starting and ending on frames worth holding.'],
+  'sk-coverage': ['Coverage and Continuity', 'Plan shots that cut together, keeping screen direction and the action line intact.'],
+  'sk-audio-capture': ['Audio Capture', 'Record clean dialogue with headroom, usable room tone and a controlled noise floor.'],
+  'sk-sound-design': ['Sound Design', 'Layer dialogue, effects, ambience and music so each element has a distinct job.'],
+  'sk-mixing': ['Mixing and Loudness', 'Balance a mix to a loudness target with ducking rather than brute level pushes.'],
+  'sk-compositing': ['Compositing', 'Combine elements with alpha, spill suppression and render passes in a linear working space.'],
+  'sk-vfx-integration': ['VFX Integration', 'Match lighting, grain and perspective so a synthetic element sits inside the plate.'],
+  'sk-story-structure': ['Story Structure', 'Build setup, turn and payoff that survive compression into short form.'],
+  'sk-visual-storytelling': ['Visual Storytelling', 'Carry meaning through image, sound and cut instead of explaining it in narration.'],
+};
 
 const MIN_SKILLS = 28;
 const MIN_ACHIEVEMENTS = 40;
@@ -450,6 +484,13 @@ function skl5(pack: ContentPack, out: Out): void {
         `tier ${node.tier} — a PERSONAL-1 node stays tier 1 or a migrated v1 save spends mastery points it never earned`,
       );
     if (node.cost !== 1) add(out, 'SKL-5', `skills/${id}`, `cost ${node.cost} — PERSONAL-1 nodes cost 1`);
+
+    const frozen = PERSONAL_1_SKILL_TEXT[id];
+    if (frozen === undefined) continue;
+    if (node.title !== frozen[0])
+      add(out, 'SKL-5', `skills/${id}`, `title “${node.title}” drifted — a PERSONAL-1 node keeps “${frozen[0]}”`);
+    if (node.description !== frozen[1])
+      add(out, 'SKL-5', `skills/${id}`, `description drifted — a PERSONAL-1 node keeps its v1 wording`);
   }
 }
 

@@ -6,7 +6,12 @@
  */
 import { describe, expect, it } from 'vitest';
 import { buildPack } from '@shared/content/index.ts';
-import { checkContentRules, CONTENT_RULE_IDS } from '@shared/validate/content-rules.ts';
+import {
+  checkContentRules,
+  CONTENT_RULE_IDS,
+  PERSONAL_1_SKILL_IDS,
+  PERSONAL_1_SKILL_TEXT,
+} from '@shared/validate/content-rules.ts';
 import { GUILD_IDS, SKILL_TAGS } from '@shared/core/constants.ts';
 import type { ContentPack, QuestDefinition } from '@shared/types/index.ts';
 
@@ -305,6 +310,25 @@ describe('QX-5 — the design-named rules that were missing (§8.2 C-02 · C-06 
     const repriced = clone(pack);
     (repriced.skills.find((s) => s.id === 'sk-framing') as { cost: number }).cost = 2;
     expect(rulesHit(repriced)).toContain('SKL-5');
+  });
+
+  /**
+   * ⚠ `title`/`description` нь ЦАРЦСАН хэсгийн бүрэн бүтэн гишүүн (§8.2 C-06 —
+   * `id·title·description·cost`). Зөвхөн «хоосон биш» гэж шалгах нь v1 тоглогчийн
+   * танидаг нэрийг чимээгүй солих зам нээнэ.
+   */
+  it('C-06 — re-wording a PERSONAL-1 node title or description is caught', () => {
+    const retitled = clone(pack);
+    retitled.skills.find((s) => s.id === 'sk-pacing')!.title = 'Pacing Control v2';
+    expect(rulesHit(retitled)).toContain('SKL-5');
+
+    const rewritten = clone(pack);
+    rewritten.skills.find((s) => s.id === 'sk-lighting')!.description = 'Light things up.';
+    expect(rulesHit(rewritten)).toContain('SKL-5');
+  });
+
+  it('C-06 — the frozen text table covers all 24 PERSONAL-1 nodes', () => {
+    expect(Object.keys(PERSONAL_1_SKILL_TEXT).sort()).toEqual([...PERSONAL_1_SKILL_IDS].sort());
   });
 
   it('C-07 — a guild id drifting from GUILD_IDS is caught (RET-5 · §5.3)', () => {

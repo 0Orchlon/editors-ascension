@@ -20,12 +20,21 @@ export type ChainOutcome = { state: GameState; events: DomainEvent[] };
  * үзнэ — «дуусаагүй» нь худал шагналаас хямд өртөгтэй.
  * ⚠ Ижил өдөр дууссан хоёр алхам нь зөрчил БИШ (`≥` харьцаа) — тоглогч нэг
  * суулгаанд хоёр алхмыг дуусгаж болно.
+ * ⚠ lld.md §6.3 — мөрийн лексикографик эрэмбэ нь ЗӨВХӨН ижил бүсийн (`Z`) ISO-8601
+ * дээр цаг хугацааны эрэмбэтэй таарна. `schemas.ts`-ийн `dateTime()` regex нь
+ * `+07:00` офсетыг ЗӨВШӨӨРДӨГ тул import/crafted action-ийн замаар офсеттой мөр
+ * орж ирж чадна: `2026-03-11T01:00:00+07:00` нь бодитоор `2026-03-10T18:00Z` —
+ * мөрөөр «том», агшнаар «бага». Тийм мөр нь дарааллыг НОТЛОХ боломжгүй тул
+ * chain дуусахгүй (буруу дуусгахаас дуусгахгүй нь аюулгүй).
  */
+const isUtcIso = (at: string): boolean => at.endsWith('Z');
+
 function completedInOrder(state: GameState, chain: SideQuestChain): boolean {
   let previous = '';
   for (const step of chain.steps) {
     const at = state.sideQuestStats[step]?.lastCompletedAt;
     if (at === undefined || at === null) return false;
+    if (!isUtcIso(at)) return false;
     if (at < previous) return false;
     previous = at;
   }

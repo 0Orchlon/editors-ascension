@@ -31,7 +31,7 @@ beforeEach(() => {
   mount();
 });
 
-describe('VIS-5 — every interactive element is a real control (T-34)', () => {
+describe('VIS-7 — every interactive element is a real control (T-34)', () => {
   for (const route of ROUTES) {
     it(`uses only native controls on ${route.label}`, () => {
       go(route.hash);
@@ -100,7 +100,7 @@ describe('VIS-4 — the new states are readable without colour (T-34)', () => {
   });
 });
 
-describe('VIS-7 — axe finds nothing blocking on the new screens (T-34)', () => {
+describe('VIS-8 — axe finds nothing blocking on the new screens (T-34)', () => {
   for (const hash of ['#/trophies', '#/skills', '#/forge', '#/settings']) {
     it(`reports no critical or serious violation on ${hash}`, async () => {
       go(hash);
@@ -130,7 +130,7 @@ describe('VIS-7 — axe finds nothing blocking on the new screens (T-34)', () =>
   });
 });
 
-describe('VIS-8 — no horizontal overflow at 360 / 768 / 1280 (T-34)', () => {
+describe('VIS-5 — no horizontal overflow at 360 / 768 / 1280 (T-34)', () => {
   /**
    * ⚠ jsdom нь layout тооцохгүй тул `scrollWidth` нь ҮРГЭЛЖ 0 — тэр шалгалт дангаараа
    * ХООСОН дамжина. Тиймээс хоёр давхар: (а) DOM-д хэвтээ гүйлгэлт үүсгэх ИНЛАЙН

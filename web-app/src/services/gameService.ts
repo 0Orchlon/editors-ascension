@@ -19,6 +19,7 @@ import {
   XP_THRESHOLDS,
 } from '@shared/core/constants.ts';
 import { rankOf } from '@shared/core/reputation.ts';
+import { trackOf } from '@shared/core/mastery.ts';
 import { isUnlocked } from '@shared/core/cosmetics.ts';
 import { costCurrency, unlockGaps, type Currency } from '@shared/core/skillTree.ts';
 import { COSMETIC_SLOTS, MASTERY_PRESTIGE_LEVEL, RESPEC_COOLDOWN_DAYS } from '@shared/core/constants.ts';
@@ -247,7 +248,7 @@ export function createGameService(deps: GameServiceDeps) {
    * AC COS-3 — нээлтийн эх сурвалжийг ӨГҮҮЛБЭР болгоно. ⚠ Домэйн дүрэм ЭНД БИШ:
    * «нээгдсэн эсэх»-ийг `isUnlocked` шийднэ, энэ нь зөвхөн тэр дүрмийг УНШИНА.
    */
-  function unlockText(item: CosmeticItem): string {
+  function unlockText(item: CosmeticItem, state: GameState): string {
     const { kind, refId, value } = item.unlockSource;
     const titleOf = (id: string): string =>
       questById.get(id)?.title ?? pack.dungeons.find((d) => d.id === id)?.title ?? id;
@@ -259,10 +260,13 @@ export function createGameService(deps: GameServiceDeps) {
         return `Log a ${String(value)} tier attempt on ${titleOf(refId)}.`;
       case 'achievement':
         return `Earn the achievement “${pack.achievements.find((a) => a.id === refId)?.title ?? refId}”.`;
+      // ⚠ lld.md §9.4.2 — «юу хийвэл нээгдэх»-ийн хажууд ОДООГИЙН явцыг МӨН
+      // харуулна (COS-3): «rank 3» гэдэг нь тоглогч 1-т байгаа эсэх, 2-т байгаа
+      // эсэхээс хамаарч огт өөр зай. Явцтай зорилт л мөрдөгдөнө.
       case 'guildRank':
-        return `Reach rank ${String(value)} of 4 with ${pack.guilds.find((g) => g.id === refId)?.title ?? refId}.`;
+        return `Reach rank ${String(value)} of 4 with ${pack.guilds.find((g) => g.id === refId)?.title ?? refId} (currently ${String(rankOf(state.reputation[refId] ?? 0))}).`;
       case 'mastery':
-        return `Reach ${TAG_LABELS[refId] ?? refId} mastery level ${String(value)}.`;
+        return `Reach ${TAG_LABELS[refId] ?? refId} mastery level ${String(value)} (currently ${String(trackOf(state, refId as SkillTag).level)}).`;
       default:
         return 'This one is unlocked by play — the source is not recorded.';
     }
@@ -483,7 +487,8 @@ export function createGameService(deps: GameServiceDeps) {
       masteryTracks(): MasteryTrackView[] {
         const state = store.getState();
         return SKILL_TAGS.map((tag) => {
-          const track = state.mastery[tag] ?? { tag, xp: 0, level: 1, prestigeCount: 0 };
+          // lld.md §4.2 (A-LLD2-1) — анхдагчийн ГАНЦ эх нь `trackOf`, гараар давтахгүй.
+          const track = trackOf(state, tag);
           const remaining = xpToNextLevel(track.xp);
           return {
             tag,
@@ -527,7 +532,7 @@ export function createGameService(deps: GameServiceDeps) {
             slot: item.slot,
             rarity: item.rarity,
             unlocked: isUnlocked(state, item, pack),
-            unlockText: unlockText(item),
+            unlockText: unlockText(item, state),
           }));
       },
 

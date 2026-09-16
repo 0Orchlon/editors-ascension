@@ -84,6 +84,33 @@ describe('RET-2 — a chain completes only in strict order (T-12)', () => {
     expect(next.completedChainIds).toEqual([]);
   });
 
+  /**
+   * ⚠ lld.md §6.3 — мөрийн лексикографик харьцуулалт нь ЗӨВХӨН ижил бүсийн (`Z`)
+   * ISO-8601 дээр цаг хугацааны эрэмбэтэй таарна. `+07:00` офсеттой мөр нь бодит
+   * агшнаа нуух тул дарааллыг НОТЛОХ боломжгүй — бонус олгогдохгүй
+   * («буруу дуусгахаас дуусгахгүй нь аюулгүй»).
+   */
+  it('does not complete when a timestamp carries a UTC offset instead of Z', () => {
+    const stats = doneAt(STEPS, [0, 1, 2, 3]);
+    // Бодитоор 2026-03-10T18:00Z — өмнөх алхмаас ӨМНӨ, гэвч мөрөөр «том» харагдана.
+    stats['sq-b'] = { completions: 1, lastCompletedAt: '2026-03-11T01:00:00+07:00' };
+    const { state: next, events } = evaluateChains(withStats(stats), packWith([chain()]));
+    expect(next.completedChainIds).toEqual([]);
+    expect(events).toEqual([]);
+    expect(next.xp).toBe(0);
+  });
+
+  it('does not complete when every timestamp carries an offset, even if ordered', () => {
+    const stats = Object.fromEntries(
+      STEPS.map((id, i) => [
+        id,
+        { completions: 1, lastCompletedAt: `2026-03-1${i}T09:00:00+07:00` },
+      ]),
+    );
+    const { state: next } = evaluateChains(withStats(stats), packWith([chain()]));
+    expect(next.completedChainIds).toEqual([]);
+  });
+
   it('emits exactly one CHAIN_COMPLETED even if evaluated twice', () => {
     const pack = packWith([chain()]);
     const first = evaluateChains(withStats(doneAt(STEPS, [0, 1, 2, 3])), pack);

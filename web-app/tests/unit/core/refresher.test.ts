@@ -42,6 +42,64 @@ const exhausted = (over: Partial<GameState> = {}): GameState => ({
 
 const passedOn = (id: string, date: string | null) => ({ [id]: { lastPassedDate: date } });
 
+/**
+ * ⚠ lld.md §6.9 — refresher-ийн шүүлт нь `q.levelRequired <= state.level`-ийг МӨН
+ * агуулна, эрэмбэ нь TIERS-ийнхтэй ИЖИЛ (`world → levelRequired → id`). Түвшний
+ * шүүлтгүй бол prestige/respec-ийн дараа түвшнээс дээш dungeon санал болгогдож
+ * тоглогч ЭХЛҮҮЛЖ ч чадахгүй даалгавар авна.
+ */
+describe('RET-4 — the refresher pool obeys the same level gate as the main pool (§6.9)', () => {
+  const gatedPack: ContentPack = testPack({
+    quests: [
+      quest({ id: 'mq-1', track: 'main', world: 1, xp: 60 }),
+      quest({ id: 'dg-low', track: 'dungeon', world: 1, xp: 40, staminaCost: 1, levelRequired: 1 }),
+      quest({ id: 'dg-high', track: 'dungeon', world: 1, xp: 40, staminaCost: 1, levelRequired: 9 }),
+    ],
+  });
+  const done = (over: Partial<GameState> = {}): GameState => ({
+    ...freshState(),
+    completedMainQuestIds: ['mq-1'],
+    completedDungeonIds: ['dg-low', 'dg-high'],
+    ...over,
+  });
+
+  it('never nominates a dungeon above the player level', () => {
+    const state = done({ level: 1, dungeonStats: passedOn('dg-high', '2026-01-01') });
+    expect(pickDailyMission(state, '2026-06-01', gatedPack)).toBeNull();
+  });
+
+  it('still nominates the same dungeon once the player reaches its level', () => {
+    const state = done({ level: 9, dungeonStats: passedOn('dg-high', '2026-01-01') });
+    expect(pickDailyMission(state, '2026-06-01', gatedPack)).toBe('dg-high');
+  });
+
+  it('picks the same dungeon no matter what order the pack lists them in', () => {
+    // Эрэмбэ (`world → levelRequired → id`) нь БҮТЭН тул пакетын массивын дараалал
+    // сонголтод нөлөөлөхгүй. Эрэмбэгүй бол `fnv1a(date) % n` нь өөр зүйл заана.
+    const quests = [
+      quest({ id: 'dg-a', track: 'dungeon', world: 2, xp: 40, staminaCost: 1, levelRequired: 1 }),
+      quest({ id: 'dg-b', track: 'dungeon', world: 1, xp: 40, staminaCost: 1, levelRequired: 5 }),
+      quest({ id: 'dg-c', track: 'dungeon', world: 1, xp: 40, staminaCost: 1, levelRequired: 2 }),
+    ];
+    const state: GameState = {
+      ...freshState(),
+      level: 9,
+      completedDungeonIds: ['dg-a', 'dg-b', 'dg-c'],
+      dungeonStats: {
+        'dg-a': { lastPassedDate: '2026-01-01' },
+        'dg-b': { lastPassedDate: '2026-01-01' },
+        'dg-c': { lastPassedDate: '2026-01-01' },
+      },
+    };
+    const pickAll = (list: typeof quests): (string | null)[] =>
+      Array.from({ length: 12 }, (_, d) =>
+        pickDailyMission(state, `2026-06-${String(d + 1).padStart(2, '0')}`, testPack({ quests: list })),
+      );
+    expect(pickAll([...quests].reverse())).toEqual(pickAll(quests));
+    expect(new Set(pickAll(quests))).toEqual(new Set(['dg-a', 'dg-b', 'dg-c']));
+  });
+});
+
 describe('RET-4 — a long-untouched dungeon becomes a candidate (T-15)', () => {
   it('keeps the minimum at fourteen game days', () => {
     expect(REFRESHER_MIN_DAYS).toBe(14);

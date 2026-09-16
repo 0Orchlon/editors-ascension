@@ -45,6 +45,23 @@ describe('COS-3 — every cosmetic is listed, locked or not (T-30)', () => {
     }
   });
 
+  /**
+   * ⚠ lld.md §9.4.2 — явцтай зорилт нь одоогийн байрлалаа МӨН хэлнэ. «rank 3 хүр»
+   * гэдэг нь тоглогч 0-т байгаа юу, 2-т байгаа юу гэдгээс хамаарч огт өөр зай:
+   * явцгүй текст нь COS-3-ын «зорилго тавих боломж»-ийг хагасхан л биелүүлнэ.
+   */
+  it('shows the current progress next to a graded goal', () => {
+    const graded = ['guildRank', 'mastery'];
+    const withProgress = pack.cosmetics.filter((c) => graded.includes(c.unlockSource.kind));
+    expect(withProgress.length).toBeGreaterThan(0);
+
+    for (const cosmetic of withProgress) {
+      const node = $(`[data-cosmetic-id="${cosmetic.id}"] .trophy-source`);
+      expect(node, `${cosmetic.id} is missing from the room`).not.toBeNull();
+      expect(node!.textContent, cosmetic.id).toMatch(/\(currently \d+\)/);
+    }
+  });
+
   it('states locked and unlocked with words, never colour alone (VIS-4)', () => {
     for (const item of $$('[data-testid="trophy-item"]'))
       expect(item.textContent).toMatch(/Unlocked|Locked/);

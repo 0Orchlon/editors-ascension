@@ -35,6 +35,27 @@ runtime хамаарал тэг, a11y-г бүрэн хянана.
   cooldown, hard mode-ийн босго, cosmetic-ийн нээлт — бүгд `gameService`-ээр
   `shared/core`-оос ирнэ (`QX-7`).
 
+## Өнгө — `theme.ts` ба `styles.css` нь ХОЛБОГДСОН
+
+`ui/theme.ts` нь өнгөний цорын ганц эх, `src/styles.css` нь түүний хуулбар. Контрастын
+нотолгоо хүснэгтээс тооцогддог, тоглогчийн харах өнгө CSS-ээс гардаг тул хоёр нь
+САЛВАЛ хаалга хашгирахгүй байв. `tests/a11y/contrast.test.ts` нь одоо
+6 палитр × 19 токен + 8 colour-blind override = **122 утгыг** үг үсгээрээ тулгана.
+Токен нэмэх/өнгө засах бол ХОЁУЛАНГ нь нэг өөрчлөлтөд.
+
+`gameService` нь `state.mastery[tag] ?? { … }` гэж анхдагчаа гараар бичихгүй —
+`trackOf(state, tag)` (lld.md §4.2 A-LLD2-1). `architecture.test.ts`-ийн сканнер
+`shared/core`-оос гадна **`web-app/src`**-ийг ч гүйнэ.
+
+Trophy Room-ийн нээлтийн текст нь явцтай зорилтод ОДООГИЙН байрлалыг мөн бичнэ
+(`(currently N)` — lld.md §9.4.2): «rank 3 хүр» гэдэг нь 0-оос эсвэл 2-оос
+хамаарч огт өөр зай.
+
+`gameService.view.*`-ийн нэрс загварын `§9.5`-ийнхээс гурав ялгаатай
+(`trophies` ↔ `cosmetics` · `respecStatus` ↔ `respecAvailableIn` ·
+`bossThresholds`+`bossPersonalBest` ↔ `bossBoard`) — чадвар нь бүтэн, зөвхөн нэр.
+Шинэ view нэмэхэд загварын нэрийг эхлээд шалга.
+
 ## A11y (заавал)
 
 Интерактив элемент бүр `<button>`/`<a>`/`<input>` — `div` + `onclick` ХОРИГТОЙ.
