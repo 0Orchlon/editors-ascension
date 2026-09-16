@@ -2,6 +2,7 @@
 import type { DomainEvent, GameState, QuestDefinition } from '../types/index.ts';
 import { evaluateAchievements } from './achievements.ts';
 import { evaluateChains } from './chains.ts';
+import { markDungeonPassed } from './dungeons.ts';
 import { addMasteryXp } from './mastery.ts';
 import { grantReputation, type RepTrack } from './reputation.ts';
 import { applyRewards, rollRewards } from './economy.ts';
@@ -78,7 +79,8 @@ export function claimQuest(state: GameState, input: ClaimInput, ctx: Ctx): Domai
     next = { ...next, completedMainQuestIds: [...next.completedMainQuestIds, quest.id] };
     events.push({ type: 'QUEST_COMPLETED', data: { questId: quest.id, title: quest.title } });
   } else if (quest.track === 'dungeon') {
-    next = { ...next, completedDungeonIds: [...next.completedDungeonIds, quest.id] };
+    // ⚠ §6.8 Δ-1 — `dungeonStats`-ыг МӨН бичнэ: `attemptDungeon`-той ИЖИЛ зам.
+    next = markDungeonPassed(next, quest.id, ctx.at);
     events.push({ type: 'QUEST_COMPLETED', data: { questId: quest.id, title: quest.title } });
   } else {
     next = {

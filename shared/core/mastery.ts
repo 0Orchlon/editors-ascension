@@ -8,14 +8,26 @@
  * нээлтэд НӨЛӨӨЛӨХГҮЙ. Цорын ганц үл хамаарах зүйл нь tier-2/3 skill node (AC SKL-2),
  * тэр нь `skillTree.ts`-д. Энэ модуль өөр төлөв ХӨНДӨХГҮЙ.
  */
-import type { DomainEvent, GameState, SkillTag } from '../types/index.ts';
-import { MASTERY_PRESTIGE_LEVEL, SKILL_TAGS } from './constants.ts';
+import type { DomainEvent, GameState, MasteryTrack, SkillTag } from '../types/index.ts';
+import { MASTERY_MAX_LEVEL, MASTERY_PRESTIGE_LEVEL, SKILL_TAGS } from './constants.ts';
 import { levelFor } from './progression.ts';
 import { ok, reject, type DomainResult } from './result.ts';
 
 export type MasteryOutcome = { state: GameState; events: DomainEvent[] };
 
 const isTag = (tag: string): tag is SkillTag => (SKILL_TAGS as readonly string[]).includes(tag);
+
+/**
+ * Track-ийн уншилтын ЦОРЫН ГАНЦ зам (lld.md §4.2 A-LLD2-1 · §6.10).
+ *
+ * ⚠ `rec()` нь түлхүүрийн БҮРЭН байдлыг шалгадаггүй тул уншигч бүр `?? 0` гэж
+ * дотроо анхдагч бичвэл зан төлөв нь файл тутамд чимээгүй сална. Байхгүй түлхүүрт
+ * `{ xp: 0, level: 1, prestigeCount: 0 }` буцаана — «хараахан ахиагүй» нь level 1,
+ * level 0 БИШ (`earnedMasteryPoints`-ийн `level − 1` томьёо үүнээс хамаарна).
+ */
+export function trackOf(state: GameState, tag: SkillTag): MasteryTrack {
+  return state.mastery[tag] ?? { tag, xp: 0, level: 1, prestigeCount: 0 };
+}
 
 /**
  * Олдсон НИЙТ mastery point (plan.md P-20). ⚠ Хадгалагдахгүй — ГАРГАГДАНА:
@@ -25,8 +37,10 @@ const isTag = (tag: string): tag is SkillTag => (SKILL_TAGS as readonly string[]
  */
 export function earnedMasteryPoints(state: GameState): number {
   let total = 0;
-  for (const track of Object.values(state.mastery))
+  for (const tag of SKILL_TAGS) {
+    const track = trackOf(state, tag);
     total += track.level - 1 + track.prestigeCount * 9;
+  }
   return total;
 }
 
@@ -49,12 +63,20 @@ export function addMasteryXp(
 
   // Ижил tag хоёр удаа бичигдсэн контент нь XP-ийг хоёр дахин авах ёсгүй.
   for (const tag of new Set(tags)) {
-    const track = mastery[tag];
-    if (track === undefined) continue;
+    const track = trackOf(state, tag);
+
+    /**
+     * ⚠ Дээд түвшинд XP ЦАРЦАНА (lld.md §6.1-ийн хилийн шийдвэр). Эс бөгөөс `xp` нь
+     * хязгааргүй өсөж, `prestigeMastery` нь `xp ← 0` бичихэд тоглогч харагдахгүй
+     * хуримтлалаа алдана — «алдсан» мэдрэмж нь MST-3-ийн амлалтыг эвдэнэ.
+     */
+    if (track.level >= MASTERY_MAX_LEVEL) continue;
 
     const xp = track.xp + amount;
-    const level = levelFor(xp);
-    mastery[tag] = { ...track, xp, level };
+    const level = Math.min(levelFor(xp), MASTERY_MAX_LEVEL);
+    // ⚠ Тархалтгүй, ил талбарууд: `{ ...track, … }` нь `architecture.test.ts`-ийн
+    // «бичих хориг» сканнерт прогрессийн бичилтээс ялгагдахгүй олдвор үлдээнэ.
+    mastery[tag] = { tag, xp, level, prestigeCount: track.prestigeCount };
 
     for (let next = track.level + 1; next <= level; next++) {
       masteryPoints += 1;
@@ -71,8 +93,7 @@ export function addMasteryXp(
  */
 export function prestigeMastery(state: GameState, tag: SkillTag): DomainResult {
   if (!isTag(tag)) return reject('INVALID_INPUT', `unknown skill tag ${String(tag)}`);
-  const track = state.mastery[tag];
-  if (track === undefined) return reject('INVALID_INPUT', `no mastery track for ${tag}`);
+  const track = trackOf(state, tag);
   if (track.level !== MASTERY_PRESTIGE_LEVEL)
     return reject(
       'PREREQ_NOT_MET',

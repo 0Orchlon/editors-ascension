@@ -11,6 +11,7 @@
  */
 import type { ContentPack, GameState, SkillDefinition, SkillTag } from '../types/index.ts';
 import { RESPEC_COOLDOWN_DAYS, SKILL_TAGS } from './constants.ts';
+import { trackOf } from './mastery.ts';
 import { dayOf, daysBetween, ok, reject, type DomainResult } from './result.ts';
 
 export type Currency = 'skillPoints' | 'masteryPoints';
@@ -41,7 +42,7 @@ export function capstoneGaps(state: GameState, skill: SkillDefinition, pack: Con
   const gaps: string[] = [];
   const track = skill.track;
 
-  const level = state.mastery[track]?.level ?? 0;
+  const level = trackOf(state, track).level;
   if (level < CAPSTONE_MASTERY_LEVEL)
     gaps.push(`${track} needs mastery level ${CAPSTONE_MASTERY_LEVEL} — it is at ${level}`);
 
@@ -73,7 +74,7 @@ export function unlockGaps(state: GameState, skill: SkillDefinition, pack: Conte
   const gaps = capstoneGaps(state, skill, pack);
 
   if (costCurrency(skill) === 'masteryPoints') {
-    const level = state.mastery[skill.track]?.level ?? 0;
+    const level = trackOf(state, skill.track).level;
     if (level < 2)
       gaps.unshift(`${skill.track} mastery must reach level 2 before its tier-${skill.tier} nodes open`);
   }

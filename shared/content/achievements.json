@@ -301,7 +301,7 @@
     "predicate": {
       "kind": "guildRank",
       "value": 2,
-      "ref": "guild-colorists-circle"
+      "ref": "guild-cut"
     }
   },
   {
@@ -311,7 +311,7 @@
     "predicate": {
       "kind": "guildRank",
       "value": 2,
-      "ref": "guild-animation"
+      "ref": "guild-form"
     }
   },
   {
@@ -321,7 +321,7 @@
     "predicate": {
       "kind": "guildRank",
       "value": 2,
-      "ref": "guild-story-collective"
+      "ref": "guild-frame"
     }
   },
   {
@@ -331,7 +331,7 @@
     "predicate": {
       "kind": "guildRank",
       "value": 2,
-      "ref": "guild-signal-chain"
+      "ref": "guild-signal"
     }
   },
   {

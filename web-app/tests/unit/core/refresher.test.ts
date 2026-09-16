@@ -131,3 +131,37 @@ describe('DM-1 — determinism survives the new branch (T-15)', () => {
     expect(pickDailyMission(state, '2026-06-02', pack)).toBeNull();
   });
 });
+
+/**
+ * `lld.md §6.9`-ийн T-15-д нэрлэгдсэн шаардлага — кодод байгаагүй.
+ *
+ * `previous` шүүлт нь зөвхөн ҮНДСЭН pool-д хэрэглэгдэж байсан тул refresher нь
+ * өчигдрийнхтэй ижил dungeon-ыг дахин гаргаж, тоглогч хоёр өдөр дараалан ижил
+ * зүйл харах боломжтой байв. TIERS-ийн зан төлөвтэй НЭГЭН ИЖИЛ байх ёстой.
+ */
+describe('RET-4 — the refresher drops yesterday’s mission too (§6.9 T-15)', () => {
+  const stale = {
+    ...passedOn('dg-1', '2026-01-01'),
+    ...passedOn('dg-2', '2026-01-02'),
+  };
+
+  it('never repeats yesterday when two refresher candidates exist', () => {
+    for (const previous of ['dg-1', 'dg-2']) {
+      const state = exhausted({
+        dungeonStats: stale,
+        dailyMission: { questId: previous, date: '2026-05-31' },
+      });
+      for (const date of ['2026-06-01', '2026-06-02', '2026-06-03', '2026-06-04'])
+        expect(pickDailyMission(state, date, pack)).not.toBe(previous);
+    }
+  });
+
+  /** ⚠ Сүүлчийн нэр дэвшигчийг хасах нь «Rest day» болгоно — DM-2-ийн ижил дүрэм. */
+  it('still returns the only candidate when it is also yesterday’s', () => {
+    const state = exhausted({
+      dungeonStats: passedOn('dg-1', '2026-01-01'),
+      dailyMission: { questId: 'dg-1', date: '2026-05-31' },
+    });
+    expect(pickDailyMission(state, '2026-06-01', pack)).toBe('dg-1');
+  });
+});

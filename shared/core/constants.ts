@@ -86,6 +86,15 @@ export const SKILL_TAGS = [
 // ───────────────────────────── v1.2.0 — гүнзгийрүүлэлтийн тогтмолууд (plan.md §12)
 
 export const GUILD_COUNT = 4;
+/**
+ * Guild id-ийн ЦОРЫН ГАНЦ хувилбар (lld.md §5.3 · A-LLD2-2).
+ *
+ * ⚠ `MIGRATIONS[2]` нь `reputation`-ийн 4 түлхүүрийг ЭНДЭЭС үүсгэнэ — `guilds.json`-ийг
+ * ШУУД импортолбол `shared/save` нь `shared/content`-оос хамаарч давхаргын чиглэл эргэнэ.
+ * ⚠ Зөвхөн `id` тогтмол; guild-ийн ХАРАГДАХ нэр (`title`) нь контентод хэвээр (P-13 · H-2)
+ * тул хүн нэрийг солиход код хөндөгдөхгүй. Хоёрын зөрүүг `[C]` дүрэм C-07 хаана.
+ */
+export const GUILD_IDS = ['guild-cut', 'guild-form', 'guild-frame', 'guild-signal'] as const;
 /** AC BSX-2 — hard mode-ийн босго нь ЭНЭ коэффициентээр ТООЦОГДОНО. */
 export const HARD_MODE_MULTIPLIER = 1.15;
 export const MASTERY_MAX_LEVEL = 10;

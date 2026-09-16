@@ -81,7 +81,7 @@ describe('FX-6 — every event speaks, animation is never the only channel', () 
       const result = play([event(type, {
         level: 3, rank: 'Cadet', title: 'Rough Cut', completions: 2, correct: 4, total: 5,
         nextStep: 'Re-read the notes', rarity: 'rare', tier: 'mvp', difficulty: 'hard',
-        current: 4, tag: 'blender', guildId: 'guild-animation', chainId: 'chain-first-week',
+        current: 4, tag: 'blender', guildId: 'guild-form', chainId: 'chain-first-week',
         bonusXp: 40, message: 'Attempt logged.',
       })], () => LOUD);
       expect(result.announced).toHaveLength(1);

@@ -13,6 +13,7 @@
 import {
   DEFAULT_REPEAT_XP_MULTIPLIER,
   GUILD_COUNT,
+  GUILD_IDS,
   MASTERY_MAX_LEVEL,
   REP_THRESHOLDS,
   SKILL_TAGS,
@@ -54,6 +55,8 @@ export const CONTENT_RULE_IDS = [
   'COS-1',
   'COS-2',
   'OFF-2',
+  // Загварт нэрлэгдсэн ч кодод дутуу байсан гурав (lld.md §8.2 — C-02 · C-06 · C-07)
+  'SKL-2',
 ] as const;
 
 const MAIN_QUEST_COUNT = 18;
@@ -63,6 +66,44 @@ const MIN_LOOT = 8;
 const STAMINA_RANGE = { min: 1, max: 6 } as const;
 const MAX_ENCOUNTER_MINUTES = 2;
 const WORLDS = [1, 2, 3, 4, 5] as const;
+/**
+ * PERSONAL-1-ийн ЯГ 24 skill node (`lld.md §6.6.1` — A-LLD2-4 · Δ-3).
+ *
+ * ⚠ Эдгээр нь v1 save-д `skillPoints`-оор нээгдсэн байж БОЛНО. Аль нэгийг нь tier-2
+ * болгох нь migration хийсэн save-д «үлдэгдэл + зарцуулсан == олдсон» инвариантыг
+ * зөрчинө (`masteryPoints ← 0`, олдсон = 0, зарцуулсан > 0) бөгөөд `respecTree` нь
+ * ОЛДООГҮЙ mastery point-ыг гараас гаргаж өгнө. Шинэ tier-2/3 node нь ЗААВАЛ ШИНЭ
+ * id-тай байна — хуучныг хөрвүүлж БОЛОХГҮЙ.
+ * ⚠ `title`/`description`-ийн үг сонголт нь контентын шийдвэр тул энд царцаагүй;
+ * тэдгээрийн дрифтийг `web-app/tests/unit/content-v2.test.ts` хардана.
+ */
+export const PERSONAL_1_SKILL_IDS = [
+  'sk-edit-fundamentals',
+  'sk-pacing',
+  'sk-color-correction',
+  'sk-color-grading',
+  'sk-blender-navigation',
+  'sk-modeling',
+  'sk-uv-texturing',
+  'sk-shading',
+  'sk-lighting',
+  'sk-rendering',
+  'sk-keyframing',
+  'sk-easing',
+  'sk-rigging',
+  'sk-character-animation',
+  'sk-framing',
+  'sk-camera-movement',
+  'sk-coverage',
+  'sk-audio-capture',
+  'sk-sound-design',
+  'sk-mixing',
+  'sk-compositing',
+  'sk-vfx-integration',
+  'sk-story-structure',
+  'sk-visual-storytelling',
+] as const;
+
 const MIN_SKILLS = 28;
 const MIN_ACHIEVEMENTS = 40;
 const MIN_CHAINS = 3;
@@ -392,6 +433,43 @@ function skl5(pack: ContentPack, out: Out): void {
     if (!s.title.trim()) add(out, 'SKL-5', at, 'title is empty');
     if (!s.description.trim()) add(out, 'SKL-5', at, 'description is empty');
   }
+
+  // C-06 — PERSONAL-1-ийн 24 node нь id · cost · tier-ээрээ ЦАРЦСАН (lld.md §6.6.1).
+  const byId = new Map(pack.skills.map((s) => [s.id, s]));
+  for (const id of PERSONAL_1_SKILL_IDS) {
+    const node = byId.get(id);
+    if (node === undefined) {
+      add(out, 'SKL-5', `skills/${id}`, 'a PERSONAL-1 node disappeared — v1 saves reference it by id');
+      continue;
+    }
+    if (node.tier !== 1)
+      add(
+        out,
+        'SKL-5',
+        `skills/${id}`,
+        `tier ${node.tier} — a PERSONAL-1 node stays tier 1 or a migrated v1 save spends mastery points it never earned`,
+      );
+    if (node.cost !== 1) add(out, 'SKL-5', `skills/${id}`, `cost ${node.cost} — PERSONAL-1 nodes cost 1`);
+  }
+}
+
+/**
+ * C-02 (`SKL-2` · Δ-2) — track тутамд харгалзах boss БАЙХ ЁСТОЙ.
+ *
+ * ⚠ `capstoneGaps` нь «тухайн track-ийн boss дээр advanced+ оролдлого бүртгэгдсэн»
+ * гэж шаарддаг ба «track-ийн boss»-ыг `boss.tags ∋ track` гэж уншдаг. Хамрагдаагүй
+ * tag-ийн capstone нь ХЭЗЭЭ Ч нээгдэхгүй — тоглогчид харагдахгүй мухардал.
+ */
+function skl2(pack: ContentPack, out: Out): void {
+  const bosses = pack.quests.filter((q) => q.track === 'boss');
+  for (const tag of SKILL_TAGS)
+    if (!bosses.some((b) => b.tags.includes(tag)))
+      add(
+        out,
+        'SKL-2',
+        'quests',
+        `no boss carries the ${tag} tag — its capstone could never be unlocked`,
+      );
 }
 
 function bsx1(pack: ContentPack, out: Out): void {
@@ -456,6 +534,19 @@ function ret5(pack: ContentPack, out: Out): void {
   const guilds = pack.guilds;
   if (guilds.length !== GUILD_COUNT)
     add(out, 'RET-5', 'guilds', `expected ${GUILD_COUNT} guilds, found ${guilds.length}`);
+
+  // C-07 — id-ууд нь `GUILD_IDS`-тэй ЯГ таарна (lld.md §5.3): `MIGRATIONS[2]` нь
+  // `reputation`-ийн түлхүүрийг тогтмолоос үүсгэдэг тул зөрүү нь хоосон түлхүүртэй
+  // save төрүүлнэ — схем хүчинтэй, зан төлөв буруу.
+  const ids = [...guilds.map((g) => g.id)].sort();
+  const expected = [...GUILD_IDS].sort();
+  if (ids.join(',') !== expected.join(','))
+    add(
+      out,
+      'RET-5',
+      'guilds',
+      `guild ids ${ids.join(', ')} do not match GUILD_IDS ${expected.join(', ')} — migrations key reputation off the constant`,
+    );
 
   const owners = new Map<string, string[]>();
   const seen = new Set<string>();
@@ -650,6 +741,7 @@ export function checkContentRules(pack: ContentPack): ContentViolation[] {
   ec1(pack, out);
   // PERSONAL-2 (T-25)
   skl1(pack, out);
+  skl2(pack, out);
   skl5(pack, out);
   bsx1(pack, out);
   ret1(pack, out);

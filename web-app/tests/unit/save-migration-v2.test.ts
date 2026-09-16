@@ -13,7 +13,13 @@ import { appendReplay } from '@shared/core/replayLog.ts';
 import { daysBetween, dayOf } from '@shared/core/result.ts';
 import { COSMETIC_SLOTS, REPLAY_LOG_CAP, SKILL_TAGS } from '@shared/core/constants.ts';
 import { validateGameState } from '@shared/validate/index.ts';
+import { earnedMasteryPoints } from '@shared/core/mastery.ts';
+import { respecTree } from '@shared/core/skillTree.ts';
+import { PERSONAL_1_SKILL_IDS } from '@shared/validate/content-rules.ts';
+import { buildPack } from '@shared/content/index.ts';
 import type { GameState, ReplayLogEntry } from '@shared/types/index.ts';
+
+const pack = buildPack();
 
 /** v1-ийн бодит хэлбэр — шинэ талбар БАЙХГҮЙ, `settings` нь 2 түлхүүртэй. */
 const v1State = (): Record<string, unknown> => ({
@@ -208,5 +214,74 @@ describe('P-18 — daysBetween lives next to dayOf and reads no clock (T-06)', (
 
   it('composes with dayOf so an ISO timestamp can be compared to a date', () => {
     expect(daysBetween(dayOf('2026-09-01T23:59:59Z'), '2026-09-15')).toBe(14);
+  });
+});
+
+/**
+ * Хянагчийн барьсан блоклогч (`lld.md §6.6.1` · A-LLD2-4 · Δ-3).
+ *
+ * PERSONAL-1-ийн 24 node нь v1-д `skillPoints`-оор нээгддэг байсан. Аль нэгийг нь
+ * tier-2 болгох нь migration хийсэн save-д «үлдэгдэл + зарцуулсан == олдсон»
+ * инвариантыг ЗӨРЧИНӨ: migration нь `masteryPoints ← 0`, mastery track бүгд level 1
+ * (олдсон = 0) бичдэг тул зарцуулсан > олдсон болно. Дараа нь `respecTree` нь
+ * ОЛДООГҮЙ mastery point-ыг гараас гаргаж өгнө.
+ *
+ * ⚠ Одоогийн `skillTree.test.ts`-ийн инвариантын тест нь СИНТЕТИК төлөв дээр
+ * ажилладаг тул энэ тохиолдлыг хамрахгүй — тиймээс шалгалт ЭНД, migration дээр.
+ */
+describe('MST-4 · P-20 — the invariant survives a real v1 → v2 migration (§6.6.1)', () => {
+  const v1WithRealSkills = (unlockedSkillIds: string[]): Record<string, unknown> => ({
+    ...v1State(),
+    unlockedSkillIds,
+  });
+
+  const legacyIds: readonly string[] = PERSONAL_1_SKILL_IDS;
+
+  const spentMasteryPoints = (ids: readonly string[]): number =>
+    ids.filter((id) => (pack.skills.find((s) => s.id === id)?.tier ?? 1) >= 2).length;
+
+  it('keeps every PERSONAL-1 node at tier 1 — nothing a v1 save bought costs mastery points', () => {
+    const legacy = pack.skills.filter((s) => legacyIds.includes(s.id));
+    expect(legacy).toHaveLength(PERSONAL_1_SKILL_IDS.length);
+    expect(legacy.filter((s) => s.tier !== 1).map((s) => s.id)).toEqual([]);
+  });
+
+  it('adds the tier-2 and tier-3 nodes rather than re-labelling old ones (38 total)', () => {
+    expect(pack.skills).toHaveLength(38);
+    for (const tag of SKILL_TAGS) {
+      const tree = pack.skills.filter((s) => s.track === tag);
+      expect(tree.filter((s) => s.tier === 2)).toHaveLength(1);
+      expect(tree.filter((s) => s.tier === 3)).toHaveLength(1);
+      // Шинэ tier-2 node нь PERSONAL-1-ийн жагсаалтад БАЙХГҮЙ — хөрвүүлсэн биш, шинэ.
+      for (const node of tree.filter((s) => s.tier >= 2))
+        expect(legacyIds).not.toContain(node.id);
+    }
+  });
+
+  it('migrates a v1 save whose unlocked nodes are real without breaking remainder + spent = earned', () => {
+    const unlocked = ['sk-modeling', 'sk-uv-texturing', 'sk-shading'];
+    const migrated = runMigrations(v1WithRealSkills(unlocked), 1, 2) as unknown as GameState;
+
+    expect(migrated.masteryPoints).toBe(0);
+    expect(earnedMasteryPoints(migrated)).toBe(0);
+    expect(migrated.masteryPoints + spentMasteryPoints(migrated.unlockedSkillIds)).toBe(
+      earnedMasteryPoints(migrated),
+    );
+  });
+
+  it('never hands out unearned mastery points when a migrated save respecs (SKL-3)', () => {
+    const unlocked = ['sk-modeling', 'sk-uv-texturing', 'sk-shading'];
+    const migrated = runMigrations(v1WithRealSkills(unlocked), 1, 2) as unknown as GameState;
+
+    const respecced = respecTree(migrated, 'blender', '2026-09-20T09:00:00Z', pack);
+    expect(respecced.ok).toBe(true);
+    if (!respecced.ok) return;
+
+    // Бүх буцаалт `skillPoints` руу — v1 тоглогч тэрхүү валютаар л төлсөн.
+    expect(respecced.state.masteryPoints).toBe(0);
+    expect(respecced.state.skillPoints).toBe((migrated.skillPoints as number) + unlocked.length);
+    expect(
+      respecced.state.masteryPoints + spentMasteryPoints(respecced.state.unlockedSkillIds),
+    ).toBe(earnedMasteryPoints(respecced.state));
   });
 });

@@ -223,7 +223,22 @@ describe('the guards actually bite (T-17)', () => {
  * ТУХАЙН файлыг хамрахгүй, гэхдээ түүнийг ил нэрлэж баримтжуулна.
  */
 describe('power bans: progression never reads the new systems (T-10)', () => {
-  const GUARDED = ['progression.ts', 'stamina.ts', 'quests.ts', 'dungeons.ts', 'economy.ts'];
+  /**
+   * ⚠ ЯГ `lld.md §2`-ийн 9 модуль. Явцуу жагсаалт нь сканнерыг чимээгүй нүхтэй
+   * болгоно: `encounters.ts` · `sideQuests.ts` · `streak.ts` · `projects.ts` нь
+   * mastery-г уншиж чадах хэвээр үлдэж, D-6 зөвхөн заавар болж хувирна.
+   */
+  const GUARDED = [
+    'progression.ts',
+    'stamina.ts',
+    'quests.ts',
+    'dungeons.ts',
+    'economy.ts',
+    'encounters.ts',
+    'sideQuests.ts',
+    'streak.ts',
+    'projects.ts',
+  ];
 
   /**
    * Талбарын УНШИЛТ — `state.mastery`, `next.reputation[…]` гэх мэт.
@@ -233,7 +248,7 @@ describe('power bans: progression never reads the new systems (T-10)', () => {
    */
   const fieldReads = (field: string): RegExp =>
     new RegExp(String.raw`(?<![.\w])[A-Za-z_$][\w$]*\.${field}\b`);
-  const BANNED_FIELDS = ['mastery', 'reputation', 'campLayout', 'replayLog'];
+  const BANNED_FIELDS = ['mastery', 'masteryPoints', 'reputation', 'campLayout', 'replayLog'];
 
   it('keeps mastery, reputation, campLayout and replayLog out of the progression modules', () => {
     const offenders: string[] = [];
@@ -310,5 +325,149 @@ describe('power bans: progression never reads the new systems (T-10)', () => {
 
   it('scans a non-empty set of guarded files — an empty scan would pass vacuously', () => {
     for (const name of GUARDED) expect(read(join(sharedDir, 'core', name)).length).toBeGreaterThan(200);
+  });
+});
+
+/**
+ * Сканнер B — «БИЧИХ хориг» (`lld.md §2`). Дээрх сканнер А нь шинэ системүүд
+ * прогрессийг УНШИХГҮЙ гэдгийг хаадаг; энэ нь эсрэг чиглэлийг хаана: шинэ
+ * хөдөлгүүрүүд прогрессийн талбарт ШУУД БИЧИХГҮЙ.
+ *
+ * ⚠ Илрүүлэлт нь `{ ...state, xp: … }` хэлбэрийн олдвор — объектын дээд түвшний
+ * түлхүүрийг л барина. `{ tag, xp: 0, level: 1 }` гэсэн ҮҮРЛЭСЭН `MasteryTrack`
+ * литерал нь прогрессийн бичилт БИШ тул хашгирахгүй.
+ * ⚠ Үл хамаарах ГАНЦ: `chains.ts` нь `bonusXp`-ийг `addXp`-ээр олгоно (RET-2) —
+ * `progression.ts`-ийг импортлож БОЛНО, харин `xp`-д ШУУД бичихгүй.
+ */
+describe('power bans: the new engines never write progression state (T-10 · §2 Scanner B)', () => {
+  const WRITERS = ['mastery.ts', 'reputation.ts', 'chains.ts', 'cosmetics.ts', 'replayLog.ts'];
+  const BANNED_WRITES = [
+    'xp',
+    'level',
+    'skillPoints',
+    'stamina',
+    'coins',
+    'inventory',
+    'completedMainQuestIds',
+    'completedDungeonIds',
+  ];
+
+  /**
+   * Тархалтаар эхэлсэн объект литерал бүрийн ДЭЭД ТҮВШНИЙ түлхүүрүүд.
+   * Хаалтын гүнг тоолж үүрлэсэн литералыг алгасана — регулярын оронд жижиг
+   * гүйлгэгч: `{ ...state, mastery: { …, xp: 0 } }` нь `mastery` л буцаана.
+   */
+  const spreadWriteFields = (source: string): string[] => {
+    const out: string[] = [];
+    for (let i = 0; i < source.length; i++) {
+      if (source[i] !== '{') continue;
+      let depth = 0;
+      let body = '';
+      for (let j = i; j < source.length; j++) {
+        const ch = source[j]!;
+        if (ch === '{') depth++;
+        else if (ch === '}') depth--;
+        if (depth === 1 && ch !== '{') body += ch;
+        if (depth === 0) break;
+      }
+      if (!/^\s*\.\.\.[A-Za-z_$][\w$]*\s*,/.test(body)) continue;
+      for (const m of body.matchAll(/(?:^|,)\s*([A-Za-z_$][\w$]*)\s*(?::|,|$)/g)) out.push(m[1]!);
+    }
+    return out;
+  };
+
+  it('keeps progression fields out of every spread-write in the new engines', () => {
+    const offenders: string[] = [];
+    for (const name of WRITERS) {
+      const source = stripComments(read(join(sharedDir, 'core', name)));
+      for (const field of spreadWriteFields(source))
+        if (BANNED_WRITES.includes(field)) offenders.push(`${name} → ${field}:`);
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('flags a planted progression write', () => {
+    const planted = 'return { ...state, xp: state.xp + entry.bonusXp };';
+    expect(spreadWriteFields(planted)).toContain('xp');
+  });
+
+  it('flags a planted shorthand write — `{ ...state, coins }` evades a naive `coins:` scan', () => {
+    expect(spreadWriteFields('return { ...state, coins };')).toContain('coins');
+  });
+
+  it('does not mistake a nested MasteryTrack literal for a progression write', () => {
+    const legit = 'return { ...state, mastery: { ...state.mastery, [tag]: { tag, xp: 0, level: 1 } } };';
+    expect(spreadWriteFields(legit)).not.toContain('xp');
+    expect(spreadWriteFields(legit)).not.toContain('level');
+    expect(spreadWriteFields(legit)).toContain('mastery');
+  });
+
+  it('scans a non-empty set of writer files — an empty scan would pass vacuously', () => {
+    for (const name of WRITERS)
+      expect(read(join(sharedDir, 'core', name)).length).toBeGreaterThan(200);
+  });
+
+  /** ⚠ `chains.ts`-ийн ил зөвшөөрөл: XP нь `addXp`-ээр л очно, талбарт биш. */
+  it('lets chains.ts award its bonus through addXp instead of touching xp (RET-2)', () => {
+    const source = stripComments(read(join(sharedDir, 'core', 'chains.ts')));
+    expect(source).toContain('addXp');
+  });
+});
+
+/**
+ * `lld.md §6.8` (Δ-1) — `dungeonStats` нь ХОЁР зам (`dungeons.ts` ба `quests.ts`)-аар
+ * бичигдэх эрсдэлтэй байсан. Шийдэл нь `markDungeonPassed` ганц туслах. Энэ сканнер
+ * нь тэр шийдвэрийг хаана: талбарт ШУУД бичих нь зөвхөн эзэн хоёр файлд.
+ */
+describe('dungeonStats has exactly one writer (§6.8 Δ-1)', () => {
+  const ALLOWED = ['dungeons.ts', 'saves.ts'];
+
+  it('never assigns dungeonStats outside dungeons.ts and saves.ts', () => {
+    const offenders: string[] = [];
+    for (const file of filesUnder(join(sharedDir, 'core'))) {
+      const name = basename(file);
+      if (ALLOWED.includes(name)) continue;
+      if (/\bdungeonStats\s*:/.test(stripComments(read(file)))) offenders.push(name);
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('routes the quest-track dungeon completion through markDungeonPassed', () => {
+    const quests = stripComments(read(join(sharedDir, 'core', 'quests.ts')));
+    expect(quests).toContain('markDungeonPassed');
+  });
+
+  it('flags a planted dungeonStats write', () => {
+    expect(/\bdungeonStats\s*:/.test('return { ...state, dungeonStats: {} };')).toBe(true);
+  });
+});
+
+/**
+ * `lld.md §4.2` (A-LLD2-1) · `§6.10` — `mastery`-г уншигч бүр `trackOf`-оор дамжина.
+ *
+ * ⚠ `rec()` нь түлхүүрийн бүрэн байдлыг шалгадаггүй тул уншигч тутам `?? 0` гэж
+ * анхдагчаа дотроо бичих уруу таталт байдаг. Тэр нь хоёр асуудал үүсгэнэ: (а) «хараахан
+ * ахиагүй» нь level 1 биш 0 болж `earnedMasteryPoints`-ийн `level − 1` томьёо хазайна,
+ * (б) анхдагчийг өөрчлөхөд файл тутам мартагдана. Ганц зам нь шийдвэр, стиль БИШ.
+ */
+describe('mastery is read through trackOf only (§4.2 A-LLD2-1)', () => {
+  const READERS = ['skillTree.ts', 'achievements.ts', 'cosmetics.ts'];
+
+  it('routes every allowed mastery reader through the helper', () => {
+    for (const name of READERS)
+      expect(stripComments(read(join(sharedDir, 'core', name)))).toContain('trackOf');
+  });
+
+  it('leaves no hand-written mastery default anywhere in shared/core', () => {
+    const offenders: string[] = [];
+    for (const file of filesUnder(join(sharedDir, 'core'))) {
+      if (basename(file) === 'mastery.ts') continue; // анхдагчийн ГАНЦ эх
+      if (/\.mastery\[[^\]]+\]\s*\?\./.test(stripComments(read(file)))) offenders.push(basename(file));
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('flags a planted hand-written default', () => {
+    expect(/\.mastery\[[^\]]+\]\s*\?\./.test('const l = state.mastery[track]?.level ?? 0;')).toBe(true);
   });
 });

@@ -3,11 +3,20 @@
  *
  * ⚠ v1.2.0-д 5 шинэ `kind` нэмэгдэв (plan.md P-23). Заавал биш `ref` нь «аль guild /
  * аль boss / аль track» гэдгийг заана; БАЙХГҮЙ бол «ДУРЫН НЭГ» гэсэн утгатай —
- * бүх track/guild/boss-ийн нийлбэр БИШ.
+ * бүх track/guild/boss-ийн нийлбэр БИШ — ГАНЦ үл хамаарах нь `prestigeCount`
+ * (lld.md §6.10: тэр нь НИЙЛБЭР).
  * ⚠ Хувийн дээд амжилт нь хоёр difficulty-гийн НЭГДСЭН багц дээрх max (P-23):
  * `total` нь хоёуланд нь ижил 0..60 хуваарьтай тул харьцуулах боломжтой.
  */
-import type { AchievementDefinition, ContentPack, DomainEvent, GameState } from '../types/index.ts';
+import type {
+  AchievementDefinition,
+  ContentPack,
+  DomainEvent,
+  GameState,
+  SkillTag,
+} from '../types/index.ts';
+import { SKILL_TAGS } from './constants.ts';
+import { trackOf } from './mastery.ts';
 import { rankOf } from './reputation.ts';
 
 /** `bossTier` предикатын эрэмбэ — тэнцүү БИШ, «доогуур биш» гэсэн утгатай. */
@@ -27,12 +36,20 @@ function satisfied(state: GameState, def: AchievementDefinition): boolean {
 
   switch (kind) {
     case 'masteryLevel': {
-      const tracks = Object.values(state.mastery).filter((t) => ref === undefined || t.tag === ref);
-      return tracks.some((t) => t.level >= threshold);
+      // ⚠ `trackOf` нь `mastery`-г УНШИХ ганц зам (lld.md §4.2 · §6.10) — `?? 0` гэсэн
+      // гараар бичсэн анхдагч нь level 1-ийг 0 болгож `earned` томьёог хазайлгана.
+      if (ref !== undefined) return trackOf(state, ref as SkillTag).level >= threshold;
+      return SKILL_TAGS.some((tag) => trackOf(state, tag).level >= threshold);
     }
     case 'prestigeCount': {
-      const tracks = Object.values(state.mastery).filter((t) => ref === undefined || t.tag === ref);
-      return tracks.some((t) => t.prestigeCount >= threshold);
+      if (ref !== undefined) return trackOf(state, ref as SkillTag).prestigeCount >= threshold;
+      /**
+       * ⚠ `ref` БАЙХГҮЙ үед НИЙЛБЭР, `∃` БИШ (lld.md §6.10). «Prestige 3 удаа» гэсэн
+       * амжилт нь нэг track-д 3 удаа ч, 3 track-д нэг удаа ч биелэх нь тоглогчийн
+       * хүлээлт; `∃` уншилт нь сүүлчийнхийг чимээгүй хаадаг.
+       */
+      const total = SKILL_TAGS.reduce((sum, tag) => sum + trackOf(state, tag).prestigeCount, 0);
+      return total >= threshold;
     }
     case 'guildRank': {
       const values = Object.entries(state.reputation)

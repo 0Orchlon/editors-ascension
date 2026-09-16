@@ -4,11 +4,7 @@
  * Түлхүүр нь ЗОРИЛТОТ хувилбар: `MIGRATIONS[n]` нь `v(n-1) → v(n)` хөрвүүлнэ.
  * ⚠ Хоосон/дэмий migration бичихгүй.
  */
-import { COSMETIC_SLOTS, SKILL_TAGS } from '../core/constants.ts';
-import guilds from '../content/guilds.json' with { type: 'json' };
-
-/** ⚠ Guild-ийн id нь КОНТЕНТООС — кодод хатуу бичвэл нэр солиход save эвдэрнэ (P-13). */
-const GUILD_IDS: readonly string[] = (guilds as { id: string }[]).map((g) => g.id);
+import { COSMETIC_SLOTS, GUILD_IDS, SKILL_TAGS } from '../core/constants.ts';
 
 export type Migration = (state: Record<string, unknown>) => Record<string, unknown>;
 
@@ -16,7 +12,12 @@ export type Migration = (state: Record<string, unknown>) => Record<string, unkno
 export const defaultMastery = (): Record<string, unknown> =>
   Object.fromEntries(SKILL_TAGS.map((tag) => [tag, { tag, xp: 0, level: 1, prestigeCount: 0 }]));
 
-/** Guild тутам 0. ⚠ Түлхүүр нь `guilds.json`-оос — кодод хатуу бичигдэхгүй (plan.md P-13). */
+/**
+ * Guild тутам 0. ⚠ Түлхүүр нь `GUILD_IDS` тогтмолоос — `guilds.json`-ийг ШУУД
+ * импортлох нь migration-ийг КОНТЕНТООС хамааруулна (lld.md §5.3 A-LLD2-2):
+ * контент засварлахад хуучин save-ийн хөрвүүлэлт чимээгүй өөрчлөгдөх болно.
+ * Тогтмол ба контентын зөрүүг `[C]` дүрэм C-07 (`RET-5`) хаана.
+ */
 export const defaultReputation = (): Record<string, number> =>
   Object.fromEntries(GUILD_IDS.map((id) => [id, 0]));
 

@@ -10,6 +10,28 @@ import { qualifyDay } from './streak.ts';
 
 export type DungeonInput = { dungeonId: string; answers: number[] };
 
+/**
+ * `completedDungeonIds` ба `dungeonStats`-ыг ХАМТ бичих ЦОРЫН ГАНЦ зам (lld.md §6.8 · Δ-1).
+ *
+ * ⚠ Хоёр зам, нэг талбар: `attemptDungeon` ба `quests.ts`-ийн `track: 'dungeon'`
+ * quest хоёулаа dungeon дуусгадаг. Хоёрын аль нэг нь `dungeonStats`-ыг бичихээ
+ * мартвал `RET-4`-ийн refresher нь тухайн dungeon-ыг ХЭЗЭЭ Ч нэр дэвшүүлэхгүй —
+ * тестээр барихад бэрх, чимээгүй алдаа. Сканнер (`architecture.test.ts`) нь
+ * `dungeonStats:` бичилтийг зөвхөн ЭНЭ файл ба `saves.ts`-д зөвшөөрнө.
+ * ⚠ `lastPassedDate` нь дахин тэнцэх БҮРД шинэчлэгдэнэ (XP 0 байсан ч): refresher нь
+ * «хамгийн сүүлд хэзээ хүрсэн»-ийг хэмждэг, «анх хэзээ»-г биш (P-15).
+ */
+export function markDungeonPassed(state: GameState, dungeonId: string, at: string): GameState {
+  const completedDungeonIds = state.completedDungeonIds.includes(dungeonId)
+    ? state.completedDungeonIds
+    : [...state.completedDungeonIds, dungeonId];
+  return {
+    ...state,
+    completedDungeonIds,
+    dungeonStats: { ...state.dungeonStats, [dungeonId]: { lastPassedDate: dayOf(at) } },
+  };
+}
+
 type WrongAnswer = { questionId: string; chosen: number; correct: number; explanation: string };
 
 /**
@@ -74,25 +96,13 @@ export function attemptDungeon(state: GameState, input: DungeonInput, ctx: Ctx):
     { type: 'DUNGEON_PASSED', data: { dungeonId: dungeon.id, correct, total: dungeon.questions.length } },
   ];
 
-  /**
-   * ⚠ P-15 — тэнцсэн ОГНОО нь тэнцэх БҮРД шинэчлэгдэнэ (давтан тэнцэлт ч):
-   * `RET-4`-ийн refresher нь «хамгийн сүүлд хэзээ тэнцсэн»-ийг асуудаг, «анх хэзээ»-г биш.
-   * Энэ нь XP-ээс ТУСДАА: давтан тэнцэлт 0 XP хэвээр (AC DG-3).
-   */
-  const stamped = (s: GameState): GameState => ({
-    ...s,
-    dungeonStats: { ...s.dungeonStats, [dungeon.id]: { lastPassedDate: dayOf(ctx.at) } },
-  });
-
   // Дахин тэнцэх нь 0 XP (AC DG-3) — давтан бөглөх нь grind болохгүй.
-  if (state.completedDungeonIds.includes(dungeon.id)) return ok(stamped(state), events);
+  if (state.completedDungeonIds.includes(dungeon.id))
+    return ok(markDungeonPassed(state, dungeon.id, ctx.at), events);
 
   const awarded = addXp(state, dungeon.xp);
   if (!awarded.ok) return awarded;
-  let next: GameState = stamped({
-    ...awarded.state,
-    completedDungeonIds: [...state.completedDungeonIds, dungeon.id],
-  });
+  let next: GameState = markDungeonPassed(awarded.state, dungeon.id, ctx.at);
   events.push(...awarded.events);
 
   // Mastery ба rep нь амжилтын үнэлгээнээс ӨМНӨ (plan.md §13.2).

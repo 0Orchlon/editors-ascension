@@ -6,7 +6,7 @@
  * тиймээс тест бүрд БУСАД 6 track-ийг бүтнээр тулгана.
  */
 import { describe, expect, it } from 'vitest';
-import { addMasteryXp, earnedMasteryPoints, prestigeMastery } from '@shared/core/mastery.ts';
+import { addMasteryXp, earnedMasteryPoints, prestigeMastery, trackOf } from '@shared/core/mastery.ts';
 import { levelFor } from '@shared/core/progression.ts';
 import {
   MASTERY_MAX_LEVEL,
@@ -184,4 +184,45 @@ describe('MST-3 — prestige only at level 10, and it never takes points back (T
       state = { ...result.state, mastery: { ...result.state.mastery, vfx: { ...result.state.mastery.vfx!, xp: 9000, level: 10 } } };
     }
   });
+});
+
+/**
+ * Хянагчийн барьсан зөрүү — `lld.md §6.1`-ийн ХИЛИЙН хоёр шийдвэр кодод байгаагүй.
+ */
+describe('§6.1 — level 10 freezes xp, and trackOf is the single read path', () => {
+  it('stops accumulating xp once a track is at MASTERY_MAX_LEVEL', () => {
+    const capped = withTrack('audio', { xp: XP_THRESHOLDS[XP_THRESHOLDS.length - 1]!, level: MASTERY_MAX_LEVEL });
+    const after = addMasteryXp(capped, ['audio'], 5000);
+
+    expect(after.state.mastery.audio!.xp).toBe(capped.mastery.audio!.xp);
+    expect(after.state.mastery.audio!.level).toBe(MASTERY_MAX_LEVEL);
+    expect(after.events).toEqual([]);
+    expect(after.state.masteryPoints).toBe(capped.masteryPoints);
+  });
+
+  it('never reports a level above the cap even when a single award crosses many thresholds', () => {
+    const after = addMasteryXp(freshState(), ['vfx'], 100_000);
+    expect(after.state.mastery.vfx!.level).toBe(MASTERY_MAX_LEVEL);
+    expect(after.state.masteryPoints).toBe(MASTERY_MAX_LEVEL - 1);
+  });
+
+  it('lets prestige restart a frozen track without the player losing banked points (MST-3)', () => {
+    const capped = withTrack('audio', { xp: XP_THRESHOLDS[XP_THRESHOLDS.length - 1]!, level: MASTERY_MAX_LEVEL });
+    const before = earnedMasteryPoints(capped);
+    const after = prestigeMastery(capped, 'audio');
+    expect(after.ok).toBe(true);
+    if (!after.ok) return;
+    expect(earnedMasteryPoints(after.state)).toBe(before);
+  });
+
+  it('trackOf returns a default track for a key the state has never seen (A-LLD2-1)', () => {
+    const bare = { ...freshState(), mastery: {} } as unknown as GameState;
+    expect(trackOf(bare, 'blender')).toEqual({ tag: 'blender', xp: 0, level: 1, prestigeCount: 0 });
+  });
+
+  it('trackOf returns the stored track when it exists', () => {
+    const state = withTrack('blender', { xp: 300, level: 3, prestigeCount: 1 });
+    expect(trackOf(state, 'blender')).toEqual({ tag: 'blender', xp: 300, level: 3, prestigeCount: 1 });
+  });
+
 });

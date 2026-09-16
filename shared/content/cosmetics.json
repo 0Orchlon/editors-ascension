@@ -91,7 +91,7 @@
     "effect": "cosmetic",
     "unlockSource": {
       "kind": "guildRank",
-      "refId": "guild-colorists-circle",
+      "refId": "guild-cut",
       "value": 2
     }
   },
@@ -103,7 +103,7 @@
     "effect": "cosmetic",
     "unlockSource": {
       "kind": "guildRank",
-      "refId": "guild-animation",
+      "refId": "guild-form",
       "value": 2
     }
   },
@@ -115,7 +115,7 @@
     "effect": "cosmetic",
     "unlockSource": {
       "kind": "guildRank",
-      "refId": "guild-story-collective",
+      "refId": "guild-frame",
       "value": 2
     }
   },
@@ -127,7 +127,7 @@
     "effect": "cosmetic",
     "unlockSource": {
       "kind": "guildRank",
-      "refId": "guild-signal-chain",
+      "refId": "guild-signal",
       "value": 2
     }
   },
@@ -139,7 +139,7 @@
     "effect": "cosmetic",
     "unlockSource": {
       "kind": "guildRank",
-      "refId": "guild-colorists-circle",
+      "refId": "guild-cut",
       "value": 3
     }
   },
@@ -151,7 +151,7 @@
     "effect": "cosmetic",
     "unlockSource": {
       "kind": "guildRank",
-      "refId": "guild-animation",
+      "refId": "guild-form",
       "value": 3
     }
   },
@@ -163,7 +163,7 @@
     "effect": "cosmetic",
     "unlockSource": {
       "kind": "guildRank",
-      "refId": "guild-story-collective",
+      "refId": "guild-frame",
       "value": 3
     }
   },
@@ -175,7 +175,7 @@
     "effect": "cosmetic",
     "unlockSource": {
       "kind": "guildRank",
-      "refId": "guild-signal-chain",
+      "refId": "guild-signal",
       "value": 3
     }
   },

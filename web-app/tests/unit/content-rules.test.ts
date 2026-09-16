@@ -7,6 +7,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildPack } from '@shared/content/index.ts';
 import { checkContentRules, CONTENT_RULE_IDS } from '@shared/validate/content-rules.ts';
+import { GUILD_IDS, SKILL_TAGS } from '@shared/core/constants.ts';
 import type { ContentPack, QuestDefinition } from '@shared/types/index.ts';
 
 const pack = buildPack();
@@ -263,8 +264,56 @@ describe('QX-5 — the PERSONAL-2 rules bite too (T-25)', () => {
   it('has a planted-violation test for every declared rule id', () => {
     const covered = [
       'MQ-1', 'MQ-2', 'MQ-5', 'SQ-1', 'SQ-3', 'SQ-4', 'STA-4', 'DG-1', 'ENC-1', 'ACH-1', 'EC-1',
-      'SKL-1', 'SKL-5', 'BSX-1', 'RET-1', 'RET-3', 'RET-5', 'RET-7', 'COS-1', 'COS-2', 'OFF-2',
+      'SKL-1', 'SKL-2', 'SKL-5', 'BSX-1', 'RET-1', 'RET-3', 'RET-5', 'RET-7', 'COS-1', 'COS-2',
+      'OFF-2',
     ];
     expect([...CONTENT_RULE_IDS].sort()).toEqual([...covered].sort());
+  });
+});
+
+/**
+ * Хянагчийн барьсан дутуу `[C]` дүрмүүд (`lld.md §8.2`-ийн 14-ийн жагсаалт).
+ *
+ * C-02 · C-06 · C-07 нь загварт нэрлэгдсэн ч кодод байгаагүй. Тэдгээргүй бол
+ * контент засахад чимээгүй эвдрэх зам үлдэнэ: capstone хэзээ ч нээгдэхгүй болох,
+ * PERSONAL-1-ийн node tier солигдох, migration-ий guild түлхүүр контентоос салах.
+ */
+describe('QX-5 — the design-named rules that were missing (§8.2 C-02 · C-06 · C-07)', () => {
+  it('C-02 — a skill tag no boss carries is caught (SKL-2 · Δ-2)', () => {
+    const broken = clone(pack);
+    for (const q of broken.quests)
+      if (q.track === 'boss') q.tags = q.tags.filter((t) => t !== 'audio') as QuestDefinition['tags'];
+    expect(rulesHit(broken)).toContain('SKL-2');
+  });
+
+  it('C-02 — the shipped bosses already cover all seven tags', () => {
+    const bosses = pack.quests.filter((q) => q.track === 'boss');
+    for (const tag of SKILL_TAGS) expect(bosses.some((b) => b.tags.includes(tag))).toBe(true);
+  });
+
+  it('C-06 — re-labelling a PERSONAL-1 node as tier 2 is caught (SKL-5 · §6.6.1)', () => {
+    const broken = clone(pack);
+    broken.skills.find((s) => s.id === 'sk-modeling')!.tier = 2;
+    expect(rulesHit(broken)).toContain('SKL-5');
+  });
+
+  it('C-06 — renaming or re-pricing a PERSONAL-1 node is caught', () => {
+    const renamed = clone(pack);
+    renamed.skills.find((s) => s.id === 'sk-mixing')!.id = 'sk-mixing-v2';
+    expect(rulesHit(renamed)).toContain('SKL-5');
+
+    const repriced = clone(pack);
+    (repriced.skills.find((s) => s.id === 'sk-framing') as { cost: number }).cost = 2;
+    expect(rulesHit(repriced)).toContain('SKL-5');
+  });
+
+  it('C-07 — a guild id drifting from GUILD_IDS is caught (RET-5 · §5.3)', () => {
+    const broken = clone(pack);
+    broken.guilds[0]!.id = 'guild-renamed';
+    expect(rulesHit(broken)).toContain('RET-5');
+  });
+
+  it('C-07 — the shipped guild ids equal the constant migrations reads', () => {
+    expect(pack.guilds.map((g) => g.id).sort()).toEqual([...GUILD_IDS].sort());
   });
 });

@@ -43,7 +43,12 @@ export function pickDailyMission(state: GameState, date: string, pack: ContentPa
 
   // AC RET-4 — refresher нь СҮҮЛИЙН АРГА: дээрх гурван эрэмбэд шинэ ажил байхгүй
   // үед л ээлж ирнэ (plan.md §12.4 — байрлал нь ЭНЭ, `return null`-ийн ӨМНӨ).
-  const refresher = refresherCandidates(state, date, pack);
+  let refresher = refresherCandidates(state, date, pack);
+  // ⚠ lld.md §6.9 (T-15) — өчигдрийнхийг МӨН хасна: TIERS-ийн `previous` шүүлт нь
+  // үндсэн pool дээр л ажилладаг байсан тул refresher нь хоёр өдөр дараалан ижил
+  // dungeon гаргаж чаддаг байв. Сүүлчийн нэр дэвшигчийг хасахгүй — DM-2-ийн дүрэм.
+  if (refresher.length >= 2 && previous !== undefined)
+    refresher = refresher.filter((q) => q.id !== previous);
   if (refresher.length > 0) return refresher[fnv1a(date) % refresher.length]!.id;
 
   return null; // AC DM-3 — UI «Rest day» харуулна.

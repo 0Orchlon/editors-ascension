@@ -12,8 +12,10 @@ import type {
   CosmeticItem,
   CosmeticSlot,
   GameState,
+  SkillTag,
 } from '../types/index.ts';
 import { COSMETIC_SLOTS } from './constants.ts';
+import { trackOf } from './mastery.ts';
 import { rankOf } from './reputation.ts';
 import { ok, reject, type DomainResult } from './result.ts';
 
@@ -47,7 +49,7 @@ export function isUnlocked(state: GameState, item: CosmeticItem, _pack: ContentP
     case 'guildRank':
       return rankOf(state.reputation[refId] ?? 0) >= Number(value);
     case 'mastery':
-      return (state.mastery[refId]?.level ?? 0) >= Number(value);
+      return trackOf(state, refId as SkillTag).level >= Number(value);
     default:
       return false;
   }

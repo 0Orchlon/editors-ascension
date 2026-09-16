@@ -17,7 +17,7 @@
       "sk-edit-fundamentals"
     ],
     "track": "video-editing",
-    "tier": 2
+    "tier": 1
   },
   {
     "id": "sk-color-correction",
@@ -40,7 +40,7 @@
       "sk-lighting"
     ],
     "track": "video-editing",
-    "tier": 2
+    "tier": 1
   },
   {
     "id": "sk-blender-navigation",
@@ -60,7 +60,7 @@
       "sk-blender-navigation"
     ],
     "track": "blender",
-    "tier": 2
+    "tier": 1
   },
   {
     "id": "sk-uv-texturing",
@@ -71,7 +71,7 @@
       "sk-modeling"
     ],
     "track": "blender",
-    "tier": 2
+    "tier": 1
   },
   {
     "id": "sk-shading",
@@ -82,7 +82,7 @@
       "sk-uv-texturing"
     ],
     "track": "blender",
-    "tier": 2
+    "tier": 1
   },
   {
     "id": "sk-lighting",
@@ -93,7 +93,7 @@
       "sk-blender-navigation"
     ],
     "track": "blender",
-    "tier": 2
+    "tier": 1
   },
   {
     "id": "sk-rendering",
@@ -105,7 +105,7 @@
       "sk-lighting"
     ],
     "track": "blender",
-    "tier": 2
+    "tier": 1
   },
   {
     "id": "sk-keyframing",
@@ -125,7 +125,7 @@
       "sk-keyframing"
     ],
     "track": "animation",
-    "tier": 2
+    "tier": 1
   },
   {
     "id": "sk-rigging",
@@ -137,7 +137,7 @@
       "sk-keyframing"
     ],
     "track": "animation",
-    "tier": 2
+    "tier": 1
   },
   {
     "id": "sk-character-animation",
@@ -149,7 +149,7 @@
       "sk-easing"
     ],
     "track": "animation",
-    "tier": 2
+    "tier": 1
   },
   {
     "id": "sk-framing",
@@ -170,7 +170,7 @@
       "sk-keyframing"
     ],
     "track": "cinematography",
-    "tier": 2
+    "tier": 1
   },
   {
     "id": "sk-coverage",
@@ -182,7 +182,7 @@
       "sk-edit-fundamentals"
     ],
     "track": "cinematography",
-    "tier": 2
+    "tier": 1
   },
   {
     "id": "sk-audio-capture",
@@ -202,7 +202,7 @@
       "sk-audio-capture"
     ],
     "track": "audio",
-    "tier": 2
+    "tier": 1
   },
   {
     "id": "sk-mixing",
@@ -213,7 +213,7 @@
       "sk-sound-design"
     ],
     "track": "audio",
-    "tier": 2
+    "tier": 1
   },
   {
     "id": "sk-compositing",
@@ -234,7 +234,7 @@
       "sk-rendering"
     ],
     "track": "vfx",
-    "tier": 2
+    "tier": 1
   },
   {
     "id": "sk-story-structure",
@@ -256,6 +256,18 @@
       "sk-coverage"
     ],
     "track": "storytelling",
+    "tier": 1
+  },
+  {
+    "id": "sk-montage-craft",
+    "title": "Montage Craft",
+    "description": "Build a sequence that carries meaning through juxtaposition alone — no narration, no title cards, only the order of shots.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-pacing",
+      "sk-color-grading"
+    ],
+    "track": "video-editing",
     "tier": 2
   },
   {
@@ -264,11 +276,22 @@
     "description": "Carry one recognisable editorial voice through a whole piece: rhythm, transitions and colour read as a single hand.",
     "cost": 1,
     "prerequisites": [
-      "sk-pacing",
-      "sk-color-grading"
+      "sk-montage-craft"
     ],
     "track": "video-editing",
     "tier": 3
+  },
+  {
+    "id": "sk-procedural-shading",
+    "title": "Procedural Shading",
+    "description": "Drive materials from node graphs instead of hand-painted maps so one asset re-skins without a new texture pass.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-shading",
+      "sk-rendering"
+    ],
+    "track": "blender",
+    "tier": 2
   },
   {
     "id": "sk-blender-lookdev",
@@ -276,11 +299,22 @@
     "description": "Drive a shot from blockout to final frame in Blender, holding one material and lighting language across every asset.",
     "cost": 1,
     "prerequisites": [
-      "sk-rendering",
-      "sk-shading"
+      "sk-procedural-shading"
     ],
     "track": "blender",
     "tier": 3
+  },
+  {
+    "id": "sk-motion-physics",
+    "title": "Motion Physics",
+    "description": "Give weight, overlap and follow-through to a moving body so the curve reads as mass rather than interpolation.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-easing",
+      "sk-character-animation"
+    ],
+    "track": "animation",
+    "tier": 2
   },
   {
     "id": "sk-animation-performance",
@@ -288,11 +322,22 @@
     "description": "Animate a full beat of acting — intent, hesitation and reaction — instead of a technically clean move.",
     "cost": 1,
     "prerequisites": [
-      "sk-character-animation",
-      "sk-easing"
+      "sk-motion-physics"
     ],
     "track": "animation",
     "tier": 3
+  },
+  {
+    "id": "sk-lens-craft",
+    "title": "Lens Craft",
+    "description": "Choose focal length, height and distance on purpose so each shot places the audience exactly where the scene needs them.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-camera-movement",
+      "sk-coverage"
+    ],
+    "track": "cinematography",
+    "tier": 2
   },
   {
     "id": "sk-camera-language",
@@ -300,11 +345,22 @@
     "description": "Design a shot list whose sizes, lenses and movement form a deliberate grammar the audience can follow.",
     "cost": 1,
     "prerequisites": [
-      "sk-camera-movement",
-      "sk-coverage"
+      "sk-lens-craft"
     ],
     "track": "cinematography",
     "tier": 3
+  },
+  {
+    "id": "sk-dialogue-edit",
+    "title": "Dialogue Editing",
+    "description": "Clean, time and match spoken takes so a cut conversation sounds like one continuous room.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-sound-design",
+      "sk-mixing"
+    ],
+    "track": "audio",
+    "tier": 2
   },
   {
     "id": "sk-audio-final-mix",
@@ -312,11 +368,22 @@
     "description": "Deliver a mix that holds its loudness target and stays intelligible on phone speakers and headphones alike.",
     "cost": 1,
     "prerequisites": [
-      "sk-mixing",
-      "sk-sound-design"
+      "sk-dialogue-edit"
     ],
     "track": "audio",
     "tier": 3
+  },
+  {
+    "id": "sk-match-moving",
+    "title": "Match Moving",
+    "description": "Solve a camera from the plate so a synthetic element stays locked to the scene through the whole move.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-compositing",
+      "sk-vfx-integration"
+    ],
+    "track": "vfx",
+    "tier": 2
   },
   {
     "id": "sk-vfx-invisible",
@@ -324,10 +391,22 @@
     "description": "Place a synthetic element a viewer never questions: grain, motion blur and edge treatment all match the plate.",
     "cost": 1,
     "prerequisites": [
-      "sk-vfx-integration"
+      "sk-match-moving"
     ],
     "track": "vfx",
     "tier": 3
+  },
+  {
+    "id": "sk-thematic-structure",
+    "title": "Thematic Structure",
+    "description": "Shape an act break so the theme turns with the plot instead of being announced beside it.",
+    "cost": 1,
+    "prerequisites": [
+      "sk-story-structure",
+      "sk-visual-storytelling"
+    ],
+    "track": "storytelling",
+    "tier": 2
   },
   {
     "id": "sk-story-authorship",
@@ -335,8 +414,7 @@
     "description": "Write and deliver a short piece whose theme is visible in its structure, not stated in narration.",
     "cost": 1,
     "prerequisites": [
-      "sk-visual-storytelling",
-      "sk-story-structure"
+      "sk-thematic-structure"
     ],
     "track": "storytelling",
     "tier": 3

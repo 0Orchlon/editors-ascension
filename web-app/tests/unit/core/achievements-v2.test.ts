@@ -54,14 +54,28 @@ describe('RET-7 — prestigeCount (T-17)', () => {
     expect(earns(state, { kind: 'prestigeCount', value: 4, ref: 'blender' })).toBe(false);
   });
 
-  /** ⚠ `ref` байхгүй нь «дурын НЭГ track», бүх track-ийн НИЙЛБЭР БИШ. */
-  it('does not add laps across tracks when no ref is given', () => {
+  /**
+   * ⚠ `ref` БАЙХГҮЙ үед НИЙЛБЭР, `∃` БИШ (lld.md §6.10 — `prestigeCount` нь бусад
+   * предикатаас ЯЛГААТАЙ). «Prestige 3 удаа» гэсэн амжилт нь нэг track-д 3 удаа ч,
+   * 3 track-д нэг удаа ч биелэх нь тоглогчийн хүлээлт; `∃` уншилт нь сүүлчийнхийг
+   * чимээгүй хаадаг — тоглогч 3 удаа prestige хийчихээд шагналгүй үлдэнэ.
+   */
+  it('sums laps across tracks when no ref is given (§6.10)', () => {
     let mastery = freshState().mastery;
     for (const tag of ['audio', 'vfx', 'blender'] as const)
       mastery = { ...mastery, [tag]: { ...mastery[tag]!, prestigeCount: 1 } };
     const state = { ...freshState(), mastery };
-    expect(earns(state, { kind: 'prestigeCount', value: 1 })).toBe(true);
-    expect(earns(state, { kind: 'prestigeCount', value: 3 })).toBe(false);
+    expect(earns(state, { kind: 'prestigeCount', value: 3 })).toBe(true);
+    expect(earns(state, { kind: 'prestigeCount', value: 4 })).toBe(false);
+  });
+
+  /** ⚠ `ref` БАЙВАЛ нийлбэр БИШ — тэр track дээрх тоо. */
+  it('still counts only the named track when ref is given', () => {
+    let mastery = freshState().mastery;
+    for (const tag of ['audio', 'vfx', 'blender'] as const)
+      mastery = { ...mastery, [tag]: { ...mastery[tag]!, prestigeCount: 1 } };
+    const state = { ...freshState(), mastery };
+    expect(earns(state, { kind: 'prestigeCount', value: 2, ref: 'audio' })).toBe(false);
   });
 });
 

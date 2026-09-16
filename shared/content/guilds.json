@@ -1,6 +1,6 @@
 [
   {
-    "id": "guild-colorists-circle",
+    "id": "guild-cut",
     "title": "Colorists' Circle",
     "tags": [
       "video-editing",
@@ -9,7 +9,7 @@
     "placeholder": true
   },
   {
-    "id": "guild-animation",
+    "id": "guild-form",
     "title": "Animation Guild",
     "tags": [
       "animation",
@@ -18,7 +18,7 @@
     "placeholder": true
   },
   {
-    "id": "guild-story-collective",
+    "id": "guild-frame",
     "title": "Story Collective",
     "tags": [
       "storytelling"
@@ -26,7 +26,7 @@
     "placeholder": true
   },
   {
-    "id": "guild-signal-chain",
+    "id": "guild-signal",
     "title": "Signal Chain",
     "tags": [
       "audio",
