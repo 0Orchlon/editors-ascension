@@ -11,6 +11,8 @@ import { tierFor } from '@shared/core/boss.ts';
 import { createRng, fnv1a } from '@shared/core/rng.ts';
 import { BOSS_CATEGORIES, BOSS_CATEGORY_LABELS, MILESTONE_KEYS, SKILL_TAGS, XP_THRESHOLDS } from '@shared/core/constants.ts';
 import { rankOf } from '@shared/core/reputation.ts';
+import { isUnlocked } from '@shared/core/cosmetics.ts';
+import { COSMETIC_SLOTS } from '@shared/core/constants.ts';
 import { exportSave, importSave } from '@shared/core/saves.ts';
 import type {
   Action,
@@ -18,6 +20,8 @@ import type {
   SkillTag,
   AchievementDefinition,
   ContentPack,
+  CosmeticItem,
+  CosmeticSlot,
   DomainEvent,
   DungeonDefinition,
   GameState,
@@ -104,6 +108,17 @@ export type GuildView = {
   /** `0..4` — ЗӨВХӨН cosmetic (AC RET-6). */
   rank: number;
   placeholder: boolean;
+};
+
+/** Trophy Room-ийн мөр (AC COS-3) — нээгдээгүй бүр ЭХ СУРВАЛЖАА текстээр хэлнэ. */
+export type TrophyView = {
+  id: string;
+  title: string;
+  slot: CosmeticSlot;
+  rarity: CosmeticItem['rarity'];
+  unlocked: boolean;
+  /** «Юу хийвэл нээгдэх» — нээгдсэн бол «юугаар нээгдсэн». */
+  unlockText: string;
 };
 
 export type DispatchResult = { events: DomainEvent[]; rejected?: RejectionReason; detail?: string };
@@ -200,6 +215,31 @@ export function createGameService(deps: GameServiceDeps) {
       streakDays: `Keep a ${value} day streak`,
     };
     return labels[kind] ?? `${kind}: ${value}`;
+  }
+
+  /**
+   * AC COS-3 — нээлтийн эх сурвалжийг ӨГҮҮЛБЭР болгоно. ⚠ Домэйн дүрэм ЭНД БИШ:
+   * «нээгдсэн эсэх»-ийг `isUnlocked` шийднэ, энэ нь зөвхөн тэр дүрмийг УНШИНА.
+   */
+  function unlockText(item: CosmeticItem): string {
+    const { kind, refId, value } = item.unlockSource;
+    const titleOf = (id: string): string =>
+      questById.get(id)?.title ?? pack.dungeons.find((d) => d.id === id)?.title ?? id;
+
+    switch (kind) {
+      case 'quest':
+        return `Finish ${titleOf(refId)}.`;
+      case 'boss':
+        return `Log a ${String(value)} tier attempt on ${titleOf(refId)}.`;
+      case 'achievement':
+        return `Earn the achievement “${pack.achievements.find((a) => a.id === refId)?.title ?? refId}”.`;
+      case 'guildRank':
+        return `Reach rank ${String(value)} of 4 with ${pack.guilds.find((g) => g.id === refId)?.title ?? refId}.`;
+      case 'mastery':
+        return `Reach ${TAG_LABELS[refId] ?? refId} mastery level ${String(value)}.`;
+      default:
+        return 'This one is unlocked by play — the source is not recorded.';
+    }
   }
 
   const service = {
@@ -410,6 +450,30 @@ export function createGameService(deps: GameServiceDeps) {
           };
         });
       },
+
+      /** AC COS-3 — БҮХ cosmetic, нээгдээгүй нь ч; эрэмбэ нь `COSMETIC_SLOTS`-ийнх. */
+      trophies(): TrophyView[] {
+        const state = store.getState();
+        return [...pack.cosmetics]
+          .sort(
+            (a, b) =>
+              COSMETIC_SLOTS.indexOf(a.slot) - COSMETIC_SLOTS.indexOf(b.slot) ||
+              (a.id < b.id ? -1 : 1),
+          )
+          .map((item) => ({
+            id: item.id,
+            title: item.title,
+            slot: item.slot,
+            rarity: item.rarity,
+            unlocked: isUnlocked(state, item, pack),
+            unlockText: unlockText(item),
+          }));
+      },
+
+      cosmeticSlots: (): readonly CosmeticSlot[] => COSMETIC_SLOTS,
+
+      /** ⚠ Цэвэр UI төлөв (spec.md D-6) — домэйн дүрэм үүнийг УНШИХГҮЙ. */
+      campLayout: () => store.getState().campLayout.slots,
 
       /**
        * Дэлгэцийн палитрыг сонгоно (lld.md §9.2). ⚠ Домэйн БИШ — цэвэр дүрслэл,

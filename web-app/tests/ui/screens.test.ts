@@ -8,8 +8,9 @@ beforeEach(() => {
 });
 
 describe('app shell and navigation (T-31; UI-1)', () => {
-  it('opens all eight screens and shows a heading on each', () => {
-    expect(ROUTES).toHaveLength(8);
+  // T-30 — Trophy Room нэмэгдэж 9 боллоо; тоо нь ROUTES-ийн гэрээ хэвээр.
+  it('opens all nine screens and shows a heading on each', () => {
+    expect(ROUTES).toHaveLength(9);
     for (const route of ROUTES) {
       go(route.hash);
       const heading = $('#screen-title');

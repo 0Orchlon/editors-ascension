@@ -11,6 +11,7 @@ export const ROUTES = [
   { hash: '#/skills', label: 'Skill Tree' },
   { hash: '#/forge', label: 'Project Forge' },
   { hash: '#/achievements', label: 'Achievements' },
+  { hash: '#/trophies', label: 'Trophy Room' },
   { hash: '#/settings', label: 'Settings' },
 ] as const;
 

@@ -9,6 +9,7 @@ import { renderDungeons } from '../ui/screens/dungeons.ts';
 import { renderSkills } from '../ui/screens/skills.ts';
 import { renderForge } from '../ui/screens/forge.ts';
 import { renderAchievements } from '../ui/screens/achievements.ts';
+import { renderTrophies } from '../ui/screens/trophies.ts';
 import { applyMotionPreference, renderSettings } from '../ui/screens/settings.ts';
 import { play } from '../ui/fx.ts';
 import { applyTheme, worldPalette } from '../ui/theme.ts';
@@ -53,6 +54,7 @@ export function boot(root: HTMLElement, storage: Storage = window.localStorage):
       : route === '#/skills' ? renderSkills(app.game, paint)
       : route === '#/forge' ? renderForge(app.game, paint)
       : route === '#/achievements' ? renderAchievements(app.game)
+      : route === '#/trophies' ? renderTrophies(app.game, paint)
       : route === '#/settings' ? renderSettings({ game: app.game, sync: app.sync, rerender: paint })
       : renderCamp(app.game, paint);
 
