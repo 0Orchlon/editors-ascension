@@ -15,6 +15,7 @@ import { COSMETIC_SLOTS, REPLAY_LOG_CAP, SKILL_TAGS } from '@shared/core/constan
 import { validateGameState } from '@shared/validate/index.ts';
 import { earnedMasteryPoints } from '@shared/core/mastery.ts';
 import { respecTree } from '@shared/core/skillTree.ts';
+import { personalBest } from '@shared/core/boss.ts';
 import { PERSONAL_1_SKILL_IDS } from '@shared/validate/content-rules.ts';
 import { buildPack } from '@shared/content/index.ts';
 import type { GameState, ReplayLogEntry } from '@shared/types/index.ts';
@@ -153,6 +154,30 @@ describe('SVX-1 — the v2 defaults are the ones the plan names (T-06)', () => {
     // Оноо ба tier нь ХӨНДӨГДӨӨГҮЙ — зөвхөн difficulty нэмэгдсэн.
     expect(after.bossAttempts[0]!.total).toBe(36);
     expect(after.bossAttempts[0]!.tier).toBe('mvp');
+  });
+
+  /**
+   * lld.md §5.1-ийн 9 дэх алхам нь `{ ...a, difficulty: 'standard' }` — spread нь
+   * ЭХЭНД, тиймээс `difficulty` нь ҮРГЭЛЖ дарж бичигдэнэ.
+   *
+   * ⚠ Яагаад энэ нь бодит эмзэг байдал вэ: `loadState` нь схемийн шалгалтыг
+   * migration-ий ДАРАА, v2 схемээр хийдэг (`serialize.ts`). Тиймээс гараар зохиосон
+   * `schemaVersion: 1` файл нь v1-ийн схемд БАЙХГҮЙ `difficulty: 'hard'` талбарыг
+   * агуулж чадна. Хэрэв migration тэрийг хүндэтгэвэл hard mode-ийн босго (41/52/60)
+   * даваагүй оноо нь hard дээд амжилт болж бүртгэгдэнэ (BSX-3-ийн эсрэг).
+   */
+  it('overwrites a crafted difficulty on a v1 attempt instead of trusting it (§5.1 · BSX-3)', () => {
+    const crafted = v1State();
+    (crafted.bossAttempts as Record<string, unknown>[])[0]!.difficulty = 'hard';
+    const migrated = migrate(crafted);
+    expect(migrated.bossAttempts[0]!.difficulty).toBe('standard');
+  });
+
+  /** Дээрхийн үр дагавар: хуурамч hard дээд амжилт үүсэхгүй. */
+  it('keeps the hard-mode personal best at zero after a crafted v1 import (BSX-3)', () => {
+    const crafted = v1State();
+    (crafted.bossAttempts as Record<string, unknown>[])[0]!.difficulty = 'hard';
+    expect(personalBest(migrate(crafted), 'boss-strange-room', 'hard')).toBe(0);
   });
 });
 

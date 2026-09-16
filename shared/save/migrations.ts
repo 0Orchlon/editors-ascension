@@ -48,7 +48,11 @@ const toV2: Migration = (state) => {
       soundVolume: 1,
     },
     // ⚠ P-2 — дээд амжилт нь эдгээрээс ГАРГАГДАНА, тиймээс difficulty ЗААВАЛ.
-    bossAttempts: bossAttempts.map((a) => ({ difficulty: 'standard', ...a })),
+    // ⚠ spread нь ЭХЭНД — `difficulty` нь ҮРГЭЛЖ дарж бичигдэнэ (lld.md §5.1, 9 дэх алхам).
+    // Эсрэгээр бичвэл гараар зохиосон `schemaVersion: 1` файлын `difficulty: 'hard'`
+    // амьд үлдэж, hard босго даваагүй оноо хуурамч дээд амжилт болно (BSX-3).
+    // Схемийн шалгалт нь migration-ий ДАРАА ажилладаг тул энд хамгаалахаас өөр зам алга.
+    bossAttempts: bossAttempts.map((a) => ({ ...a, difficulty: 'standard' })),
     mastery: defaultMastery(),
     masteryPoints: 0,
     reputation: defaultReputation(),
