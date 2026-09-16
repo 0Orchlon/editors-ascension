@@ -1,5 +1,5 @@
 /** Экспортлогдох validator-ууд (lld.md §5.1). Клиент ба сервер ИЖИЛ функцийг дуудна. */
-import { arr, bool, int, obj, run, str, type Issue } from './dsl.ts';
+import { arr, bool, int, num, obj, run, str, type Issue } from './dsl.ts';
 import * as S from './schemas.ts';
 import type { ActionType } from '../types/index.ts';
 
@@ -37,13 +37,28 @@ const PAYLOADS = {
     },
     { optional: ['notes', 'nextAction', 'evidenceRef', 'selfScore'] },
   ),
-  bossAttempt: obj({ bossId: str({ min: 1 }), scores: S.BossScores }),
+  // ⚠ `difficulty` нь СОНГОЛТТОЙ — v1.1.0-ийн офлайн дараалалд хадгалагдсан
+  // үйлдэл серверт хожим хүрэхэд эвдрэхгүй (plan.md §13.1, BE-13).
+  bossAttempt: obj(
+    { bossId: str({ min: 1 }), scores: S.BossScores, difficulty: S.DifficultyTier },
+    { optional: ['difficulty'] },
+  ),
   rollDailyMission: obj({ date: str({ pattern: /^\d{4}-\d{2}-\d{2}$/ }) }),
   resolveEncounter: obj({ encounterId: str({ min: 1 }) }),
   updateSettings: obj(
-    { reducedMotion: bool(), soundEnabled: bool() },
-    { optional: ['reducedMotion', 'soundEnabled'] },
+    {
+      reducedMotion: bool(),
+      soundEnabled: bool(),
+      colorBlindSafe: bool(),
+      soundVolume: num({ min: 0, max: 1 }),
+    },
+    { optional: ['reducedMotion', 'soundEnabled', 'colorBlindSafe', 'soundVolume'] },
   ),
+  // ── v1.2.0-ийн гурван шинэ action (plan.md P-7 · §13.1)
+  prestigeMastery: obj({ tag: S.SkillTag }),
+  respecTree: obj({ track: S.SkillTag }),
+  /** ⚠ ЯГ 6 түлхүүртэй БҮТЭН объект — хэсэгчилсэн засвар БАЙХГҮЙ (plan.md P-25). */
+  setCampLayout: obj({ slots: S.CampLayoutSlots }),
 } satisfies Record<ActionType, unknown>;
 
 export function validateActionPayload(type: ActionType, v: unknown): Issue[] {

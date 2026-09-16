@@ -133,7 +133,8 @@ describe('COS-4 — campLayout is pure UI state (T-16; plan.md P-25)', () => {
   });
 
   it('rejects INVALID_INPUT when a slot key is missing', () => {
-    const { title: _dropped, ...partial } = emptySlots();
+    const partial = { ...emptySlots() };
+    delete partial.title;
     const result = setCampLayout(owner(), partial, pack);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.reason).toBe('INVALID_INPUT');
@@ -166,7 +167,11 @@ describe('COS-4 — campLayout is pure UI state (T-16; plan.md P-25)', () => {
 
   it('leaves the state untouched on every rejection', () => {
     const before = owner();
-    for (const slots of [{ hat: null }, { ...emptySlots(), title: 'c-locked' }]) {
+    const rejected: Record<string, string | null>[] = [
+      { hat: null },
+      { ...emptySlots(), title: 'c-locked' },
+    ];
+    for (const slots of rejected) {
       const result = setCampLayout(before, slots, pack);
       expect(result.ok).toBe(false);
       // `ok:false` үед `state` БУЦАХГҮЙ — дуудагч өмнөхөө хэвээр хадгална.
