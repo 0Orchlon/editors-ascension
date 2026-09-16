@@ -145,8 +145,11 @@ export function attemptBoss(state: GameState, input: BossInput, ctx: Ctx): Domai
     const awarded = addXp(next, boss.xp);
     if (!awarded.ok) return awarded;
     next = { ...awarded.state, completedMainQuestIds: [...awarded.state.completedMainQuestIds, boss.id] };
-    events.push({ type: 'BOSS_PASSED', data: { bossId: boss.id, tier, total, difficulty } });
+    // ⚠ lld.md §7.3 алхам 5 — `addXp` → бүртгэл → `BOSS_PASSED`. XP нь ялалтын
+    // ЗАРЛАЛААС өмнө урсана: `BOSS_PASSED` нь §9.3-ын ялалтын FX-ийг асаадаг тул
+    // эсрэг дараалал нь шагналыг ялалтаас салгаж харагдуулна.
     events.push(...awarded.events);
+    events.push({ type: 'BOSS_PASSED', data: { bossId: boss.id, tier, total, difficulty } });
 
     // Mastery ба rep нь ЭХНИЙ тэнцэлтэд л олгогдоно — дахин тэнцэх нь 0 XP (BS-2)
     // тул 0 mastery, 0 rep. Амжилтын үнэлгээнээс ӨМНӨ (plan.md §13.2).

@@ -191,6 +191,40 @@ describe('RET-5 — reputation lands inside the same claim (T-09)', () => {
     expect(types.indexOf('MASTERY_LEVEL_UP')).toBeLessThan(types.indexOf('ACHIEVEMENT_UNLOCKED'));
     expect(result.state.achievementIds).toContain('ach-mastery');
   });
+
+  /**
+   * lld.md §7.1 — алхам `3` (бүртгэл) нь алхам `3a` (mastery)-аас ӨМНӨ.
+   *
+   * ⚠ Яагаад дараалал нь гэрээ вэ: event урсгал нь FX ба `aria-live`-ийн ЦОРЫН ГАНЦ
+   * эх (§9.3). «Mastery Lv 2!» гэж эхэлж дараа нь «Quest complete» гэж уншуулах нь
+   * шалтгаан-үр дагаврыг эргүүлж, дэлгэц хардаггүй тоглогчийг төөрөгдүүлнэ.
+   * Төлөвт нөлөөгүй тул зөвхөн индексийн тест л энэ зөрүүг барина.
+   */
+  it('emits QUEST_COMPLETED before MASTERY_LEVEL_UP (§7.1 step 3 → 3a)', () => {
+    const state = start({
+      mastery: {
+        ...freshState().mastery,
+        audio: { tag: 'audio', xp: XP_THRESHOLDS[0]! - 10, level: 1, prestigeCount: 0 },
+      },
+    });
+    const result = claimQuest(state, { questId: 'mq-1', checkedConditions: all }, quietCtx(pack()));
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const types = result.events.map((e) => e.type);
+    expect(types).toContain('MASTERY_LEVEL_UP');
+    expect(types.indexOf('QUEST_COMPLETED')).toBeLessThan(types.indexOf('MASTERY_LEVEL_UP'));
+  });
+
+  /** §7.1 — XP нь бүртгэлээс ӨМНӨ (алхам 2 → 3): «+40 XP» дараа нь «Quest complete». */
+  it('emits XP_GAINED before QUEST_COMPLETED (§7.1 step 2 → 3)', () => {
+    const result = claimQuest(start(), { questId: 'mq-1', checkedConditions: all }, quietCtx(pack()));
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const types = result.events.map((e) => e.type);
+    expect(types.indexOf('XP_GAINED')).toBeLessThan(types.indexOf('QUEST_COMPLETED'));
+  });
 });
 
 describe('RET-2 — a chain closes inside the claim that finished its last step (T-09)', () => {

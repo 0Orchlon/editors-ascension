@@ -92,6 +92,32 @@ describe('attemptBoss (T-15)', () => {
     expect(r.ok && r.events.map((e) => e.type)).toContain('BOSS_PASSED');
   });
 
+  /**
+   * lld.md §7.3 — алхам `5` нь `addXp → completedMainQuestIds → BOSS_PASSED`.
+   *
+   * ⚠ Дараалал нь гэрээ: `BOSS_PASSED` нь дэлгэцэн дээр ялалтын FX-ийг асаана,
+   * `XP_GAINED` нь тоон урамшууллыг. Ялалтыг эхэлж зарлаад дараа нь XP-г нэмэх нь
+   * шагналыг ялалтаас ТУСГААРЛАЖ харагдуулна — §9.3-ын juice давхаргын цорын ганц
+   * оролт бол энэ массивын дараалал.
+   */
+  it('emits XP_GAINED before BOSS_PASSED (§7.3 step 5)', () => {
+    const r = attemptBoss(freshState(), { bossId: 'b-1', scores: totalling(52) }, ctx);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const types = r.events.map((e) => e.type);
+    expect(types).toContain('XP_GAINED');
+    expect(types.indexOf('XP_GAINED')).toBeLessThan(types.indexOf('BOSS_PASSED'));
+  });
+
+  /** §7.3 — алхам `4` (бүртгэл) нь алхам `5`-аас ӨМНӨ: оролдлого эхлээд бүртгэгдэнэ. */
+  it('emits BOSS_ATTEMPT_LOGGED before BOSS_PASSED (§7.3 step 4 → 5)', () => {
+    const r = attemptBoss(freshState(), { bossId: 'b-1', scores: totalling(52) }, ctx);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const types = r.events.map((e) => e.type);
+    expect(types.indexOf('BOSS_ATTEMPT_LOGGED')).toBeLessThan(types.indexOf('BOSS_PASSED'));
+  });
+
   it('awards zero xp when passing an already cleared boss (BS-2)', () => {
     const state = freshState({ completedMainQuestIds: ['b-1'] });
     const r = attemptBoss(state, { bossId: 'b-1', scores: totalling(55) }, ctx);
