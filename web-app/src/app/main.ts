@@ -10,7 +10,7 @@ import { renderSkills } from '../ui/screens/skills.ts';
 import { renderForge } from '../ui/screens/forge.ts';
 import { renderAchievements } from '../ui/screens/achievements.ts';
 import { applyMotionPreference, renderSettings } from '../ui/screens/settings.ts';
-import { createSoundCues } from '../ui/sound.ts';
+import { play } from '../ui/fx.ts';
 import { applyTheme, worldPalette } from '../ui/theme.ts';
 import type { SyncStatus } from '../services/sync.ts';
 // ⚠ DOM-ийн глобал `Storage` БИШ — сервисийн нарийссан интерфейс (тестэд солигдоно).
@@ -61,8 +61,18 @@ export function boot(root: HTMLElement, storage: Storage = window.localStorage):
     document.getElementById('screen-title')?.focus();
   };
 
-  // A11Y-5 — дуу нь `events$`-ийн дөрвөн event дээр л тоглоно, тохиргоогоор унтрана.
-  app.game.events$(createSoundCues(() => app.game.view.settings().soundEnabled));
+  // FX-1…FX-7 — анимац, дуу, `aria-live` мэдэгдэл нь ГАНЦ хаалгаар (`fx.play`).
+  // ⚠ Тохиргоо нь дуудалт БҮРД шинээр уншигдана: горим солиход дахин бүртгэх шаардлагагүй.
+  app.game.events$((events) => {
+    play(events, () => {
+      const settings = app.game.view.settings();
+      return {
+        reducedMotion: settings.reducedMotion,
+        soundEnabled: settings.soundEnabled,
+        soundVolume: settings.soundVolume,
+      };
+    });
+  });
 
   onRouteChange(paint);
   applyMotionPreference(app.game.view.settings().reducedMotion);

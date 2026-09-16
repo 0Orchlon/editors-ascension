@@ -374,3 +374,17 @@ input[type="checkbox"], input[type="radio"] { width: 1.15rem; height: 1.15rem; }
   transition-duration: 0.001ms !important;
   scroll-behavior: auto !important;
 }
+
+/* ── FX давхарга (T-28; AC FX-4) — зөвхөн `transform`/`opacity`, бүгд ≤300ms. */
+@keyframes fx-pop {
+  from { transform: scale(0.94); opacity: 0.4; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes fx-shake {
+  0%, 100% { transform: none; }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+.fx-levelup, .fx-achieve, .fx-mastery, .fx-chain { animation: fx-pop 280ms ease-out; }
+.fx-claim, .fx-side, .fx-pass, .fx-loot, .fx-streak, .fx-rep, .fx-boss { animation: fx-pop 200ms ease-out; }
+.fx-fail { animation: fx-shake 240ms ease-in-out; }
