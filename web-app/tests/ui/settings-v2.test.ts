@@ -95,6 +95,11 @@ describe('FX-3 — sound volume is a slider, and zero means silent (T-33)', () =
     expect(slider.type).toBe('range');
     expect(slider.labels?.length).toBeGreaterThan(0);
     expect(slider.value).toBe('100');
+    // lld.md §9.4.5 — `min=0 max=100 step=10`. ⚠ Алхам нь гоо зүй БИШ: гарын товчлуур
+    // нэг даралтад нэг алхам хөдөлдөг тул алхмын тоо = дуу тохируулах даралтын тоо.
+    expect(slider.min).toBe('0');
+    expect(slider.max).toBe('100');
+    expect(slider.step).toBe('10');
   });
 
   it('stores the volume as a 0..1 number in the save', () => {

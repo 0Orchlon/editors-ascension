@@ -24,7 +24,7 @@ function mountTrophies(patch: Partial<GameState> = {}) {
     document.getElementById('main')!.replaceChildren(renderTrophies(game, rerender));
   };
   rerender();
-  return { game };
+  return { game, rerender };
 }
 
 describe('COS-3 — every cosmetic is listed, locked or not (T-30)', () => {
@@ -73,38 +73,53 @@ describe('COS-3 — every cosmetic is listed, locked or not (T-30)', () => {
 });
 
 describe('COS-4 — camp layout is arranged here (T-30)', () => {
-  it('offers one labelled control per slot', () => {
-    mountTrophies();
-    const selects = $$<HTMLSelectElement>('select[data-slot]');
-    expect(selects).toHaveLength(6);
-    for (const select of selects) expect(select.labels?.length).toBeGreaterThan(0);
-  });
-
+  /**
+   * `lld.md §9.4.2` — товч нь НЭЭГДЭЭГҮЙ элементэд ОГТ БАЙХГҮЙ (`disabled` биш).
+   * ⚠ Шинэ тоглоомд нээгдсэн cosmetic ганц ч байхгүй тул товч ч байхгүй байх ЁСТОЙ:
+   * `disabled` товч нь «энэ хүрч болох зүйл» гэж уншигдаж, тоглогчийг дарж үзүүлээд
+   * `PREREQ_NOT_MET` гэсэн хариу авахуулна.
+   */
   it('never offers a locked cosmetic for equipping', () => {
     mountTrophies();
-    const ids = $$<HTMLSelectElement>('select[data-slot]')
-      .flatMap((s) => [...s.options].map((o) => o.value))
-      .filter((v) => v !== '');
-    expect(ids).toEqual([]);
+    expect($$('[data-equip-action]')).toEqual([]);
+  });
+
+  /** Нээгдсэн cosmetic бүр ЯГ нэг товчтой, шошго нь текстээр (VIS-4). */
+  const unlockedFrame = pack.cosmetics.find(
+    (c) => c.unlockSource.kind === 'mastery' && c.slot === 'avatarFrame',
+  )!;
+  const withFrame = (): Partial<GameState> => {
+    const tag = unlockedFrame.unlockSource.refId as 'video-editing';
+    const base = newGame();
+    return { mastery: { ...base.mastery, [tag]: { tag, xp: 1750, level: 6, prestigeCount: 0 } } };
+  };
+
+  it('offers exactly one labelled Equip button on an unlocked cosmetic', () => {
+    mountTrophies(withFrame());
+    const actions = $$<HTMLButtonElement>('[data-equip-action]');
+    expect(actions.length).toBeGreaterThan(0);
+    for (const action of actions) {
+      expect(action.tagName).toBe('BUTTON');
+      expect(action.textContent).toBe('Equip');
+    }
   });
 
   it('equips an unlocked cosmetic and keeps it in the save state', () => {
-    // `mastery` нээлттэй нэг frame — түвшин 5 хүрсэн track.
-    const item = pack.cosmetics.find(
-      (c) => c.unlockSource.kind === 'mastery' && c.slot === 'avatarFrame',
-    )!;
-    const tag = item.unlockSource.refId as 'video-editing';
-    const base = newGame();
-    const { game } = mountTrophies({
-      mastery: { ...base.mastery, [tag]: { tag, xp: 1750, level: 6, prestigeCount: 0 } },
-    });
+    const { game } = mountTrophies(withFrame());
+    const action = $<HTMLButtonElement>(`[data-equip-action="equip"][data-cosmetic-id="${unlockedFrame.id}"]`)!;
+    action.click();
+    expect(game.state$.getState().campLayout.slots[unlockedFrame.slot]).toBe(unlockedFrame.id);
+  });
 
-    const select = $<HTMLSelectElement>(`select[data-slot="${item.slot}"]`)!;
-    expect([...select.options].map((o) => o.value)).toContain(item.id);
-
-    select.value = item.id;
-    select.dispatchEvent(new Event('change'));
-    expect(game.state$.getState().campLayout.slots[item.slot]).toBe(item.id);
+  /** COS-4 — эмхлэн байрлуулалт нь БУЦААГДАХ ёстой, эс бөгөөс сонголт нь урхи болно. */
+  it('turns the button into Unequip once worn and clears the slot when pressed', () => {
+    const { game, rerender } = mountTrophies(withFrame());
+    $<HTMLButtonElement>(`[data-equip-action="equip"][data-cosmetic-id="${unlockedFrame.id}"]`)!.click();
+    rerender();
+    const off = $<HTMLButtonElement>(`[data-equip-action="unequip"][data-cosmetic-id="${unlockedFrame.id}"]`)!;
+    expect(off.textContent).toBe('Unequip');
+    off.click();
+    expect(game.state$.getState().campLayout.slots[unlockedFrame.slot]).toBeNull();
   });
 });
 

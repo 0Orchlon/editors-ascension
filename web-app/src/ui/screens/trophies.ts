@@ -7,7 +7,7 @@
  * нөлөөлөхгүй (spec.md D-6). Домэйн талын шалгалт нь `setCampLayout`-д.
  */
 import type { GameService, TrophyView } from '../../services/gameService.ts';
-import { announce, badge, el, h1, toast } from '../components.ts';
+import { announce, badge, button, el, h1, toast } from '../components.ts';
 
 const SLOT_LABELS: Record<string, string> = {
   avatarFrame: 'Avatar frames',
@@ -38,36 +38,21 @@ export function renderTrophies(game: GameService, rerender: () => void): HTMLEle
       el('h2', { id: `slot-${slot}`, text: SLOT_LABELS[slot] ?? slot }),
     ]);
 
-    // ── Эмхлэн байрлуулалт — нээгдсэн зүйл л сонголтод гарна (AC COS-4).
-    const select = el('select', { id: `equip-${slot}`, 'data-slot': slot });
-    select.append(el('option', { value: '', text: 'Nothing equipped' }));
-    for (const item of inSlot.filter((t) => t.unlocked))
-      select.append(el('option', { value: item.id, text: item.title }));
-    select.value = layout[slot] ?? '';
-    select.addEventListener('change', () => {
-      // ⚠ ЯГ 6 түлхүүртэй БҮТЭН объект — хэсэгчилсэн засвар байхгүй (plan.md P-25).
-      const slots: Record<string, string | null> = { ...layout };
-      slots[slot] = select.value === '' ? null : select.value;
-      const result = game.dispatch('setCampLayout', { slots });
+    // ── Эмхлэн байрлуулалт — картан дээрх товчоор (lld.md §9.4.2).
+    // ⚠ ЯГ 6 түлхүүртэй БҮТЭН объект — хэсэгчилсэн засвар байхгүй (plan.md P-25).
+    const equip = (id: string | null, label: string): void => {
+      const result = game.dispatch('setCampLayout', { slots: { ...layout, [slot]: id } });
       if (result.rejected) {
         toast(`Cannot equip that: ${result.rejected}`, 'warn');
         return;
       }
-      announce(
-        select.value === ''
-          ? `${SLOT_LABELS[slot] ?? slot} cleared.`
-          : `${select.options[select.selectedIndex]!.text} equipped.`,
-      );
+      announce(id === null ? `${SLOT_LABELS[slot] ?? slot} cleared.` : `${label} equipped.`);
       rerender();
-    });
+    };
 
     group.append(
-      el('div', { class: 'option' }, [
-        el('label', { for: `equip-${slot}`, text: `Equip in this slot` }),
-        select,
-      ]),
       el('ul', { class: 'trophy-list', 'aria-labelledby': `slot-${slot}` },
-        inSlot.map((item) => el('li', {}, [trophyCard(item, layout[slot] === item.id)])),
+        inSlot.map((item) => el('li', {}, [trophyCard(item, layout[slot] === item.id, equip)])),
       ),
     );
     root.append(group);
@@ -76,7 +61,17 @@ export function renderTrophies(game: GameService, rerender: () => void): HTMLEle
   return root;
 }
 
-function trophyCard(item: TrophyView, equipped: boolean): HTMLElement {
+/**
+ * ⚠ `lld.md §9.4.2` — `Equip` товч нь НЭЭГДЭЭГҮЙ элементэд ОГТ БАЙХГҮЙ (`disabled`
+ * биш). `PREREQ_NOT_MET`-д хүргэх замыг UI-д нээлттэй үлдээх нь тоглогчийг
+ * мухардалд хүргэнэ. Домэйн талын шалгалт нь `setCampLayout`-д ТЭР ЧИГЭЭРЭЭ үлдэнэ —
+ * UI бол тав тух, хамгаалалт БИШ.
+ */
+function trophyCard(
+  item: TrophyView,
+  equipped: boolean,
+  equip: (id: string | null, label: string) => void,
+): HTMLElement {
   const card = el('article', {
     class: `card trophy-card trophy-${item.unlocked ? 'unlocked' : 'locked'}`,
     'data-testid': 'trophy-item',
@@ -96,5 +91,14 @@ function trophyCard(item: TrophyView, equipped: boolean): HTMLElement {
     }),
   );
   if (equipped) card.append(badge('Equipped at camp', 'ok'));
+
+  if (item.unlocked) {
+    const action = equipped
+      ? button('Unequip', () => equip(null, item.title), { })
+      : button('Equip', () => equip(item.id, item.title), { });
+    action.setAttribute('data-equip-action', equipped ? 'unequip' : 'equip');
+    action.setAttribute('data-cosmetic-id', item.id);
+    card.append(action);
+  }
   return card;
 }

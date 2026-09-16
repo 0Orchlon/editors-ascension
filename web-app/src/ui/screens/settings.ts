@@ -46,7 +46,7 @@ export function renderSettings(deps: SettingsDeps): HTMLElement {
 
   // ── AC FX-3 — 0 нь ЧИМЭЭГҮЙ: `fx.play` тэр утганд oscillator ҮҮСГЭХГҮЙ.
   const volume = el('input', {
-    type: 'range', id: 'set-sound-volume', min: '0', max: '100', step: '5',
+    type: 'range', id: 'set-sound-volume', min: '0', max: '100', step: '10',
     value: String(Math.round(settings.soundVolume * 100)),
   });
   const volumeOut = el('output', { for: 'set-sound-volume', text: `${Math.round(settings.soundVolume * 100)}%` });
