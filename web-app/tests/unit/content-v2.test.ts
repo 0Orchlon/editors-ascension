@@ -269,3 +269,88 @@ describe('RET-1 · RET-3 — side quest chains (T-22)', () => {
     expect(bad.map((c) => c.id)).toEqual([]);
   });
 });
+
+describe('RET-7 — the achievement catalog reaches forty (T-24)', () => {
+  const achievements = pack.achievements;
+  const kinds = new Set(achievements.map((a) => a.predicate.kind));
+
+  it('ships at least forty achievements', () => {
+    expect(achievements.length).toBeGreaterThanOrEqual(40);
+  });
+
+  it('uses unique ids and non-empty text', () => {
+    expect(new Set(achievements.map((a) => a.id)).size).toBe(achievements.length);
+    const thin = achievements.filter((a) => !a.title.trim() || !a.description.trim());
+    expect(thin.map((a) => a.id)).toEqual([]);
+  });
+
+  it.each(['masteryLevel', 'prestigeCount', 'guildRank', 'bossPersonalBest', 'chainsCompleted'])(
+    'exercises the new %s predicate',
+    (kind) => {
+      expect(kinds.has(kind as never)).toBe(true);
+    },
+  );
+
+  /**
+   * ⚠ plan.md §12.5 — prestige цол ба streak шагналын cosmetic нь `kind:'achievement'`-ээр
+   * ЭДГЭЭР амжилтад заана. Байхгүй бол тэр cosmetic өнчирч `COS-2` УНАНА.
+   */
+  it('keeps prestigeCount and streakDays predicates so the cosmetics have anchors', () => {
+    expect(kinds.has('prestigeCount')).toBe(true);
+    expect(kinds.has('streakDays')).toBe(true);
+  });
+
+  it('covers the four streak reward thresholds 3 · 7 · 14 · 30 (RET-8)', () => {
+    const days = achievements
+      .filter((a) => a.predicate.kind === 'streakDays')
+      .map((a) => Number(a.predicate.value))
+      .sort((a, b) => a - b);
+    expect(days).toEqual([3, 7, 14, 30]);
+  });
+
+  it('points every masteryLevel ref at a real skill tag', () => {
+    const bad = achievements
+      .filter((a) => a.predicate.kind === 'masteryLevel' && a.predicate.ref !== undefined)
+      .filter((a) => !(SKILL_TAGS as readonly string[]).includes(a.predicate.ref!));
+    expect(bad.map((a) => a.id)).toEqual([]);
+  });
+
+  it('points every guildRank ref at a real guild and a rank in 1..4', () => {
+    const guildIds = new Set(pack.guilds.map((g) => g.id));
+    const bad = achievements
+      .filter((a) => a.predicate.kind === 'guildRank')
+      .filter(
+        (a) =>
+          (a.predicate.ref !== undefined && !guildIds.has(a.predicate.ref)) ||
+          Number(a.predicate.value) < 1 ||
+          Number(a.predicate.value) > 4,
+      );
+    expect(bad.map((a) => a.id)).toEqual([]);
+  });
+
+  it('points every bossPersonalBest ref at a real boss and a total in 0..60', () => {
+    const bossIds = new Set(pack.quests.filter((q) => q.track === 'boss').map((q) => q.id));
+    const bad = achievements
+      .filter((a) => a.predicate.kind === 'bossPersonalBest')
+      .filter(
+        (a) =>
+          (a.predicate.ref !== undefined && !bossIds.has(a.predicate.ref)) ||
+          Number(a.predicate.value) < 0 ||
+          Number(a.predicate.value) > 60,
+      );
+    expect(bad.map((a) => a.id)).toEqual([]);
+  });
+
+  it('keeps chainsCompleted thresholds inside the number of chains that exist', () => {
+    const bad = achievements
+      .filter((a) => a.predicate.kind === 'chainsCompleted')
+      .filter((a) => Number(a.predicate.value) > pack.chains.length);
+    expect(bad.map((a) => a.id)).toEqual([]);
+  });
+
+  it('keeps all 21 PERSONAL-1 achievements', () => {
+    expect(achievements.filter((a) => a.id.startsWith('ach-')).length).toBeGreaterThanOrEqual(41);
+    for (const id of ['ach-first-light', 'ach-boss-mastery', 'ach-streak-30', 'ach-campaign-complete'])
+      expect(achievements.some((a) => a.id === id)).toBe(true);
+  });
+});

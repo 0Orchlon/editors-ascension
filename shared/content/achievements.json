@@ -3,126 +3,381 @@
     "id": "ach-first-light",
     "title": "First Light",
     "description": "Reach level 2. The first cut is always the hardest one to make.",
-    "predicate": { "kind": "level", "value": 2 }
+    "predicate": {
+      "kind": "level",
+      "value": 2
+    }
   },
   {
     "id": "ach-journeyman",
     "title": "Journeyman Editor",
     "description": "Reach level 5 and stop calling yourself a beginner.",
-    "predicate": { "kind": "level", "value": 5 }
+    "predicate": {
+      "kind": "level",
+      "value": 5
+    }
   },
   {
     "id": "ach-ascended",
     "title": "Editor's Ascension",
     "description": "Reach level 10, the highest rank the studio recognises.",
-    "predicate": { "kind": "level", "value": 10 }
+    "predicate": {
+      "kind": "level",
+      "value": 10
+    }
   },
   {
     "id": "ach-xp-apprentice",
     "title": "Five Hundred Frames",
     "description": "Earn 500 total XP across quests, dungeons and projects.",
-    "predicate": { "kind": "totalXp", "value": 500 }
+    "predicate": {
+      "kind": "totalXp",
+      "value": 500
+    }
   },
   {
     "id": "ach-xp-veteran",
     "title": "Render Veteran",
     "description": "Earn 2750 total XP. That is a lot of hours in the chair.",
-    "predicate": { "kind": "totalXp", "value": 2750 }
+    "predicate": {
+      "kind": "totalXp",
+      "value": 2750
+    }
   },
   {
     "id": "ach-xp-legend",
     "title": "Seven and a Half Thousand",
     "description": "Earn 7500 total XP and reach the far side of the campaign.",
-    "predicate": { "kind": "totalXp", "value": 7500 }
+    "predicate": {
+      "kind": "totalXp",
+      "value": 7500
+    }
   },
   {
     "id": "ach-campaign-opened",
     "title": "Opening Frame",
     "description": "Complete your first main quest.",
-    "predicate": { "kind": "mainQuestsCompleted", "value": 1 }
+    "predicate": {
+      "kind": "mainQuestsCompleted",
+      "value": 1
+    }
   },
   {
     "id": "ach-campaign-halfway",
     "title": "Halfway to the Credits",
     "description": "Complete 9 of the 18 main quests.",
-    "predicate": { "kind": "mainQuestsCompleted", "value": 9 }
+    "predicate": {
+      "kind": "mainQuestsCompleted",
+      "value": 9
+    }
   },
   {
     "id": "ach-campaign-complete",
     "title": "Final Cut",
     "description": "Complete all 18 main quests of the campaign.",
-    "predicate": { "kind": "mainQuestsCompleted", "value": 18 }
+    "predicate": {
+      "kind": "mainQuestsCompleted",
+      "value": 18
+    }
   },
   {
     "id": "ach-gym-regular",
     "title": "Gym Regular",
     "description": "Complete 10 side quests in the practice gym.",
-    "predicate": { "kind": "sideQuestCompletions", "value": 10 }
+    "predicate": {
+      "kind": "sideQuestCompletions",
+      "value": 10
+    }
   },
   {
     "id": "ach-gym-devotee",
     "title": "Reps Are Everything",
     "description": "Complete 50 side quests. Skill is repetition with attention.",
-    "predicate": { "kind": "sideQuestCompletions", "value": 50 }
+    "predicate": {
+      "kind": "sideQuestCompletions",
+      "value": 50
+    }
   },
   {
     "id": "ach-dungeon-delver",
     "title": "Dungeon Delver",
     "description": "Clear 5 study dungeons and pass their mastery questions.",
-    "predicate": { "kind": "dungeonsCompleted", "value": 5 }
+    "predicate": {
+      "kind": "dungeonsCompleted",
+      "value": 5
+    }
   },
   {
     "id": "ach-dungeon-scholar",
     "title": "Scholar of the Deep",
     "description": "Clear 12 study dungeons across every learning domain.",
-    "predicate": { "kind": "dungeonsCompleted", "value": 12 }
+    "predicate": {
+      "kind": "dungeonsCompleted",
+      "value": 12
+    }
   },
   {
     "id": "ach-first-project",
     "title": "Shipped It",
     "description": "Finish your first full project, start to export.",
-    "predicate": { "kind": "projectsCompleted", "value": 1 }
+    "predicate": {
+      "kind": "projectsCompleted",
+      "value": 1
+    }
   },
   {
     "id": "ach-portfolio",
     "title": "Portfolio Piece",
     "description": "Finish 5 projects. That is a reel, not a hobby.",
-    "predicate": { "kind": "projectsCompleted", "value": 5 }
+    "predicate": {
+      "kind": "projectsCompleted",
+      "value": 5
+    }
   },
   {
     "id": "ach-boss-mvp",
     "title": "Minimum Viable Cut",
     "description": "Clear a boss review at MVP tier.",
-    "predicate": { "kind": "bossTier", "value": "mvp" }
+    "predicate": {
+      "kind": "bossTier",
+      "value": "mvp"
+    }
   },
   {
     "id": "ach-boss-advanced",
     "title": "Advanced Craft",
     "description": "Clear a boss review at advanced tier.",
-    "predicate": { "kind": "bossTier", "value": "advanced" }
+    "predicate": {
+      "kind": "bossTier",
+      "value": "advanced"
+    }
   },
   {
     "id": "ach-boss-mastery",
     "title": "Mastery Tier",
     "description": "Clear a boss review at mastery tier.",
-    "predicate": { "kind": "bossTier", "value": "mastery" }
+    "predicate": {
+      "kind": "bossTier",
+      "value": "mastery"
+    }
   },
   {
     "id": "ach-streak-3",
     "title": "Three Days Running",
     "description": "Study three days in a row.",
-    "predicate": { "kind": "streakDays", "value": 3 }
+    "predicate": {
+      "kind": "streakDays",
+      "value": 3
+    }
   },
   {
     "id": "ach-streak-7",
     "title": "A Full Week",
     "description": "Keep a seven day study streak.",
-    "predicate": { "kind": "streakDays", "value": 7 }
+    "predicate": {
+      "kind": "streakDays",
+      "value": 7
+    }
   },
   {
     "id": "ach-streak-30",
     "title": "Thirty Day Render",
     "description": "Keep a thirty day study streak. This is where habits live.",
-    "predicate": { "kind": "streakDays", "value": 30 }
+    "predicate": {
+      "kind": "streakDays",
+      "value": 30
+    }
+  },
+  {
+    "id": "ach-streak-14",
+    "title": "Two Weeks Straight",
+    "description": "Keep a fourteen day streak — the habit is no longer an experiment.",
+    "predicate": {
+      "kind": "streakDays",
+      "value": 14
+    }
+  },
+  {
+    "id": "ach-mastery-video-editing",
+    "title": "Editing Adept",
+    "description": "Reach mastery level 5 on the editing track.",
+    "predicate": {
+      "kind": "masteryLevel",
+      "value": 5,
+      "ref": "video-editing"
+    }
+  },
+  {
+    "id": "ach-mastery-blender",
+    "title": "Blender Adept",
+    "description": "Reach mastery level 5 on the blender track.",
+    "predicate": {
+      "kind": "masteryLevel",
+      "value": 5,
+      "ref": "blender"
+    }
+  },
+  {
+    "id": "ach-mastery-animation",
+    "title": "Animation Adept",
+    "description": "Reach mastery level 5 on the animation track.",
+    "predicate": {
+      "kind": "masteryLevel",
+      "value": 5,
+      "ref": "animation"
+    }
+  },
+  {
+    "id": "ach-mastery-cinematography",
+    "title": "Camera Adept",
+    "description": "Reach mastery level 5 on the camera track.",
+    "predicate": {
+      "kind": "masteryLevel",
+      "value": 5,
+      "ref": "cinematography"
+    }
+  },
+  {
+    "id": "ach-mastery-audio",
+    "title": "Audio Adept",
+    "description": "Reach mastery level 5 on the audio track.",
+    "predicate": {
+      "kind": "masteryLevel",
+      "value": 5,
+      "ref": "audio"
+    }
+  },
+  {
+    "id": "ach-mastery-vfx",
+    "title": "VFX Adept",
+    "description": "Reach mastery level 5 on the vfx track.",
+    "predicate": {
+      "kind": "masteryLevel",
+      "value": 5,
+      "ref": "vfx"
+    }
+  },
+  {
+    "id": "ach-mastery-storytelling",
+    "title": "Story Adept",
+    "description": "Reach mastery level 5 on the story track.",
+    "predicate": {
+      "kind": "masteryLevel",
+      "value": 5,
+      "ref": "storytelling"
+    }
+  },
+  {
+    "id": "ach-mastery-maxed",
+    "title": "Track Maxed",
+    "description": "Take any one mastery track all the way to level 10.",
+    "predicate": {
+      "kind": "masteryLevel",
+      "value": 10
+    }
+  },
+  {
+    "id": "ach-prestige-first",
+    "title": "Around Again",
+    "description": "Prestige a mastery track for the first time.",
+    "predicate": {
+      "kind": "prestigeCount",
+      "value": 1
+    }
+  },
+  {
+    "id": "ach-prestige-three",
+    "title": "Third Lap",
+    "description": "Prestige mastery tracks three times in total.",
+    "predicate": {
+      "kind": "prestigeCount",
+      "value": 3
+    }
+  },
+  {
+    "id": "ach-rep-colorists-circle",
+    "title": "Colorists' Circle Regular",
+    "description": "Reach reputation rank 2 with the Colorists' Circle.",
+    "predicate": {
+      "kind": "guildRank",
+      "value": 2,
+      "ref": "guild-colorists-circle"
+    }
+  },
+  {
+    "id": "ach-rep-animation",
+    "title": "Animation Guild Regular",
+    "description": "Reach reputation rank 2 with the Animation Guild.",
+    "predicate": {
+      "kind": "guildRank",
+      "value": 2,
+      "ref": "guild-animation"
+    }
+  },
+  {
+    "id": "ach-rep-story-collective",
+    "title": "Story Collective Regular",
+    "description": "Reach reputation rank 2 with the Story Collective.",
+    "predicate": {
+      "kind": "guildRank",
+      "value": 2,
+      "ref": "guild-story-collective"
+    }
+  },
+  {
+    "id": "ach-rep-signal-chain",
+    "title": "Signal Chain Regular",
+    "description": "Reach reputation rank 2 with the Signal Chain.",
+    "predicate": {
+      "kind": "guildRank",
+      "value": 2,
+      "ref": "guild-signal-chain"
+    }
+  },
+  {
+    "id": "ach-rep-honoured",
+    "title": "Honoured Member",
+    "description": "Reach the top reputation rank with any guild.",
+    "predicate": {
+      "kind": "guildRank",
+      "value": 4
+    }
+  },
+  {
+    "id": "ach-best-hard-mvp",
+    "title": "Hard Mode Entry",
+    "description": "Score 41 or better on any boss attempt — the hard-mode MVP line.",
+    "predicate": {
+      "kind": "bossPersonalBest",
+      "value": 41
+    }
+  },
+  {
+    "id": "ach-best-strange-room",
+    "title": "Room Record",
+    "description": "Score 52 or better on The Strange Room.",
+    "predicate": {
+      "kind": "bossPersonalBest",
+      "value": 52,
+      "ref": "boss-strange-room"
+    }
+  },
+  {
+    "id": "ach-chain-first",
+    "title": "Chain Reaction",
+    "description": "Finish a full side quest chain in order.",
+    "predicate": {
+      "kind": "chainsCompleted",
+      "value": 1
+    }
+  },
+  {
+    "id": "ach-chain-all",
+    "title": "Every Link",
+    "description": "Finish four side quest chains.",
+    "predicate": {
+      "kind": "chainsCompleted",
+      "value": 4
+    }
   }
 ]
