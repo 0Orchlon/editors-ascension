@@ -140,3 +140,34 @@ describe('contract parity: schemas.ts ↔ contracts.yaml (T-04)', () => {
     });
   }
 });
+
+/**
+ * T-07 — «drift хамгаалалт өөрөө хазна» гэдгийн нотолгоо.
+ *
+ * ⚠ Дээрх бүх тест НОГООН байх нь хангалтгүй: харьцуулалт хоосон ажиллаж байвал ч
+ * ногоон болно. Доор гэрээ болон схемийн ЗӨРҮҮГ зориуд тарьж, ижил шалгалт
+ * УНАХЫГ баталлаа.
+ */
+describe('the parity guard actually bites (T-07)', () => {
+  const requiredOf = (check: Check<any>) => sorted(check.meta.required);
+
+  it('fails when the contract gains a field the DSL does not have', () => {
+    const drifted = { ...yamlSchemas.GameState, required: [...yamlSchemas.GameState.required, 'newThing'] };
+    expect(requiredOf(S.GameState)).not.toEqual(sorted(drifted.required));
+  });
+
+  it('fails when the DSL loses a field the contract still requires', () => {
+    const shrunk = requiredOf(S.GameState).filter((f) => f !== 'mastery');
+    expect(shrunk).not.toEqual(sorted(yamlSchemas.GameState.required));
+  });
+
+  it('fails when an enum drifts apart', () => {
+    const drifted = [...(S.ActionType.meta.enum ?? []), 'teleport'];
+    expect(sorted(drifted)).not.toEqual(sorted(yamlSchemas.ActionType.enum));
+  });
+
+  it('reads a real contract file — an empty parse would pass vacuously', () => {
+    expect(Object.keys(yamlSchemas).length).toBeGreaterThan(40);
+    expect(doc.components.schemas.GameState.required).toContain('mastery');
+  });
+});
