@@ -51,10 +51,19 @@ Trophy Room-ийн нээлтийн текст нь явцтай зорилто�
 (`(currently N)` — lld.md §9.4.2): «rank 3 хүр» гэдэг нь 0-оос эсвэл 2-оос
 хамаарч огт өөр зай.
 
-`gameService.view.*`-ийн нэрс загварын `§9.5`-ийнхээс гурав ялгаатай
-(`trophies` ↔ `cosmetics` · `respecStatus` ↔ `respecAvailableIn` ·
-`bossThresholds`+`bossPersonalBest` ↔ `bossBoard`) — чадвар нь бүтэн, зөвхөн нэр.
-Шинэ view нэмэхэд загварын нэрийг эхлээд шалга.
+`gameService.view.*`-ийн нэрс нь `lld.md §9.5`-ийн гэрээтэй ЯГ таарна:
+`masteryTracks` · `guilds` · `cosmetics` · `capstone` · `bossBoard` ·
+`respecAvailableIn` · `activeWorld`. `tests/unit/view-contract.test.ts` нь долоон
+нэр ба тэдгээрийн хэлбэрийг хаана.
+
+⚠ Дэлгэцийн дотоод нэрээр (`trophies`, `respecStatus`) дахин нэрлэхгүй: `§9.5` бол
+UI ↔ домэйны ЦОРЫН ГАНЦ гэрээ (`QX-7` — `ui/**` нь `shared/core`-ыг шууд
+импортлохгүй), нэр салбал загварын хүснэгт ба код хоёр тусдаа үнэн болно.
+
+Trophy Room-д `Equip`/`Unequip` нь картан дээрх `<button>`; нээгдээгүй элементэд
+товч ОГТ БАЙХГҮЙ (`disabled` БИШ — lld.md §9.4.2). `disabled` товч нь «хүрч болох
+зүйл» гэж уншигдаж, дарахад `PREREQ_NOT_MET` гэсэн мухардал үзүүлнэ. Домэйн талын
+шалгалт `setCampLayout`-д тэр чигээрээ үлдэнэ — UI бол тав тух, хамгаалалт БИШ.
 
 ## A11y (заавал)
 

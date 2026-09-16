@@ -67,6 +67,30 @@ PERSONAL-1-ийн 24 node-ийн `id · title · description · cost · tier`-и
 (`levelRequired <= state.level`) ба ИЖИЛ эрэмбэ (`world → levelRequired → id`)
 ашиглана (lld.md §6.9).
 
+## Event-ийн дараалал бол ГЭРЭЭ, тестээр хаагдсан
+
+`events` массивын дараалал нь FX ба `aria-live`-ийн ЦОРЫН ГАНЦ оролт (`lld.md §9.3`)
+тул төлөвт нөлөөгүй ч тоглогчид ШУУД харагдана. `lld.md §7.1…§7.3`-ын дараалал:
+
+- `claimQuest`: stamina → XP → бүртгэл → mastery → reputation → chain → streak →
+  шагнал → тохиолдол → амжилт. `QUEST_COMPLETED` нь `MASTERY_LEVEL_UP`-аас ӨМНӨ.
+- `attemptBoss`: `BOSS_ATTEMPT_LOGGED` → `XP_GAINED` → `BOSS_PASSED` → mastery → rep
+  → амжилт. Ялалтын FX-ийг `BOSS_PASSED` асаадаг тул XP нь түүнээс ӨМНӨ урсана.
+- mastery ба reputation нь ҮРГЭЛЖ амжилтын үнэлгээнээс ӨМНӨ — эс бөгөөс
+  `masteryLevel`/`guildRank` предикаттай амжилт нэг үйлдэл ХОЦРОНО.
+
+Индексийн тестүүд: `tests/unit/core/rollup.test.ts` · `boss.test.ts`.
+
+## Migration нь оролтод ИТГЭХГҮЙ
+
+`save/migrations.ts`-ийн алхам бүр `{ ...a, шинэ_талбар: анхдагч }` — spread нь
+ЭХЭНД. Эсрэгээр бичвэл оролтын утга ноёрхоно.
+
+⚠ Яагаад энэ нь бодит эмзэг байдал вэ: `loadState` нь схемийн шалгалтыг migration-ий
+ДАРАА, v2 схемээр хийдэг (`save/serialize.ts`). Тиймээс `schemaVersion: 1` гэж
+тэмдэглэсэн, гараар зохиосон файл нь v1 схемд БАЙХГҮЙ талбарыг (ж: `difficulty:
+'hard'`) агуулж чадна. Импортын зам дээр цорын ганц хамгаалалт нь энэ дарааллах.
+
 ## Загвараас ил зөрсөн ХОЁР цэг (санамсаргүй биш)
 
 - **`chains.ts → bonusWithinCeiling` нь домэйнд ҮЛДСЭН.** `lld.md §6.3` нь таазыг
