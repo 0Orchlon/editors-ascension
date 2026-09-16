@@ -7,7 +7,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { buildPack } from '@shared/content/index.ts';
-import { GUILD_COUNT, SKILL_TAGS } from '@shared/core/constants.ts';
+import { COSMETIC_SLOTS, GUILD_COUNT, SKILL_TAGS } from '@shared/core/constants.ts';
 import type { SkillDefinition } from '@shared/types/index.ts';
 
 const pack = buildPack();
@@ -352,5 +352,103 @@ describe('RET-7 — the achievement catalog reaches forty (T-24)', () => {
     expect(achievements.filter((a) => a.id.startsWith('ach-')).length).toBeGreaterThanOrEqual(41);
     for (const id of ['ach-first-light', 'ach-boss-mastery', 'ach-streak-30', 'ach-campaign-complete'])
       expect(achievements.some((a) => a.id === id)).toBe(true);
+  });
+});
+
+describe('COS-1 · COS-2 — the cosmetic catalog (T-23)', () => {
+  const cosmetics = pack.cosmetics;
+  const questIds = new Set(pack.quests.map((q) => q.id));
+  const bossIds = new Set(pack.quests.filter((q) => q.track === 'boss').map((q) => q.id));
+  const achievementIds = new Set(pack.achievements.map((a) => a.id));
+  const guildIds = new Set(pack.guilds.map((g) => g.id));
+
+  it('ships at least sixty items', () => {
+    expect(cosmetics.length).toBeGreaterThanOrEqual(60);
+  });
+
+  it.each(COSMETIC_SLOTS)('fills the %s slot with at least five items', (slot) => {
+    expect(cosmetics.filter((c) => c.slot === slot).length).toBeGreaterThanOrEqual(5);
+  });
+
+  it('uses only the six contract slots', () => {
+    const bad = cosmetics.filter((c) => !(COSMETIC_SLOTS as readonly string[]).includes(c.slot));
+    expect(bad.map((c) => c.id)).toEqual([]);
+  });
+
+  it('marks every item cosmetic — nothing may buy progression (EC-1)', () => {
+    expect(cosmetics.filter((c) => c.effect !== 'cosmetic').map((c) => c.id)).toEqual([]);
+  });
+
+  it('uses unique ids and non-empty titles', () => {
+    expect(new Set(cosmetics.map((c) => c.id)).size).toBe(cosmetics.length);
+    expect(cosmetics.filter((c) => !c.title.trim()).map((c) => c.id)).toEqual([]);
+  });
+
+  /** ⚠ COS-2 — өнчин шагнал ХОРИОТОЙ: `unlockSource` нь БОДИТ id-д заана. */
+  it('resolves every unlockSource to a real id', () => {
+    const bad: string[] = [];
+    for (const c of cosmetics) {
+      const { kind, refId } = c.unlockSource;
+      const known =
+        kind === 'quest' ? questIds.has(refId)
+        : kind === 'boss' ? bossIds.has(refId)
+        : kind === 'achievement' ? achievementIds.has(refId)
+        : kind === 'guildRank' ? guildIds.has(refId)
+        : (SKILL_TAGS as readonly string[]).includes(refId);
+      if (!known) bad.push(`${c.id} → ${kind}:${refId}`);
+    }
+    expect(bad).toEqual([]);
+  });
+
+  it('keeps every unlockSource value inside the range its kind allows', () => {
+    const bad: string[] = [];
+    for (const c of cosmetics) {
+      const { kind, value } = c.unlockSource;
+      if (kind === 'boss' && !['mvp', 'advanced', 'mastery'].includes(String(value)))
+        bad.push(`${c.id}: boss tier ${String(value)}`);
+      if (kind === 'guildRank' && (Number(value) < 1 || Number(value) > 4))
+        bad.push(`${c.id}: guild rank ${String(value)}`);
+      if (kind === 'mastery' && (Number(value) < 1 || Number(value) > 10))
+        bad.push(`${c.id}: mastery level ${String(value)}`);
+      if ((kind === 'quest' || kind === 'achievement') && value !== undefined)
+        bad.push(`${c.id}: ${kind} carries a value it cannot use`);
+    }
+    expect(bad).toEqual([]);
+  });
+
+  /** plan.md P-22 — prestige цол ба streak шагнал нь шинэ kind БИШ, амжилтад заана. */
+  it('anchors the prestige titles to the prestigeCount achievements', () => {
+    const prestigeAchievements = new Set(
+      pack.achievements.filter((a) => a.predicate.kind === 'prestigeCount').map((a) => a.id),
+    );
+    const anchored = cosmetics.filter(
+      (c) => c.unlockSource.kind === 'achievement' && prestigeAchievements.has(c.unlockSource.refId),
+    );
+    expect(anchored.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('anchors a streak reward to each of the four streak achievements (RET-8)', () => {
+    const streakAchievements = pack.achievements
+      .filter((a) => a.predicate.kind === 'streakDays')
+      .map((a) => a.id);
+    const missing = streakAchievements.filter(
+      (id) => !cosmetics.some((c) => c.unlockSource.kind === 'achievement' && c.unlockSource.refId === id),
+    );
+    expect(missing).toEqual([]);
+  });
+
+  it('adds no new unlock kind beyond the contract five', () => {
+    const kinds = new Set(cosmetics.map((c) => c.unlockSource.kind));
+    expect([...kinds].sort()).toEqual(
+      ['achievement', 'boss', 'guildRank', 'mastery', 'quest'].filter((k) => kinds.has(k as never)),
+    );
+    expect(kinds.size).toBeLessThanOrEqual(5);
+  });
+
+  /** ⚠ `loot.json`-ийн 18 RNG drop нь cosmetic каталог БИШ — хоёулаа зэрэгцэн байна. */
+  it('leaves the eighteen RNG loot items untouched', () => {
+    expect(pack.loot).toHaveLength(18);
+    const overlap = pack.loot.filter((l) => cosmetics.some((c) => c.id === l.id));
+    expect(overlap.map((l) => l.id)).toEqual([]);
   });
 });
