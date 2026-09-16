@@ -22,7 +22,10 @@ const pack = testPack({
       questions: [{ id: 'q1', prompt: 'p', options: ['a', 'b'], correctIndex: 0, explanation: 'e' }],
     },
   ] as never,
-  skills: [{ id: 'sk-a', title: 'A', description: 'd', cost: 1, prerequisites: [] }] as never,
+  // ⚠ v1.2.0 — `track` ба `tier` нь гэрээнд ЗААВАЛ (SKL-1); tier-1 тул `skillPoints`.
+  skills: [
+    { id: 'sk-a', title: 'A', description: 'd', cost: 1, prerequisites: [], track: 'video-editing', tier: 1 },
+  ] as never,
 });
 const ctx = quietCtx(pack);
 

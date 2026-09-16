@@ -1,6 +1,7 @@
 /** XP, түвшин, ранк, skill point (lld.md §5.4.1; AC PRG-1…6). */
 import type { ContentPack, DomainEvent, GameState } from '../types/index.ts';
 import { RANK_NAMES, XP_THRESHOLDS } from './constants.ts';
+import { capstoneGaps, costCurrency } from './skillTree.ts';
 import { ok, reject, type DomainResult } from './result.ts';
 
 /** `1 + |{t ∈ XP_THRESHOLDS : t ≤ xp}|`, дээд тал нь 10 (AC PRG-1). */
@@ -40,21 +41,45 @@ export function addXp(state: GameState, amount: number): DomainResult {
   return ok({ ...state, xp, level, skillPoints }, events);
 }
 
-/** AC PRG-5 — шалгах дараалал нь ГЭРЭЭ (lld.md §5.4.1). */
+/**
+ * AC PRG-5 — шалгах ДАРААЛАЛ нь ГЭРЭЭ (lld.md §5.4.1): танихгүй → аль хэдийн →
+ * урьдчилсан нөхцөл → валют. Тоглогч хоёр удаа татгалзалт уншихгүй.
+ *
+ * ⚠ v1.2.0 — ҮНЭ нь `1` ХЭВЭЭР (SKL-5), ВАЛЮТ нь tier-ээр хуваагдана (plan.md P-3):
+ * tier-1 = `skillPoints`, tier-2/3 = mastery point. Capstone (tier-3) нь нэмэлт
+ * гурван нөхцөлтэй — татгалзлын мессеж нь АЛЬ нь дутсаныг НЭРЛЭНЭ (SKL-2).
+ */
 export function unlockSkill(state: GameState, skillId: string, pack: ContentPack): DomainResult {
   const skill = pack.skills.find((s) => s.id === skillId);
   if (!skill) return reject('INVALID_INPUT', `unknown skill ${skillId}`);
   if (state.unlockedSkillIds.includes(skillId)) return reject('ALREADY_COMPLETED');
   if (!skill.prerequisites.every((p) => state.unlockedSkillIds.includes(p)))
     return reject('PREREQ_NOT_MET');
-  if (state.skillPoints < skill.cost) return reject('INSUFFICIENT_SKILL_POINTS');
+
+  const gaps = capstoneGaps(state, skill, pack);
+  if (gaps.length > 0) return reject('PREREQ_NOT_MET', gaps.join('; '));
+
+  const currency = costCurrency(skill);
+  if (currency === 'masteryPoints') {
+    // ⚠ Track нь дор хаяж нэг оноо ГАРГАСАН байх ёстой (plan.md P-3-ийн уншилт —
+    // `skillTree.ts`-ийн толгойд тайлбарласан). Эс бөгөөс өөр модны оноогоор
+    // энэ модыг бүрэн нээх боломж үүсч мод тус бүрийн утга алдагдана.
+    const level = state.mastery[skill.track]?.level ?? 0;
+    if (level < 2)
+      return reject(
+        'PREREQ_NOT_MET',
+        `${skill.track} mastery must reach level 2 before its tier-${skill.tier} nodes open`,
+      );
+  }
+
+  if (state[currency] < skill.cost) return reject('INSUFFICIENT_SKILL_POINTS');
 
   return ok(
     {
       ...state,
-      skillPoints: state.skillPoints - skill.cost,
+      [currency]: state[currency] - skill.cost,
       unlockedSkillIds: [...state.unlockedSkillIds, skillId],
     },
-    [{ type: 'SKILL_UNLOCKED', data: { skillId, title: skill.title } }],
+    [{ type: 'SKILL_UNLOCKED', data: { skillId, title: skill.title, currency } }],
   );
 }

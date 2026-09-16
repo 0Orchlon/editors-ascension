@@ -9,8 +9,10 @@ const pack = {
   quests: [],
   dungeons: [],
   skills: [
-    { id: 'sk-a', title: 'A', description: 'a', cost: 1, prerequisites: [] },
-    { id: 'sk-b', title: 'B', description: 'b', cost: 1, prerequisites: ['sk-a'] },
+    // ⚠ v1.2.0 — `track` ба `tier` нь гэрээнд ЗААВАЛ (SKL-1). Хоёулаа tier-1 тул
+    // төлбөрийн валют нь `skillPoints` ХЭВЭЭР: PRG-5-ийн зам өөрчлөгдөөгүй.
+    { id: 'sk-a', title: 'A', description: 'a', cost: 1, prerequisites: [], track: 'video-editing', tier: 1 },
+    { id: 'sk-b', title: 'B', description: 'b', cost: 1, prerequisites: ['sk-a'], track: 'video-editing', tier: 1 },
   ],
   achievements: [],
   encounters: [],
