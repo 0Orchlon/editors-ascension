@@ -12,7 +12,9 @@ import { createRng, fnv1a } from '@shared/core/rng.ts';
 import { BOSS_CATEGORIES, BOSS_CATEGORY_LABELS, MILESTONE_KEYS, SKILL_TAGS, XP_THRESHOLDS } from '@shared/core/constants.ts';
 import { rankOf } from '@shared/core/reputation.ts';
 import { isUnlocked } from '@shared/core/cosmetics.ts';
-import { COSMETIC_SLOTS } from '@shared/core/constants.ts';
+import { costCurrency, unlockGaps, type Currency } from '@shared/core/skillTree.ts';
+import { COSMETIC_SLOTS, MASTERY_PRESTIGE_LEVEL, RESPEC_COOLDOWN_DAYS } from '@shared/core/constants.ts';
+import { dayOf, daysBetween } from '@shared/core/result.ts';
 import { exportSave, importSave } from '@shared/core/saves.ts';
 import type {
   Action,
@@ -82,7 +84,17 @@ export type SkillNodeView = SkillDefinition & {
   unlocked: boolean;
   affordable: boolean;
   lockReason: string | null;
+  /** tier-1 = `skillPoints`, tier-2/3 = mastery point (plan.md P-3) — UI үнийг ТААХГҮЙ. */
+  currency: Currency;
+  /**
+   * Дутсан нөхцөлүүд, capstone-ийнх ч (AC SKL-2). ⚠ `shared/core`-оос ГАРНА:
+   * UI ижил дүрмийг хоёр дахь удаа бичих нь татгалзал ба тайлбарыг салгана.
+   */
+  gaps: readonly string[];
 };
+
+/** AC SKL-3 — respec-ийн ГЛОБАЛ cooldown (plan.md P-19). */
+export type RespecStatus = { available: boolean; daysLeft: number };
 
 export type AchievementView = AchievementDefinition & { earned: boolean; requirement: string };
 
@@ -200,6 +212,11 @@ export function createGameService(deps: GameServiceDeps) {
     audio: 'Audio',
     vfx: 'VFX',
     storytelling: 'Storytelling',
+  };
+
+  const CURRENCY_LABELS: Record<Currency, string> = {
+    skillPoints: 'skill point',
+    masteryPoints: 'mastery point',
   };
 
   function requirementText(def: AchievementDefinition): string {
@@ -372,14 +389,37 @@ export function createGameService(deps: GameServiceDeps) {
         return pack.skills.map((skill) => {
           const unlocked = state.unlockedSkillIds.includes(skill.id);
           const missing = skill.prerequisites.filter((p) => !state.unlockedSkillIds.includes(p));
-          const affordable = state.skillPoints >= skill.cost;
+          const currency = costCurrency(skill);
+          const affordable = state[currency] >= skill.cost;
+          const gaps = unlocked ? [] : unlockGaps(state, skill, pack);
           let lockReason: string | null = null;
           if (!unlocked && missing.length > 0)
             lockReason = `Unlock first: ${missing.map((id) => pack.skills.find((s) => s.id === id)?.title ?? id).join(', ')}.`;
+          else if (!unlocked && gaps.length > 0)
+            // ⚠ Эхний дутуу нөхцөл нь товч шалтгаан; БҮГД нь `gaps`-д бүтнээрээ.
+            lockReason = `${gaps[0]!}.`;
           else if (!unlocked && !affordable)
-            lockReason = `Needs ${skill.cost} skill point — you have ${state.skillPoints}.`;
-          return { ...skill, unlocked, affordable, lockReason };
+            lockReason = `Needs ${skill.cost} ${CURRENCY_LABELS[currency]} — you have ${state[currency]}.`;
+          return { ...skill, unlocked, affordable, lockReason, currency, gaps };
         });
+      },
+
+      masteryPoints: (): number => store.getState().masteryPoints,
+
+      /** Prestige-ийн босго нь домэйнээс — UI 10-ыг дахин бичихгүй (AC BE-10). */
+      prestigeLevel: (): number => MASTERY_PRESTIGE_LEVEL,
+
+      /**
+       * AC SKL-3 — cooldown нь ГЛОБАЛ: нэг мод respec хийхэд бүгд хүлээнэ.
+       * ⚠ Үлдсэн хоног нь домэйнтэй ИЖИЛ тоололтоор (`daysBetween`) — хоёр өөр
+       * тоолол нь «товч идэвхтэй ч сервер татгалзлаа» гэсэн байдал үүсгэнэ.
+       */
+      respecStatus(): RespecStatus {
+        const { respecAt } = store.getState();
+        if (respecAt === null) return { available: true, daysLeft: 0 };
+        const waited = daysBetween(dayOf(respecAt), dayOf(now()));
+        const daysLeft = Math.max(0, RESPEC_COOLDOWN_DAYS - waited);
+        return { available: daysLeft === 0, daysLeft };
       },
 
       projects(): ProjectView[] {
