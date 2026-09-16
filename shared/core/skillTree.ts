@@ -62,6 +62,26 @@ export function capstoneGaps(state: GameState, skill: SkillDefinition, pack: Con
 }
 
 /**
+ * Node-ийг нээхэд ДУТСАН нөхцөлүүд — capstone-ийнхыг ч агуулна. ХООСОН = нээж болно.
+ *
+ * ⚠ Энэ функц нь `state.mastery`-г УНШИХ ЦОРЫН ГАНЦ зөвшөөрөгдсөн зам (AC SKL-2 —
+ * `MasteryTrack`-ийн гэрээнд нэрлэсэн үл хамаарах зүйл). `progression.ts` нь mastery-г
+ * ШУУД уншихгүй, үүнийг дуудна: `architecture.test.ts`-ийн хүчний хоригийн сканнер
+ * (D-6 · MST-5) прогрессийн модулиудад mastery-ийн уншилт олдвол УНАНА.
+ */
+export function unlockGaps(state: GameState, skill: SkillDefinition, pack: ContentPack): string[] {
+  const gaps = capstoneGaps(state, skill, pack);
+
+  if (costCurrency(skill) === 'masteryPoints') {
+    const level = state.mastery[skill.track]?.level ?? 0;
+    if (level < 2)
+      gaps.unshift(`${skill.track} mastery must reach level 2 before its tier-${skill.tier} nodes open`);
+  }
+
+  return gaps;
+}
+
+/**
  * Нэг модны зарцуулсан оноог төлсөн ВАЛЮТААРАА яг бүтнээр буцааж, тухайн модны бүх
  * unlock-ийг тэглэнэ (AC SKL-3).
  *

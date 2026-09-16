@@ -7,7 +7,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname, join, relative } from 'node:path';
+import { basename, dirname, join, relative } from 'node:path';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, '..', '..');
@@ -207,5 +207,108 @@ describe('the guards actually bite (T-17)', () => {
 
   it('does not mistake a rule written in a comment for a violation', () => {
     expect(stripComments('// never call Date.now( here')).not.toContain('Date.now(');
+  });
+});
+
+/**
+ * T-10 — ХҮЧНИЙ ХОРИГ (AC MST-5, RET-6, spec.md D-6).
+ *
+ * Mastery · reputation · campLayout · replayLog нь XP · stamina · coin · loot ·
+ * quest/dungeon-ийн НЭЭЛТЭД нөлөөлөхгүй байх ёстой. Энэ нь машинаар шалгагдахгүй
+ * амлалт учраас `EC-1`-ийн арга (импорт/токен сканнер) хэрэглэв: прогрессийн
+ * модулиуд эдгээр утгыг УНШИХ боломжгүй бол нөлөөлж ч чадахгүй.
+ *
+ * ⚠ ИЛ зөвшөөрөгдсөн ганц үл хамаарах зүйл: `skillTree.ts` нь tier-2/3 node-ийн
+ * нээлтэд mastery-г уншина (AC SKL-2 — гэрээнд нэрлэгдсэн). Тиймээс сканнер
+ * ТУХАЙН файлыг хамрахгүй, гэхдээ түүнийг ил нэрлэж баримтжуулна.
+ */
+describe('power bans: progression never reads the new systems (T-10)', () => {
+  const GUARDED = ['progression.ts', 'stamina.ts', 'quests.ts', 'dungeons.ts', 'economy.ts'];
+
+  /**
+   * Талбарын УНШИЛТ — `state.mastery`, `next.reputation[…]` гэх мэт.
+   * ⚠ `...mastery.events` (дамжуулж буй үр дүнгийн ХУВЬСАГЧ) нь уншилт БИШ: энд
+   * талбарын нэр нь `events`. Тиймээс энгийн дэд мөр хайлт хангалтгүй — таних
+   * тэмдгийн дараах талбарыг л барина.
+   */
+  const fieldReads = (field: string): RegExp =>
+    new RegExp(String.raw`(?<![.\w])[A-Za-z_$][\w$]*\.${field}\b`);
+  const BANNED_FIELDS = ['mastery', 'reputation', 'campLayout', 'replayLog'];
+
+  it('keeps mastery, reputation, campLayout and replayLog out of the progression modules', () => {
+    const offenders: string[] = [];
+    for (const name of GUARDED) {
+      const source = stripComments(read(join(sharedDir, 'core', name)));
+      for (const field of BANNED_FIELDS)
+        if (fieldReads(field).test(source)) offenders.push(`${name} → .${field}`);
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  /** Roll-up нь ДУУДЛАГААР явагдана: `addMasteryXp` · `grantReputation` — уншилт биш бичилт. */
+  it('still lets those modules hand work to the owning engines', () => {
+    const quests = stripComments(read(join(sharedDir, 'core', 'quests.ts')));
+    expect(quests).toContain('addMasteryXp');
+    expect(quests).toContain('grantReputation');
+  });
+
+  it('keeps reputation reads inside the rep, cosmetic and achievement modules (RET-6)', () => {
+    const allowed = ['reputation.ts', 'cosmetics.ts', 'achievements.ts'];
+    const offenders: string[] = [];
+    for (const file of filesUnder(join(sharedDir, 'core'))) {
+      const name = basename(file);
+      if (allowed.includes(name)) continue;
+      if (fieldReads('reputation').test(stripComments(read(file)))) offenders.push(name);
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  /** ⚠ AC SKL-2-ийн ил үл хамаарах зүйл — баримтжуулсан, чимээгүй биш. */
+  it('documents skillTree.ts as the one module allowed to read mastery for unlocks', () => {
+    const source = read(join(sharedDir, 'core', 'skillTree.ts'));
+    expect(source).toContain('state.mastery');
+    expect(source).toMatch(/SKL-2/);
+  });
+
+  it('keeps campLayout out of every domain module except the cosmetic engine (D-6)', () => {
+    const offenders: string[] = [];
+    for (const file of filesUnder(join(sharedDir, 'core'))) {
+      const name = basename(file);
+      if (name === 'cosmetics.ts') continue;
+      if (fieldReads('campLayout').test(stripComments(read(file)))) offenders.push(name);
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('keeps replayLog writes to the single append helper (P-10 · P-24)', () => {
+    const writers: string[] = [];
+    for (const file of filesUnder(join(sharedDir, 'core'))) {
+      const name = basename(file);
+      if (name === 'replayLog.ts') continue;
+      if (fieldReads('replayLog').test(stripComments(read(file)))) writers.push(name);
+    }
+    expect(writers).toEqual([]);
+
+    // `appendReplay`-ийн дуудагч нь ЯГ нэг модуль: `boss.ts` (plan.md P-24).
+    const callers = filesUnder(join(sharedDir, 'core'))
+      .filter((f) => !f.endsWith('replayLog.ts'))
+      .filter((f) => stripComments(read(f)).includes('appendReplay('))
+      .map((f) => basename(f));
+    expect(callers).toEqual(['boss.ts']);
+  });
+
+  it('flags a planted mastery read inside a guarded module', () => {
+    const planted = 'const level = state.mastery[tag].level;';
+    expect(BANNED_FIELDS.some((f) => fieldReads(f).test(stripComments(planted)))).toBe(true);
+  });
+
+  it('flags a planted reputation read', () => {
+    expect(fieldReads('reputation').test('if (state.reputation[g] > 10) xp *= 2;')).toBe(true);
+    // ⚠ Үр дүнгийн хувьсагчийг дамжуулах нь уншилт БИШ — сканнер хэт хашгирахгүй.
+    expect(fieldReads('reputation').test('events.push(...reputation.events);')).toBe(false);
+  });
+
+  it('scans a non-empty set of guarded files — an empty scan would pass vacuously', () => {
+    for (const name of GUARDED) expect(read(join(sharedDir, 'core', name)).length).toBeGreaterThan(200);
   });
 });
