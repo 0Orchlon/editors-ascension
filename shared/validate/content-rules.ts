@@ -11,6 +11,7 @@
  * байхгүй) тул давхаргын мөчлөг үүсэхгүй.
  */
 import { DEFAULT_REPEAT_XP_MULTIPLIER, SKILL_TAGS } from '../core/constants.ts';
+import { AchievementDefinition } from './schemas.ts';
 import { sideQuestXp } from '../core/sideQuests.ts';
 import type { ContentPack, QuestDefinition } from '../types/index.ts';
 
@@ -45,17 +46,12 @@ const STAMINA_RANGE = { min: 1, max: 6 } as const;
 const MAX_ENCOUNTER_MINUTES = 2;
 const WORLDS = [1, 2, 3, 4, 5] as const;
 
-/** `schemas.ts`-ийн `AchievementDefinition.predicate.kind` энум — домэйн үнэлж чадах kind-ууд. */
-const KNOWN_PREDICATE_KINDS = [
-  'level',
-  'totalXp',
-  'mainQuestsCompleted',
-  'sideQuestCompletions',
-  'dungeonsCompleted',
-  'projectsCompleted',
-  'bossTier',
-  'streakDays',
-] as const;
+/**
+ * Зөвшөөрөгдөх предикатын `kind`-ууд нь `schemas.ts`-ийн энумаас ГАРГАГДАНА —
+ * гараар хуулбарлавал гэрээ өргөжихөд энэ жагсаалт чимээгүй хоцорно.
+ */
+const KNOWN_PREDICATE_KINDS: readonly string[] =
+  (AchievementDefinition.meta.fields?.predicate?.meta.fields?.kind?.meta.enum ?? []).map(String);
 
 const BOSS_TIER_NAMES = ['mvp', 'advanced', 'mastery'] as const;
 
@@ -255,7 +251,7 @@ function ach1(pack: ContentPack, out: Out): void {
     if (seen.has(a.id)) add(out, 'ACH-1', at, 'duplicate achievement id');
     seen.add(a.id);
 
-    if (!(KNOWN_PREDICATE_KINDS as readonly string[]).includes(a.predicate.kind))
+    if (!KNOWN_PREDICATE_KINDS.includes(a.predicate.kind))
       add(out, 'ACH-1', at, `predicate kind ${a.predicate.kind} cannot be evaluated by the domain`);
     if (
       a.predicate.kind === 'bossTier' &&

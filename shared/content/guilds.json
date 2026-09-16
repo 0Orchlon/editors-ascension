@@ -1,0 +1,37 @@
+[
+  {
+    "id": "guild-colorists-circle",
+    "title": "Colorists' Circle",
+    "tags": [
+      "video-editing",
+      "cinematography"
+    ],
+    "placeholder": true
+  },
+  {
+    "id": "guild-animation",
+    "title": "Animation Guild",
+    "tags": [
+      "animation",
+      "blender"
+    ],
+    "placeholder": true
+  },
+  {
+    "id": "guild-story-collective",
+    "title": "Story Collective",
+    "tags": [
+      "storytelling"
+    ],
+    "placeholder": true
+  },
+  {
+    "id": "guild-signal-chain",
+    "title": "Signal Chain",
+    "tags": [
+      "audio",
+      "vfx"
+    ],
+    "placeholder": true
+  }
+]

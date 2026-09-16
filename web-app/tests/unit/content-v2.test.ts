@@ -7,7 +7,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { buildPack } from '@shared/content/index.ts';
-import { SKILL_TAGS } from '@shared/core/constants.ts';
+import { GUILD_COUNT, SKILL_TAGS } from '@shared/core/constants.ts';
 import type { SkillDefinition } from '@shared/types/index.ts';
 
 const pack = buildPack();
@@ -181,5 +181,36 @@ describe('BSX-1 — exactly one boss per world (T-20)', () => {
       (b) => !b.victoryConditions.some((v) => /six craft categories/i.test(v)),
     );
     expect(bad.map((b) => b.id)).toEqual([]);
+  });
+});
+
+describe('RET-5 — four guilds partition the seven learning domains (T-21)', () => {
+  const guilds = pack.guilds;
+
+  it('ships exactly four guilds', () => {
+    expect(guilds).toHaveLength(4);
+  });
+
+  it('assigns every skill tag to exactly one guild — no overlap, no gap', () => {
+    const owners = new Map<string, string[]>();
+    for (const g of guilds) for (const t of g.tags) owners.set(t, [...(owners.get(t) ?? []), g.id]);
+    const wrong = SKILL_TAGS.map((tag) => ({ tag, guilds: owners.get(tag) ?? [] })).filter(
+      (r) => r.guilds.length !== 1,
+    );
+    expect(wrong).toEqual([]);
+  });
+
+  it('uses unique guild ids and non-empty titles', () => {
+    expect(new Set(guilds.map((g) => g.id)).size).toBe(guilds.length);
+    expect(guilds.filter((g) => !g.title.trim())).toEqual([]);
+  });
+
+  /** ⚠ H-2 хариугүй тул AAA §4.10-ын 4 нэр нь ТҮР орлуулагч — `placeholder` нь тэр тэмдэглэгээ. */
+  it('marks the AAA placeholder names as awaiting human sign-off (H-2)', () => {
+    expect(guilds.every((g) => g.placeholder)).toBe(true);
+  });
+
+  it('keeps the guild count in step with the domain constant', () => {
+    expect(guilds).toHaveLength(GUILD_COUNT);
   });
 });
