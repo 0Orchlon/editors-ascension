@@ -1,4 +1,5 @@
 <!-- PERSONAL-1 · readme · Код + тест · 2026-09-15 -->
+<!-- PERSONAL-2 · readme · Код + тест · 2026-09-16 — v2-ийн систем, 9 дэх маршрут, validate:content -->
 
 # Editor's Ascension
 
@@ -12,8 +13,26 @@
 |---|---|
 | `shared/` | ✅ домэйн цөм, контент пакет, validator, save давхарга |
 | `server/` | ✅ 10 endpoint, SQLite, эрх бүхий үйлдэл, snapshot, transfer, ops хаалга |
-| `web-app/` | ✅ 8 дэлгэц, офлайн дараалал, сервертэй эвлэрүүлэг (If-Match · 409 · 429), шилжүүлэх код, export/import, a11y |
+| `web-app/` | ✅ **9 дэлгэц**, офлайн дараалал, сервертэй эвлэрүүлэг (If-Match · 409 · 429), шилжүүлэх код, export/import, a11y |
 | `docs/PERSONAL-1/` | ✅ спек · төлөвлөгөө · tasks · LLD · гэрээний баримт |
+| `docs/PERSONAL-2/` | ✅ спек · төлөвлөгөө · tasks · LLD · гэрээ v1.2.0 ба түүний баримт |
+
+### PERSONAL-2 — гүнзгийрүүлэлт (хэрэгжсэн)
+
+| Систем | Юу гэсэн үг | Хаана |
+|---|---|---|
+| **Mastery track** ×7 | Ажлын `tags` бүрд ТУСДАА түвшин; level 10-д **prestige**. ⚠ XP, stamina, quest-ийн нээлтэд НӨЛӨӨЛӨХГҮЙ — зөвхөн tier-2/3 skill node ба cosmetic | `shared/core/mastery.ts` · Camp · Skills |
+| **Guild reputation** ×4 | `tags` → guild; rep ХЭЗЭЭ Ч буурахгүй, зэрэглэл нь ЗӨВХӨН cosmetic | `shared/core/reputation.ts` · Camp |
+| **Side quest chain** | 4 алхмын дараалал → нэг удаагийн bonus XP | `shared/core/chains.ts` |
+| **Boss v2 — hard mode** | Оролдлого тутамд `standard`/`hard`; hard босго нь `ceil(×1.15)` = 41/52/60. `(bossId, difficulty)` тутмын хувийн дээд амжилт, rematch **cooldown-гүй** | `shared/core/boss.ts` · Project Forge |
+| **Skill tree v2** | 7 track таб, tier-1 = skill point · tier-2/3 = mastery point, capstone-ийн дутуу нөхцөл НЭРЛЭГДЭНЭ, respec (7 хоногийн ГЛОБАЛ cooldown) | `shared/core/skillTree.ts` · Skills |
+| **Trophy Room** | `#/trophies` — 60+ cosmetic бүгд харагдана, нээгдээгүй бүр «юу хийвэл нээгдэх»-ээ текстээр хэлнэ; camp-ийн 6 slot энд эмхлэгдэнэ | `web-app/src/ui/screens/trophies.ts` |
+| **Дэлхий тутмын палитр** | 6 палитр × 19 токен × 2 багц (`colorBlindSafe`); 228 контраст ТООЦООЛЖ шалгагдана | `web-app/src/ui/theme.ts` |
+| **Juice давхарга** | 12 event → (анимац ≤300ms, дуу, `aria-live` текст) ГАНЦ хаалгаар; `reducedMotion`/`soundVolume=0` бүрэн унтраана | `web-app/src/ui/fx.ts` |
+
+⚠ Шинэ систем бүр **сервергүйгээр бүрэн ажиллана** — `web-app/tests/integration/offline.test.ts`
+нь бүх `fetch`-ийг унагаж, mastery · guild · trophy · hard mode · skill unlock бүгдийг
+шалгана. Бүртгэл, нууц үг, PII ХЭВЭЭР шаардагдахгүй.
 
 ## Эхлэх
 
@@ -72,6 +91,12 @@ cd server  && npm test      # typecheck + lint + vitest (76 тест)
 ```
 
 Репогийн ROOT дээр `package.json` БАЙХГҮЙ нь зөв — CI нь гадаргуу тутам ажиллана.
+
+Контентын дүрмийг тестээс ГАДНА, CLI-аар ч шалгана (ижил модуль — хоёр дүгнэлт үүсэхгүй):
+
+```bash
+cd web-app && npm run validate:content   # exit ≠ 0 бол зөрчсөн зам хэвлэгдэнэ
+```
 
 ## Архитектурын хил (тестээр хамгаалагдсан)
 
