@@ -121,3 +121,150 @@ describe('QX-5 — each rule actually bites when a violation is planted (T-03)',
     expect(rulesHit(broken)).toContain('EC-1');
   });
 });
+
+describe('QX-5 — the PERSONAL-2 rules bite too (T-25)', () => {
+  it('SKL-1 — a second capstone in one track is caught', () => {
+    const broken = clone(pack);
+    const tier2 = broken.skills.find((s) => s.track === 'blender' && s.tier === 2)!;
+    tier2.tier = 3;
+    expect(rulesHit(broken)).toContain('SKL-1');
+  });
+
+  it('SKL-1 — a capstone borrowing a prerequisite from another track is caught', () => {
+    const broken = clone(pack);
+    const capstone = broken.skills.find((s) => s.tier === 3 && s.track === 'audio')!;
+    capstone.prerequisites = ['sk-modeling'];
+    expect(rulesHit(broken)).toContain('SKL-1');
+  });
+
+  it('SKL-1 — a skill cycle is caught', () => {
+    const broken = clone(pack);
+    broken.skills[0]!.prerequisites = [broken.skills[1]!.id];
+    broken.skills[1]!.prerequisites = [broken.skills[0]!.id];
+    expect(rulesHit(broken)).toContain('SKL-1');
+  });
+
+  it('SKL-5 — a node priced above one point is caught', () => {
+    const broken = clone(pack);
+    broken.skills[0]!.cost = 2 as never;
+    expect(rulesHit(broken)).toContain('SKL-5');
+  });
+
+  it('BSX-1 — a world losing its boss is caught', () => {
+    const broken = clone(pack);
+    broken.quests = broken.quests.filter((q) => q.id !== 'boss-strange-room');
+    expect(rulesHit(broken)).toContain('BSX-1');
+  });
+
+  it('BSX-1 — a second boss in one world is caught', () => {
+    const broken = clone(pack);
+    const boss = broken.quests.find((q) => q.track === 'boss' && q.world === 2)!;
+    boss.world = 3;
+    expect(rulesHit(broken)).toContain('BSX-1');
+  });
+
+  it('RET-1 — a chain with the wrong number of steps is caught', () => {
+    const broken = clone(pack);
+    broken.chains[0]!.steps = broken.chains[0]!.steps.slice(0, 3);
+    expect(rulesHit(broken)).toContain('RET-1');
+  });
+
+  it('RET-1 — the same side quest in two chains is caught', () => {
+    const broken = clone(pack);
+    broken.chains[1]!.steps[0] = broken.chains[0]!.steps[0]!;
+    expect(rulesHit(broken)).toContain('RET-1');
+  });
+
+  it('RET-1 — a step that is not a side quest is caught', () => {
+    const broken = clone(pack);
+    broken.chains[0]!.steps[0] = 'mq-first-cut';
+    expect(rulesHit(broken)).toContain('RET-1');
+  });
+
+  it('RET-3 — a bonus above the world ceiling is caught', () => {
+    const broken = clone(pack);
+    broken.chains[0]!.bonusXp = 100_000;
+    expect(rulesHit(broken)).toContain('RET-3');
+  });
+
+  it('RET-5 — a skill tag owned by two guilds is caught', () => {
+    const broken = clone(pack);
+    broken.guilds[1]!.tags = [...broken.guilds[1]!.tags, broken.guilds[0]!.tags[0]!];
+    expect(rulesHit(broken)).toContain('RET-5');
+  });
+
+  it('RET-5 — a skill tag owned by no guild is caught', () => {
+    const broken = clone(pack);
+    broken.guilds[2]!.tags = broken.guilds[0]!.tags.slice(0, 1);
+    expect(rulesHit(broken)).toContain('RET-5');
+  });
+
+  it('RET-7 — dropping below forty achievements is caught', () => {
+    const broken = clone(pack);
+    broken.achievements = broken.achievements.slice(0, 20);
+    expect(rulesHit(broken)).toContain('RET-7');
+  });
+
+  it('RET-7 — a guildRank predicate pointing at no guild is caught', () => {
+    const broken = clone(pack);
+    const rank = broken.achievements.find((a) => a.predicate.kind === 'guildRank')!;
+    rank.predicate.ref = 'guild-does-not-exist';
+    expect(rulesHit(broken)).toContain('RET-7');
+  });
+
+  it('RET-7 — losing the prestigeCount anchor is caught (orphaned cosmetics)', () => {
+    const broken = clone(pack);
+    broken.achievements = broken.achievements.filter((a) => a.predicate.kind !== 'prestigeCount');
+    expect(rulesHit(broken)).toContain('RET-7');
+  });
+
+  it('COS-1 — a slot falling below five items is caught', () => {
+    const broken = clone(pack);
+    broken.cosmetics = broken.cosmetics.filter(
+      (c) => c.slot !== 'title' || broken.cosmetics.indexOf(c) % 10 === 0,
+    );
+    expect(rulesHit(broken)).toContain('COS-1');
+  });
+
+  it('COS-1 — a non-cosmetic effect is caught', () => {
+    const broken = clone(pack);
+    broken.cosmetics[0]!.effect = 'power' as never;
+    expect(rulesHit(broken)).toContain('COS-1');
+  });
+
+  it('COS-2 — an unlockSource pointing at a missing id is caught', () => {
+    const broken = clone(pack);
+    broken.cosmetics[0]!.unlockSource.refId = 'nope-does-not-exist';
+    expect(rulesHit(broken)).toContain('COS-2');
+  });
+
+  it('COS-2 — a guild rank outside 1..4 is caught', () => {
+    const broken = clone(pack);
+    const item = broken.cosmetics.find((c) => c.unlockSource.kind === 'guildRank')!;
+    item.unlockSource.value = 9;
+    expect(rulesHit(broken)).toContain('COS-2');
+  });
+
+  it('OFF-2 — an external url outside tutorialRefs is caught', () => {
+    const broken = clone(pack);
+    broken.quests[0]!.summary = 'See https://cdn.example.com/tracker.js for details.';
+    expect(rulesHit(broken)).toContain('OFF-2');
+  });
+
+  it('OFF-2 — a real tutorialRefs link is not flagged', () => {
+    expect(checkContentRules(pack).filter((v) => v.rule === 'OFF-2')).toEqual([]);
+  });
+
+  /**
+   * ⚠ Бүрэн байдлын хаалга: дүрмийн id нэмэгдээд «зөрчил тарихад унана» тест
+   * бичигдээгүй бол ЭНЭ тест унана. Хоосон пакет дээр гүйлгэх нь хүрэлцэхгүй —
+   * `SQ-3` зэрэг дүрэм зөрчих ЗҮЙЛ байхгүй үед чимээгүй өнгөрнө.
+   */
+  it('has a planted-violation test for every declared rule id', () => {
+    const covered = [
+      'MQ-1', 'MQ-2', 'MQ-5', 'SQ-1', 'SQ-3', 'SQ-4', 'STA-4', 'DG-1', 'ENC-1', 'ACH-1', 'EC-1',
+      'SKL-1', 'SKL-5', 'BSX-1', 'RET-1', 'RET-3', 'RET-5', 'RET-7', 'COS-1', 'COS-2', 'OFF-2',
+    ];
+    expect([...CONTENT_RULE_IDS].sort()).toEqual([...covered].sort());
+  });
+});
