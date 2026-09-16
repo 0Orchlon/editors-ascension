@@ -19,10 +19,20 @@
   `campLayout` · `replayLog` нь XP · stamina · coin · loot · quest/dungeon-ийн
   нээлтэд НӨЛӨӨЛӨХГҮЙ. Прогрессийн модулиуд эдгээр талбарыг УНШИХГҮЙ —
   `architecture.test.ts`-ийн сканнер уншилт олдвол УНАНА.
-  - ИЛ зөвшөөрөгдсөн ганц үл хамаарах зүйл: `skillTree.ts` нь tier-2/3 node-ийн
-    нээлтэд `state.mastery`-г уншина (AC SKL-2 — гэрээнд нэрлэгдсэн).
+  - ИЛ зөвшөөрөгдсөн үл хамаарах ГУРАВ: `skillTree.ts` (tier-2/3 node-ийн нээлт —
+    AC SKL-2), `cosmetics.ts`, `achievements.ts`. Гурвуулаа mastery-г `mastery.ts`-ийн
+    **`trackOf(state, tag)`**-оор л уншина (lld.md §4.2 A-LLD2-1): `state.mastery[x]?.…`
+    гэж гараар анхдагч бичих нь хоёр дахь уншилтын зам үүсгэх тул сканнердагдана.
   - `campLayout`-ыг зөвхөн `cosmetics.ts` бичнэ; `replayLog`-д зөвхөн
     `appendReplay` нэмнэ, түүнийг зөвхөн `boss.ts` дуудна (plan.md P-24).
+  - Эсрэг чиглэл (Сканнер B · lld.md §2): `mastery.ts` · `reputation.ts` ·
+    `chains.ts` · `cosmetics.ts` · `replayLog.ts` нь `xp` · `level` · `skillPoints` ·
+    `stamina` · `coins` · `inventory` · `completed*Ids`-д **бичихгүй**. `chains.ts`
+    нь bonus XP-ээ `addXp`-ээр олгоно (AC RET-2), талбарт шууд биш.
+  - `dungeonStats` ба `completedDungeonIds` нь ХАМТ, `dungeons.ts → markDungeonPassed`
+    ганц замаар бичигдэнэ (lld.md §6.8 Δ-1) — `quests.ts` ч түүгээр дамжина.
+  - `GUILD_IDS` нь `core/constants.ts`-д; `save/migrations.ts` нь `content/guilds.json`-ийг
+    ИМПОРТЛОХГҮЙ (lld.md §5.3). Тогтмол ба контентын зөрүүг `[C]` дүрэм C-07 хаана.
 
 ## Хэлбэр
 
