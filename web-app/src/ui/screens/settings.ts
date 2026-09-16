@@ -124,6 +124,10 @@ export function renderSettings(deps: SettingsDeps): HTMLElement {
     }
     importStatus.replaceChildren(el('span', { text: 'Save imported.' }));
     announce('Save imported.');
+    // ⚠ `rerender()` нь дэлгэцийг ДАХИН угсардаг тул `importStatus` устана —
+    // баталгаа нь `toast-host`-д гарах ёстой, эс бөгөөс тоглогч «болсон уу?»
+    // гэдгийг мэдэхгүй үлдэнэ (татгалзлын зам аль хэдийн toast ашигладаг).
+    toast('Save imported.', 'win');
     // lld.md §7.7 — импортолсон төлөв нь серверт БҮТНЭЭР тавигдана, эс бөгөөс
     // дараагийн sync нь серверийн хуучин save-ыг буцааж татна.
     void deps.sync?.pushFullSave(game.state$.getState(), new Date().toISOString());

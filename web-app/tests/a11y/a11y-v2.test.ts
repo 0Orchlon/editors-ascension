@@ -111,7 +111,9 @@ describe('VIS-7 — axe finds nothing blocking on the new screens (T-34)', () =>
       });
       const blocking = results.violations.filter((v) => v.impact === 'critical' || v.impact === 'serious');
       expect(blocking.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
-    });
+      // ⚠ Trophy Room-д 60+ карт байгаа тул axe-ийн гүйлт удаан — анхдагч 5с
+      // хугацаа нь ачаалалтай машин дээр ЧИМЭЭГҮЙ уналт өгдөг (шалгалт биш, таймер).
+    }, 30_000);
   }
 
   it('labels every new form control', () => {
