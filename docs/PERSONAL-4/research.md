@@ -36,9 +36,44 @@ non-goal гэж албан ёсоор хассан.
 болон "платформын дүрэм ЗОХИОХГҮЙ" зарчмын дагуу: спекд байхгүй, тодорхой
 non-goal гэж заасан том subsystem-ийг таамгаар нэмэхгүй.
 
+## Хүний хариулт (2-р удаа) ба дахин шалгалт
+
+Хүн: "when I opened the frontend it asked me to login with a login page
+and had a register page aswell".
+
+Үүнийг баталгаажуулахаар дахин шалгав:
+- `git log --oneline --all --grep="login|register|auth" -i` — бүх branch
+  (`main`, `issue/personal-1`, `issue/personal-2`, `issue/personal-4`) дээрх
+  бүх commit-оор хайхад login/register feature нэмсэн ЭСВЭЛ хассан commit
+  ГАРААГҮЙ (зөвхөн энэ ticket-ийн өөрийн docs commit олдсон).
+- `web-app/src` бүтэц бүхэлдээ (`find src -type f`): 17 файл, бүгд
+  `camp/quests/dungeons/skills/forge/achievements/trophies/settings` дэлгэц
+  — login/register нэртэй screen, route, эсвэл auth service алга.
+- `docker-compose.dev.yml`: зөвхөн `server` (8787) ба `web-app` (80→18085)
+  container — өөр app/service (жишээ нь тусдаа auth frontend) байхгүй.
+- Тиймээс энэ репо (`editors-ascension`, бүх branch, бүх commit) ЯГ ХЭЗЭЭ Ч
+  login/register дэлгэц агуулж байгаагүй нь баталгаажлаа.
+
+## Дүгнэлт
+
+Хүний хоёр дахь хариулт нь эхний асуултын хоёр сонголтын аль нэгийг
+(шинэ auth систем зохиох уу / ticket буруу репод холбогдсон уу) сонгосонгүй
+— харин код бодит байдалтай ШУУД зөрчилдсөн шинэ мэдэгдэл нэмж өгсөн. Код,
+git түүх, docker-compose — бүгд нэг репод (`editors-ascension`) login/register
+байгаагүйг баталж байгаа тул хүний харсан дэлгэц:
+(а) өөр URL/порт/төсөл (жишээ нь өөр demo/staging), эсвэл
+(б) хөтчийн кэш/service worker-ийн хуучин static file, эсвэл
+(в) огт өөр repo/branch байх магадлалтай.
+
+Энэ нь спек-код-ийн зөрчил БИШ, харин "юуг тестэлсэн бэ" гэдгийн тодруулга
+шаардсан асуулт тул код таамгаар нэмэгдээгүй хэвээр.
+
 ## Үр дүн
 
-Код өөрчлөгдөөгүй. Энэ баримт нь ticket-ийг PERSONAL-4 дугаараар цаашид
-шийдвэрлэхэд (эсвэл өөр репо/ticket рүү шилжүүлэхэд) зориулсан нотолгоо.
-Product/PM тал спек шинэчлэх эсвэл ticket-ийг зөв репод шилжүүлэх шийдвэр
-гаргах шаардлагатай хэвээр байна.
+Код өөрчлөгдөөгүй. PM/хүн дараах тодорхой мэдээллийг өгвол үргэлжлүүлж
+болно:
+1. Хэдийд, ямар URL (host:port)-оор нээж туршсан бэ (`localhost:18085`
+   мөн эсэх)?
+2. Screenshot эсвэл browser console/Network tab-ийн зураг байгаа юу?
+3. Энэ нь яг `0Orchlon/editors-ascension` repo-гийн `main`/энэ branch-ийн
+   build мөн үү, эсвэл өөр repo/project байж болох уу?
